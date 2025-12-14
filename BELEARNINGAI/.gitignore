@@ -1,0 +1,33 @@
+# Python cache và build
+__pycache__/
+*.py[cod]
+*$py.class
+build/
+dist/
+*.egg-info/
+
+# Môi trường ảo
+venv/
+.env
+.env.*
+!.env.example
+
+# IDE và hệ điều hành
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Log và dữ liệu tạm
+logs/
+*.log
+*.sqlite3
+
+# Test
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Docker
+*.pid

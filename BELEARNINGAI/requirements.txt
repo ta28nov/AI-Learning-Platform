@@ -1,0 +1,87 @@
+# ============================================================================
+# BeLearning AI - Educational Platform Requirements
+# ============================================================================
+# Last updated: 2025-11-08
+# Python version: 3.11+
+
+
+# ----------------------------------------------------------------------------
+# Core Framework
+# ----------------------------------------------------------------------------
+fastapi==0.116.2                    # Modern async web framework
+uvicorn[standard]==0.35.0          # ASGI server with WebSocket support
+
+# ----------------------------------------------------------------------------
+# Data Validation & Settings
+# ----------------------------------------------------------------------------
+pydantic==2.11.1                   # Data validation and serialization
+pydantic-settings==2.10.1          # Settings management from .env
+email-validator==2.0.0             # Email validation
+
+# ----------------------------------------------------------------------------
+# Database - MongoDB
+# ----------------------------------------------------------------------------
+motor==3.6.0                       # Async MongoDB driver
+pymongo==4.9.1                     # MongoDB driver (required by motor)
+dnspython==2.7.0                   # DNS support for MongoDB Atlas
+beanie==1.27.0                     # Async ODM for MongoDB (compatible with pydantic 2.x)
+
+# ----------------------------------------------------------------------------
+# Authentication & Security
+# ----------------------------------------------------------------------------
+python-jose[cryptography]==3.3.0   # JWT token handling
+passlib[bcrypt]==1.7.4             # Password hashing with bcrypt
+bcrypt==3.2.2                      # Pin bcrypt to a passlib-compatible version
+
+# ----------------------------------------------------------------------------
+# File Uploads & Processing
+# ----------------------------------------------------------------------------
+python-multipart==0.0.20           # Form data and file upload parsing
+aiofiles==24.1.0                   # Async file operations
+python-magic==0.4.27               # File type detection
+python-magic-bin==0.4.14 ; sys_platform == "win32"  # Windows binary
+
+# ----------------------------------------------------------------------------
+# AI Integration - Google Gemini API
+# ----------------------------------------------------------------------------
+google-generativeai==0.8.3         # Google Gemini API (chat, assessment generation)
+google-auth==2.40.3                # Google authentication
+
+# ----------------------------------------------------------------------------
+# HTTP Client & Utilities
+# ----------------------------------------------------------------------------
+httpx==0.28.1                      # Async HTTP client
+python-dotenv==1.0.0               # Load environment variables from .env
+
+# ----------------------------------------------------------------------------
+# Testing & Development Tools
+# ----------------------------------------------------------------------------
+pytest==8.4.2                      # Testing framework
+pytest-asyncio==0.24.0             # Async test support
+coverage==7.6.4                    # Code coverage reporting
+Faker==25.9.1                      # Data generation for testing and seeding
+
+
+# ============================================================================
+
+# ============================================================================
+# Installation Instructions:
+# ============================================================================
+# 1. Create virtual environment:
+#    python -m venv venv
+#    venv\Scripts\activate  (Windows)
+#    source venv/bin/activate  (Linux/Mac)
+#
+# 2. Install dependencies:
+#    pip install -r requirements.txt
+#
+# 3. Setup .env file with required keys:
+#    - MONGODB_URL=mongodb://localhost:27017/belearning_ai
+#    - SECRET_KEY=your-secret-key-here
+#    - GOOGLE_API_KEY=your-google-gemini-api-key
+#    - ACCESS_TOKEN_EXPIRE_MINUTES=15
+#    - REFRESH_TOKEN_EXPIRE_DAYS=7
+#
+# 4. Run application:
+#    uvicorn app.main:app --reload
+# ============================================================================
