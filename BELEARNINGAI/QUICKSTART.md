@@ -67,6 +67,7 @@ python scripts/init_data.py  -- python -m scripts.init_data
 ```powershell
 uvicorn app.main:app --reload
 ```
+python -m uvicorn app.main:app --reload
 
 **Server running at:**
 - **API**: http://localhost:8000       //đường dẫn cho API chính, nơi FE gọi 
