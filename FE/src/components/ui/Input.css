@@ -1,0 +1,174 @@
+/* Styles cho Input component */
+
+.input-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  width: 100%;
+}
+
+.input-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.input-required {
+  color: var(--danger);
+  margin-left: 2px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  transition: all var(--transition-fast);
+  font-family: inherit;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Input sizes */
+.input-sm {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  min-height: 32px;
+}
+
+.input-md {
+  padding: var(--spacing-md) var(--spacing-md);
+  font-size: var(--font-size-base);
+  min-height: 40px;
+}
+
+.input-lg {
+  padding: var(--spacing-lg) var(--spacing-md);
+  font-size: var(--font-size-lg);
+  min-height: 48px;
+}
+
+/* Input with icons */
+.input-with-start-icon {
+  padding-left: 40px;
+}
+
+.input-with-end-icon {
+  padding-right: 40px;
+}
+
+.input-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.input-start-icon {
+  left: var(--spacing-md);
+}
+
+.input-end-icon {
+  right: var(--spacing-md);
+}
+
+/* Input states */
+.input-error {
+  border-color: var(--danger);
+}
+
+.input-error:focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px var(--danger-light);
+}
+
+.input-disabled {
+  background-color: var(--bg-secondary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.input-disabled::placeholder {
+  color: var(--text-muted);
+}
+
+/* Textarea specific styles */
+.textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+  padding-top: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+}
+
+/* Helper and error messages */
+.input-helper-text,
+.input-error-message {
+  font-size: var(--font-size-xs);
+  margin-top: var(--spacing-xs);
+  line-height: 1.4;
+}
+
+.input-helper-text {
+  color: var(--text-muted);
+}
+
+.input-error-message {
+  color: var(--danger);
+  font-weight: 500;
+}
+
+/* Focus-visible for better accessibility */
+.input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-color: var(--primary);
+  box-shadow: none;
+}
+
+/* Input group styles */
+.input-group {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.input-group .input-container {
+  flex: 1;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .input-lg {
+    padding: var(--spacing-md) var(--spacing-md);
+    font-size: var(--font-size-base);
+    min-height: 44px;
+  }
+  
+  .input-group {
+    flex-direction: column;
+  }
+}
