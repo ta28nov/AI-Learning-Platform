@@ -1,0 +1,158 @@
+/* ============================================
+   ERROR PAGES — Premium 404 / 403 Design
+   Glassmorphism, gradient orbs, premium feel
+   ============================================ */
+
+.error-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  background: #fafaff;
+}
+
+/* Gradient orbs */
+.error-page__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.error-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  animation: errorOrbFloat 10s ease-in-out infinite;
+}
+
+.error-orb--1 {
+  width: 500px;
+  height: 500px;
+  background: rgba(99, 102, 241, 0.15);
+  top: -10%;
+  right: -10%;
+}
+
+.error-orb--2 {
+  width: 350px;
+  height: 350px;
+  background: rgba(139, 92, 246, 0.12);
+  bottom: -10%;
+  left: -5%;
+  animation-delay: -4s;
+}
+
+/* 403 variant — red orbs */
+.error-page--403 .error-orb--1 {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.error-page--403 .error-orb--2 {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+@keyframes errorOrbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-25px, 15px) scale(1.05); }
+}
+
+/* Content */
+.error-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 480px;
+}
+
+/* Error code display */
+.error-code {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.error-code__digit {
+  font-size: 5rem;
+  font-weight: 900;
+  color: #1a1a2e;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+@media (min-width: 768px) {
+  .error-code__digit { font-size: 7rem; }
+}
+
+.error-code__circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+  animation: errorPulse 2s ease-in-out infinite;
+}
+
+@media (min-width: 768px) {
+  .error-code__circle { width: 80px; height: 80px; }
+}
+
+.error-code__circle--red {
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
+}
+
+@keyframes errorPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.error-code__emoji {
+  font-size: 1.75rem;
+}
+
+@media (min-width: 768px) {
+  .error-code__emoji { font-size: 2rem; }
+}
+
+/* Title & desc */
+.error-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 12px;
+  letter-spacing: -0.02em;
+}
+
+@media (min-width: 768px) {
+  .error-title { font-size: 1.75rem; }
+}
+
+.error-desc {
+  font-size: 0.9rem;
+  color: #64748b;
+  line-height: 1.7;
+  margin: 0 0 32px;
+}
+
+/* Actions */
+.error-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+@media (min-width: 480px) {
+  .error-actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+}

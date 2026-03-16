@@ -19,19 +19,23 @@ export const useAuthStore = create(
        * @param {string} email - Email nguoi dung
        * @param {string} password - Mat khau
        */
-      login: async (email, password) => {
+      login: async (email, password, rememberMe = false) => {
         set({ isLoading: true, error: null })
         
         try {
-          const response = await authService.login(email, password)
-          const { user, access_token, refresh_token } = response
+          const response = await authService.login(email, password, rememberMe)
+          const { user, access_token, refresh_token, token_type } = response
+          
+          // Map BE field: user.avatar → avatar_url (BE dùng "avatar", FE dùng "avatar_url")
+          const mappedUser = { ...user, avatar_url: user.avatar || user.avatar_url || null }
           
           // Luu tokens vao localStorage
           localStorage.setItem('access_token', access_token)
           localStorage.setItem('refresh_token', refresh_token)
+          if (token_type) localStorage.setItem('token_type', token_type)
           
           set({
-            user,
+            user: mappedUser,
             isAuthenticated: true,
             isLoading: false,
             error: null

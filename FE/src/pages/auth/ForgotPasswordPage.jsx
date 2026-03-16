@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
+import authService from '@services/authService'
 import Button from '@components/ui/Button'
 import Input from '@components/ui/Input'
 import Card, { CardHeader, CardBody, CardFooter } from '@components/ui/Card'
@@ -26,10 +27,7 @@ const ForgotPasswordPage = () => {
     setLoading(true)
     try {
       // Goi API forgot password
-      // await authService.forgotPassword(data.email)
-      
-      // Gia lap API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      await authService.forgotPassword(data.email)
       
       setEmailSent(true)
       toast.success('Email khôi phục mật khẩu đã được gửi!')

@@ -1,0 +1,91 @@
+/* CourseDetailPage — Chi tiết khóa học */
+
+.cd-page { max-width: 960px; margin: 0 auto; }
+
+/* Skeleton */
+.cd-skeleton__hero { height: 260px; background: linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 16px; margin-bottom: 20px; }
+.cd-skeleton__body { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.cd-skeleton__block { height: 200px; background: linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 14px; }
+.cd-skeleton__block--sm { height: 120px; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* Hero */
+.cd-hero { position: relative; border-radius: 16px; overflow: hidden; margin-bottom: 24px; background: linear-gradient(135deg, #1a1a2e, #2d1b69); min-height: 220px; }
+.cd-hero__bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.25; }
+.cd-hero__overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(26,26,46,0.85), rgba(45,27,105,0.85)); }
+.cd-hero__content { position: relative; z-index: 1; padding: 24px 20px; }
+@media (min-width: 768px) { .cd-hero__content { padding: 32px 28px; } }
+
+.cd-hero__badges { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.cd-hero__title { font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0 0 10px; line-height: 1.3; }
+@media (min-width: 768px) { .cd-hero__title { font-size: 1.75rem; } }
+.cd-hero__desc { font-size: 0.85rem; color: rgba(255,255,255,0.7); line-height: 1.6; margin: 0 0 16px; max-width: 600px; }
+.cd-hero__stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; font-size: 0.75rem; color: rgba(255,255,255,0.6); }
+.cd-hero__actions { margin-bottom: 12px; }
+.cd-hero__progress { display: flex; align-items: center; gap: 10px; }
+.cd-hero__progress-bar { flex: 1; height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden; max-width: 200px; }
+.cd-hero__progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 3px; transition: width 0.4s; }
+.cd-hero__progress-text { font-size: 0.75rem; color: rgba(255,255,255,0.7); font-weight: 600; }
+
+/* Badges */
+.cd-badge { padding: 3px 10px; border-radius: 6px; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; background: rgba(255,255,255,0.15); color: #fff; }
+.cd-badge--cat { background: rgba(99,102,241,0.3); }
+.cd-badge--beginner { background: rgba(16,185,129,0.3); color: #6ee7b7; }
+.cd-badge--intermediate { background: rgba(245,158,11,0.3); color: #fcd34d; }
+.cd-badge--advanced { background: rgba(239,68,68,0.3); color: #fca5a5; }
+.cd-badge--sm { font-size: 0.55rem; padding: 2px 6px; background: rgba(99,102,241,0.08); color: #6366f1; }
+
+/* Body layout */
+.cd-body { display: grid; grid-template-columns: 1fr; gap: 20px; }
+@media (min-width: 768px) { .cd-body { grid-template-columns: 1fr 280px; } }
+
+/* Section */
+.cd-section { background: #fff; border: 1px solid #f1f5f9; border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+.cd-section__title { font-size: 1rem; font-weight: 700; color: #1a1a2e; margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+.cd-section__count { font-size: 0.7rem; color: #94a3b8; font-weight: 500; }
+
+/* Outcomes */
+.cd-outcomes { display: grid; grid-template-columns: 1fr; gap: 8px; }
+@media (min-width: 640px) { .cd-outcomes { grid-template-columns: repeat(2, 1fr); } }
+.cd-outcome { display: flex; gap: 10px; align-items: flex-start; }
+.cd-outcome__check { color: #10b981; font-size: 0.85rem; flex-shrink: 0; margin-top: 2px; }
+.cd-outcome__text { font-size: 0.8rem; color: #1a1a2e; }
+.cd-outcome__skill { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 600; background: rgba(99,102,241,0.08); color: #6366f1; margin-left: 6px; }
+
+/* Prerequisites */
+.cd-prereqs { list-style: none; padding: 0; margin: 0; }
+.cd-prereqs li { padding: 6px 0; font-size: 0.8rem; color: #64748b; border-bottom: 1px solid #f8fafc; }
+.cd-prereqs li:last-child { border: none; }
+.cd-prereqs li::before { content: '•'; color: #6366f1; margin-right: 8px; }
+
+/* Modules accordion */
+.cd-modules { display: flex; flex-direction: column; gap: 8px; }
+.cd-module { border: 1px solid #f1f5f9; border-radius: 12px; overflow: hidden; transition: border-color 0.2s; }
+.cd-module--open { border-color: rgba(99,102,241,0.2); }
+.cd-module__header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; transition: background 0.15s; }
+.cd-module__header:hover { background: #fafaff; }
+.cd-module__info { flex: 1; }
+.cd-module__title { font-size: 0.85rem; font-weight: 600; color: #1a1a2e; margin: 0 0 4px; }
+.cd-module__meta { display: flex; gap: 8px; font-size: 0.7rem; color: #94a3b8; align-items: center; }
+.cd-module__arrow { font-size: 0.6rem; color: #94a3b8; flex-shrink: 0; margin-left: 10px; }
+.cd-module__lessons { padding: 0 16px 14px; }
+.cd-module__desc { font-size: 0.75rem; color: #64748b; margin: 0 0 10px; padding-bottom: 8px; border-bottom: 1px solid #f8fafc; }
+
+/* Lessons */
+.cd-lesson { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid #f8fafc; }
+.cd-lesson:last-child { border: none; }
+.cd-lesson__status { font-size: 0.85rem; flex-shrink: 0; }
+.cd-lesson__info { flex: 1; }
+.cd-lesson__title { font-size: 0.8rem; color: #1a1a2e; font-weight: 500; display: block; }
+.cd-lesson__meta { font-size: 0.65rem; color: #94a3b8; }
+
+/* Sidebar */
+.cd-sidebar { position: sticky; top: 80px; }
+.cd-instructor-card { background: #fff; border: 1px solid #f1f5f9; border-radius: 14px; padding: 20px; }
+.cd-instructor-card__label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #94a3b8; margin: 0 0 12px; }
+.cd-instructor-card__profile { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.cd-instructor-card__avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+.cd-instructor-card__avatar-ph { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 800; }
+.cd-instructor-card__name { font-size: 0.9rem; font-weight: 600; color: #1a1a2e; display: block; }
+.cd-instructor-card__exp { font-size: 0.7rem; color: #94a3b8; }
+.cd-instructor-card__bio { font-size: 0.75rem; color: #64748b; line-height: 1.5; margin: 0; }

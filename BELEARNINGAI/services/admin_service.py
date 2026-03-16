@@ -239,9 +239,9 @@ async def get_user_detail_admin(user_id: str) -> Dict:
         "created_at": user.created_at.isoformat(),
         "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
         "profile": {
-            "phone": user.phone,
+            # "phone": user.phone,
             "bio": user.bio,
-            "profile_image": user.profile_image
+            #"profile_image": user.profile_image
         },
         "enrollments": enrollments_data if user.role == "student" else None,
         "courses": courses_data if user.role == "instructor" else None,
@@ -295,7 +295,7 @@ async def create_user_admin(user_data: Dict) -> Dict:
     user = User(
         email=user_data["email"],
         full_name=user_data["full_name"],
-        password=hashed_password,
+        hashed_password=hashed_password,
         role=user_data.get("role", "student"),
         status="active",
         phone=user_data.get("phone"),
@@ -308,6 +308,7 @@ async def create_user_admin(user_data: Dict) -> Dict:
         await user.save()
         
         return {
+            "message": "Tạo tài khoản người dùng thành công", 
             "user_id": str(user.id),
             "email": user.email,
             "full_name": user.full_name,
@@ -380,6 +381,7 @@ async def update_user_admin(user_id: str, update_data: Dict) -> Dict:
         await user.save()
         
         return {
+            "message": "Cập nhật thông tin người dùng thành công",
             "user_id": str(user.id),
             "email": user.email,
             "full_name": user.full_name,

@@ -10,11 +10,12 @@ export const authService = {
    * @param {string} password - Mat khau
    * @returns {Promise} User data va tokens
    */
-  async login(email, password) {
+  async login(email, password, remember_me = false) {
     try {
       const response = await api.post('/auth/login', {
         email,
-        password
+        password,
+        remember_me
       })
       return handleApiResponse(response)
     } catch (error) {

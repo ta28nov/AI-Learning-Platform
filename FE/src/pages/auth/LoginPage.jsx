@@ -13,6 +13,7 @@ import './AuthPages.css'
  */
 const LoginPage = () => {
   const [loading, setLoading] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const { login } = useAuthStore()
@@ -31,7 +32,7 @@ const LoginPage = () => {
   const onSubmit = async (data) => {
     setLoading(true)
     try {
-      await login(data.email, data.password)
+      await login(data.email, data.password, rememberMe)
       toast.success('Đăng nhập thành công!')
       navigate(from, { replace: true })
     } catch (error) {
@@ -79,6 +80,15 @@ const LoginPage = () => {
               />
 
               <div className="forgot-password">
+                <label className="checkbox-label remember-me">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
+                  <span className="checkmark"></span>
+                  Ghi nhớ đăng nhập
+                </label>
                 <Link to="/auth/forgot-password">
                   Quên mật khẩu?
                 </Link>

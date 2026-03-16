@@ -1,102 +1,19 @@
 import api, { handleApiResponse, handleApiError } from './api'
 
 /**
- * Service xu ly bai kiem tra quiz
+ * Service xu ly quiz va bai kiem tra
+ * Student: GET detail, POST attempt, GET results, POST retake, POST generate-practice
+ * Instructor: POST create, GET list, PUT update, DELETE, GET class-results
  */
 export const quizService = {
-  /**
-   * Sinh bai danh gia nang luc AI
-   * @param {Object} assessmentData - Du lieu de yeu cau tao bai kiem tra
-   * @param {string} assessmentData.subject - Chu de danh gia
-   * @param {string} assessmentData.level - Cap do: 'beginner', 'intermediate', 'advanced'
-   * @param {Array} assessmentData.topics - Danh sach chu de cu the
-   * @returns {Promise} Thong tin session danh gia
-   */
-  async generateAssessment(assessmentData) {
-    try {
-      const response = await api.post('/assessments/generate', assessmentData)
-      return handleApiResponse(response)
-    } catch (error) {
-      handleApiError(error)
-    }
-  },
+  // ========================
+  // STUDENT ENDPOINTS
+  // ========================
 
   /**
-   * Lay thong tin bai danh gia
-   * @param {string} sessionId - ID session danh gia
-   * @returns {Promise} Noi dung bai kiem tra
-   */
-  async getAssessment(sessionId) {
-    try {
-      const response = await api.get(`/assessments/${sessionId}`)
-      return handleApiResponse(response)
-    } catch (error) {
-      handleApiError(error)
-    }
-  },
-
-  /**
-   * Nop bai danh gia nang luc
-   * @param {string} sessionId - ID session danh gia
-   * @param {Array} answers - Cac cau tra loi
-   * @returns {Promise} Ket qua danh gia
-   */
-  async submitAssessment(sessionId, answers) {
-    try {
-      const response = await api.post(`/assessments/${sessionId}/submit`, {
-        answers
-      })
-      return handleApiResponse(response)
-    } catch (error) {
-      handleApiError(error)
-    }
-  },
-
-  /**
-   * Lay ket qua danh gia
-   * @param {string} sessionId - ID session danh gia
-   * @returns {Promise} Ket qua chi tiet va phan tich
-   */
-  async getAssessmentResults(sessionId) {
-    try {
-      const response = await api.get(`/assessments/${sessionId}/results`)
-      return handleApiResponse(response)
-    } catch (error) {
-      handleApiError(error)
-    }
-  },
-
-  /**
-   * Lay de xuat lo trinh hoc tap tu ket qua danh gia
-   * @returns {Promise} Lo trinh hoc tap ca nhan hoa
-   */
-  async getRecommendationsFromAssessment() {
-    try {
-      const response = await api.get('/recommendations/from-assessment')
-      return handleApiResponse(response)
-    } catch (error) {
-      handleApiError(error)
-    }
-  },
-
-  /**
-   * Lay danh sach quiz thuong
-   * @param {Object} params - Parameters filter
-   * @returns {Promise} Danh sach quiz
-   */
-  async getQuizzes(params = {}) {
-    try {
-      const response = await api.get('/quizzes', { params })
-      return handleApiResponse(response)
-    } catch (error) {
-      handleApiError(error)
-    }
-  },
-
-  /**
-   * Lay thong tin chi tiet quiz
-   * @param {string} quizId - ID quiz
-   * @returns {Promise} Thong tin quiz
+   * Lay thong tin chi tiet quiz truoc khi lam bai
+   * @param {string} quizId - UUID quiz
+   * @returns {Promise} QuizDetailResponse
    */
   async getQuizDetail(quizId) {
     try {
@@ -108,13 +25,14 @@ export const quizService = {
   },
 
   /**
-   * Bat dau lam quiz
-   * @param {string} quizId - ID quiz
-   * @returns {Promise} Session quiz
+   * Nop bai lam quiz
+   * @param {string} quizId - UUID quiz
+   * @param {Object} data - { answers: [{question_id, selected_option}], time_spent_minutes }
+   * @returns {Promise} QuizAttemptResponse
    */
-  async startQuiz(quizId) {
+  async submitAttempt(quizId, data) {
     try {
-      const response = await api.post(`/quizzes/${quizId}/start`)
+      const response = await api.post(`/quizzes/${quizId}/attempt`, data)
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)
@@ -122,18 +40,13 @@ export const quizService = {
   },
 
   /**
-   * Nop bai quiz
-   * @param {string} quizId - ID quiz
-   * @param {string} sessionId - ID session
-   * @param {Array} answers - Cac cau tra loi
-   * @returns {Promise} Ket qua quiz
+   * Lay ket qua quiz chi tiet (tung cau hoi + giai thich)
+   * @param {string} quizId - UUID quiz
+   * @returns {Promise} QuizResultsResponse
    */
-  async submitQuiz(quizId, sessionId, answers) {
+  async getQuizResults(quizId) {
     try {
-      const response = await api.post(`/quizzes/${quizId}/submit`, {
-        session_id: sessionId,
-        answers
-      })
+      const response = await api.get(`/quizzes/${quizId}/results`)
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)
@@ -141,14 +54,13 @@ export const quizService = {
   },
 
   /**
-   * Lay ket qua quiz
-   * @param {string} quizId - ID quiz
-   * @param {string} sessionId - ID session
-   * @returns {Promise} Ket qua chi tiet
+   * Lam lai quiz (AI sinh cau hoi moi tuong tu)
+   * @param {string} quizId - UUID quiz
+   * @returns {Promise} QuizRetakeResponse - bao gom questions[] moi
    */
-  async getQuizResults(quizId, sessionId) {
+  async retakeQuiz(quizId) {
     try {
-      const response = await api.get(`/quizzes/${quizId}/results/${sessionId}`)
+      const response = await api.post(`/quizzes/${quizId}/retake`)
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)
@@ -156,13 +68,90 @@ export const quizService = {
   },
 
   /**
-   * Lay lich su lam quiz
-   * @param {Object} params - Parameters filter
-   * @returns {Promise} Lich su quiz
+   * Sinh bai tap luyen tap ca nhan hoa bang AI
+   * @param {Object} data - { lesson_id|course_id|topic_prompt, difficulty, question_count, practice_type, focus_skills }
+   * @returns {Promise} PracticeExercisesGenerateResponse
    */
-  async getQuizHistory(params = {}) {
+  async generatePractice(data) {
     try {
-      const response = await api.get('/quizzes/history', { params })
+      const response = await api.post('/ai/generate-practice', data)
+      return handleApiResponse(response)
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  // ========================
+  // INSTRUCTOR ENDPOINTS
+  // ========================
+
+  /**
+   * Tao quiz moi cho lesson (Instructor)
+   * @param {string} lessonId - UUID lesson
+   * @param {Object} data - QuizCreateRequest
+   * @returns {Promise} QuizCreateResponse
+   */
+  async createQuiz(lessonId, data) {
+    try {
+      const response = await api.post(`/lessons/${lessonId}/quizzes`, data)
+      return handleApiResponse(response)
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  /**
+   * Lay danh sach quiz (Instructor)
+   * @param {Object} params - role, course_id, class_id, search, sort_by, sort_order, skip, limit
+   * @returns {Promise} QuizListResponse
+   */
+  async getQuizzes(params = {}) {
+    try {
+      const response = await api.get('/quizzes', { params })
+      return handleApiResponse(response)
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  /**
+   * Cap nhat quiz (Instructor)
+   * @param {string} quizId - UUID quiz
+   * @param {Object} data - QuizUpdateRequest
+   * @returns {Promise} QuizUpdateResponse (bao gom has_attempts, warning)
+   */
+  async updateQuiz(quizId, data) {
+    try {
+      const response = await api.put(`/quizzes/${quizId}`, data)
+      return handleApiResponse(response)
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  /**
+   * Xoa quiz (Instructor, chi khi chua co attempt)
+   * @param {string} quizId - UUID quiz
+   * @returns {Promise} QuizDeleteResponse
+   */
+  async deleteQuiz(quizId) {
+    try {
+      const response = await api.delete(`/quizzes/${quizId}`)
+      return handleApiResponse(response)
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  /**
+   * Lay ket qua quiz cua lop hoc (Instructor)
+   * @param {string} quizId - UUID quiz
+   * @param {Object} params - class_id
+   * @returns {Promise} QuizClassResultsResponse
+   */
+  async getClassResults(quizId, params = {}) {
+    try {
+      const response = await api.get(`/quizzes/${quizId}/class-results`, { params })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)

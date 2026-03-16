@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
+import authService from '@services/authService'
 import Button from '@components/ui/Button'
 import Card, { CardHeader, CardBody, CardFooter } from '@components/ui/Card'
 import { toast } from 'react-hot-toast'
@@ -26,10 +27,7 @@ const VerifyEmailPage = () => {
 
       try {
         // Goi API verify email
-        // await authService.verifyEmail(token)
-        
-        // Gia lap API call
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        await authService.verifyEmail(token)
         
         setVerificationStatus('success')
         toast.success('Email đã được xác thực thành công!')
@@ -53,10 +51,7 @@ const VerifyEmailPage = () => {
     setLoading(true)
     try {
       // Goi API resend verification
-      // await authService.resendVerification(email)
-      
-      // Gia lap API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      await authService.resendVerificationEmail(email)
       
       toast.success('Email xác thực đã được gửi lại!')
     } catch (error) {

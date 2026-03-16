@@ -1,0 +1,160 @@
+.lesson-page {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 768px) { .lesson-page { padding: 24px; gap: 20px; } }
+@media (min-width: 1024px) { .lesson-page { padding: 32px; max-width: 960px; margin: 0 auto; } }
+
+/* Breadcrumb */
+.lesson-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6b7280);
+  flex-wrap: wrap;
+}
+
+.breadcrumb-link {
+  cursor: pointer;
+  color: var(--color-primary, #6366f1);
+  transition: opacity 0.15s;
+}
+
+.breadcrumb-link:hover { opacity: 0.7; }
+.breadcrumb-sep { color: var(--border-color, #d1d5db); }
+.breadcrumb-current { color: var(--text-primary, #1a1a2e); font-weight: 500; }
+
+/* Header */
+.lesson-header h1 { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+
+@media (min-width: 768px) {
+  .lesson-header h1 { font-size: 1.5rem; }
+}
+
+.lesson-meta {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  font-size: 0.8rem; color: var(--text-secondary, #6b7280);
+}
+
+.completed-badge {
+  color: var(--color-success, #10b981);
+  font-weight: 600;
+}
+
+/* Video */
+.lesson-video { border-radius: 10px; overflow: hidden; background: #000; }
+
+.video-player {
+  width: 100%;
+  max-height: 500px;
+  display: block;
+}
+
+/* Text content */
+.lesson-text-content {
+  font-size: 0.9rem;
+  line-height: 1.8;
+  color: var(--text-primary);
+}
+
+.lesson-text-content h2 { font-size: 1.2rem; margin: 20px 0 10px; }
+.lesson-text-content h3 { font-size: 1.05rem; margin: 16px 0 8px; }
+.lesson-text-content p { margin-bottom: 12px; }
+.lesson-text-content ul, .lesson-text-content ol { margin: 8px 0 12px 20px; }
+.lesson-text-content li { margin-bottom: 4px; }
+.lesson-text-content pre { background: #1e1e2e; color: #cdd6f4; padding: 14px; border-radius: 8px; overflow-x: auto; font-size: 0.8rem; margin: 10px 0; }
+.lesson-text-content code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+.lesson-text-content pre code { background: none; padding: 0; }
+.lesson-text-content img { max-width: 100%; border-radius: 8px; margin: 10px 0; }
+
+/* Objectives */
+.objectives-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.objectives-list li {
+  padding-left: 20px;
+  position: relative;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.objectives-list li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--color-success, #10b981);
+  font-weight: 700;
+}
+
+/* Attachments */
+.attachments-list { display: flex; flex-direction: column; gap: 8px; }
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-secondary, #f8f9fa);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: background 0.15s;
+  font-size: 0.85rem;
+}
+
+.attachment-item:hover { background: var(--border-color, #e5e7eb); }
+.attachment-icon { font-size: 1.1rem; }
+.attachment-name { flex: 1; font-weight: 500; }
+.attachment-size { font-size: 0.75rem; color: var(--text-secondary); }
+
+/* Quiz prompt */
+.quiz-prompt-card { border: 2px solid var(--color-primary, #6366f1); }
+
+.quiz-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .quiz-prompt {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.quiz-prompt__info h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
+.mandatory-badge { font-size: 0.7rem; padding: 2px 8px; background: #fef3c7; color: #92400e; border-radius: 10px; font-weight: 600; }
+
+/* Navigation */
+.lesson-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.lesson-navigation .btn {
+  max-width: 45%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.8rem;
+}
+
+/* Shared */
+.loading-spinner, .empty-state {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 300px; color: var(--text-secondary); font-size: 0.9rem;
+}

@@ -1,0 +1,96 @@
+/* CoursesPage — Danh sách khóa học */
+
+/* Header */
+.courses-header { margin-bottom: 24px; }
+.courses-header__title { font-size: 1.35rem; font-weight: 800; color: #1a1a2e; margin: 0 0 6px; }
+.courses-header__sub { font-size: 0.85rem; color: #94a3b8; margin: 0 0 16px; }
+
+/* Thanh tìm kiếm */
+.courses-search { display: flex; gap: 8px; }
+.courses-search__input {
+  flex: 1; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 10px;
+  font-size: 0.85rem; font-family: inherit; transition: border-color 0.2s; background: #fafafa;
+}
+.courses-search__input:focus { outline: none; border-color: #6366f1; background: #fff; box-shadow: 0 0 0 3px rgba(99,102,241,0.08); }
+
+/* Bộ lọc */
+.courses-filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.courses-filters__group { display: flex; flex-direction: column; gap: 4px; min-width: 140px; flex: 1; }
+.courses-filters__label { font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.courses-filters__select {
+  padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px;
+  font-size: 0.8rem; font-family: inherit; color: #1a1a2e; background: #fafafa; cursor: pointer;
+}
+.courses-filters__select:focus { outline: none; border-color: #6366f1; }
+
+/* Kết quả */
+.courses-result-info { font-size: 0.8rem; color: #64748b; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+.courses-result-info__keyword { color: #6366f1; font-weight: 600; }
+.courses-result-info__clear {
+  background: none; border: none; color: #ef4444; font-size: 0.7rem; cursor: pointer;
+  text-decoration: underline; margin-left: 4px; font-family: inherit;
+}
+
+/* Grid */
+.courses-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 768px) { .courses-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .courses-grid { grid-template-columns: repeat(3, 1fr); } }
+
+/* Skeleton */
+.course-skeleton { background: #fff; border: 1px solid #f1f5f9; border-radius: 14px; overflow: hidden; }
+.course-skeleton__img { height: 140px; background: linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+.course-skeleton__body { padding: 16px; }
+.course-skeleton__line { height: 12px; background: linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; margin-bottom: 8px; }
+.course-skeleton__line--title { height: 16px; width: 70%; }
+.course-skeleton__line--short { width: 40%; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* Course card */
+.course-card {
+  background: #fff; border: 1px solid #f1f5f9; border-radius: 14px; overflow: hidden;
+  cursor: pointer; transition: all 0.25s;
+}
+.course-card:hover { border-color: rgba(99,102,241,0.2); box-shadow: 0 8px 24px rgba(99,102,241,0.08); transform: translateY(-3px); }
+
+/* Ảnh */
+.course-card__img-wrap { position: relative; height: 150px; overflow: hidden; background: #f1f5f9; }
+.course-card__img { width: 100%; height: 100%; object-fit: cover; }
+.course-card__img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg,#f5f3ff,#ede9fe); font-size: 2.5rem; }
+.course-card__enrolled-badge { position: absolute; top: 10px; right: 10px; padding: 3px 10px; background: rgba(16,185,129,0.9); color: #fff; font-size: 0.65rem; font-weight: 700; border-radius: 100px; }
+
+/* Nội dung */
+.course-card__body { padding: 14px 16px 16px; }
+.course-card__badges { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.course-card__badge { padding: 2px 8px; border-radius: 6px; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+.course-card__badge--category { background: rgba(99,102,241,0.08); color: #6366f1; }
+.course-card__badge--beginner { background: rgba(16,185,129,0.08); color: #10b981; }
+.course-card__badge--intermediate { background: rgba(245,158,11,0.08); color: #f59e0b; }
+.course-card__badge--advanced { background: rgba(239,68,68,0.08); color: #ef4444; }
+.course-card__title { font-size: 0.9rem; font-weight: 700; color: #1a1a2e; margin: 0 0 6px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.course-card__desc { font-size: 0.75rem; color: #64748b; margin: 0 0 10px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.course-card__meta { display: flex; gap: 8px; font-size: 0.7rem; color: #94a3b8; margin-bottom: 12px; flex-wrap: wrap; }
+.course-card__meta span { display: flex; align-items: center; gap: 3px; }
+
+/* Footer */
+.course-card__footer { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid #f8fafc; }
+.course-card__instructor { display: flex; align-items: center; gap: 6px; }
+.course-card__instructor-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+.course-card__instructor-avatar-placeholder { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; font-weight: 800; }
+.course-card__instructor-name { font-size: 0.7rem; color: #64748b; font-weight: 500; }
+.course-card__students { font-size: 0.7rem; color: #94a3b8; }
+
+/* Trạng thái rỗng */
+.courses-empty { text-align: center; padding: 48px 20px; background: #fafafa; border-radius: 16px; border: 2px dashed #e2e8f0; }
+.courses-empty__icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+.courses-empty h3 { font-size: 1rem; color: #1a1a2e; margin: 0 0 6px; }
+.courses-empty p { font-size: 0.85rem; color: #94a3b8; margin: 0 0 16px; }
+
+/* Phân trang */
+.courses-pagination { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 24px; }
+.courses-pagination__btn {
+  padding: 8px 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;
+  font-size: 0.8rem; font-family: inherit; cursor: pointer; transition: all 0.15s; color: #64748b;
+}
+.courses-pagination__btn:hover:not(:disabled) { border-color: #6366f1; color: #6366f1; }
+.courses-pagination__btn--active { background: #6366f1; color: #fff; border-color: #6366f1; }
+.courses-pagination__btn:disabled { opacity: 0.4; cursor: not-allowed; }

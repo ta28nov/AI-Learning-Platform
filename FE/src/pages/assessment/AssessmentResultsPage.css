@@ -1,0 +1,154 @@
+.assessment-results-page {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .assessment-results-page { padding: 24px; gap: 20px; }
+}
+
+@media (min-width: 1024px) {
+  .assessment-results-page { padding: 32px; max-width: 900px; margin: 0 auto; }
+}
+
+/* Score display */
+.score-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .score-display { flex-direction: row; text-align: left; gap: 24px; }
+}
+
+.score-circle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.score-circle__inner {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: var(--bg-primary, #fff);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-circle__value { font-size: 2.5rem; font-weight: 800; color: var(--text-primary, #1a1a2e); }
+.score-circle__label { font-size: 0.75rem; color: var(--text-secondary, #6b7280); }
+
+.proficiency-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  background: var(--color-primary, #6366f1);
+  color: #fff;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.score-summary { color: var(--text-secondary, #6b7280); font-size: 0.875rem; }
+
+/* Skills */
+.skills-list { display: flex; flex-direction: column; gap: 14px; }
+
+.skill-item { display: flex; flex-direction: column; gap: 4px; }
+.skill-item__header { display: flex; justify-content: space-between; align-items: center; }
+.skill-item__name { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+.skill-item__percent { font-size: 0.75rem; color: var(--text-secondary); text-align: right; }
+.skill-item__feedback { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+
+.strength-badge {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.strength-badge--strong { background: #dcfce7; color: #166534; }
+.strength-badge--average { background: #fef3c7; color: #92400e; }
+.strength-badge--weak { background: #fecaca; color: #991b1b; }
+
+.skill-bar {
+  height: 8px;
+  background: var(--border-color, #e5e7eb);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.skill-bar__fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+/* Knowledge gaps */
+.gaps-list { display: flex; flex-direction: column; gap: 10px; }
+
+.gap-item {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border-left: 4px solid var(--border-color);
+}
+.gap-item--high { border-left-color: #ef4444; background: #fef2f2; }
+.gap-item--medium { border-left-color: #f59e0b; background: #fffbeb; }
+.gap-item--low { border-left-color: #6b7280; background: #f9fafb; }
+
+.gap-item__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.gap-item__area { font-weight: 600; font-size: 0.85rem; color: var(--text-primary); }
+.gap-item__action { font-size: 0.8rem; color: var(--text-secondary); }
+
+.importance-badge { font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+.importance-badge--high { background: #fecaca; color: #991b1b; }
+.importance-badge--medium { background: #fef3c7; color: #92400e; }
+.importance-badge--low { background: #f3f4f6; color: #6b7280; }
+
+/* Time stats */
+.time-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat-card {
+  text-align: center;
+  padding: 16px 12px;
+  background: var(--bg-secondary, #f8f9fa);
+  border-radius: 10px;
+}
+
+.stat-card__value { display: block; font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+.stat-card__label { display: block; font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+
+/* AI feedback */
+.ai-feedback {
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+/* Actions */
+.results-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (min-width: 768px) {
+  .results-actions { flex-direction: row; justify-content: center; gap: 12px; }
+}

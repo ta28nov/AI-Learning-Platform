@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
+import authService from '@services/authService'
 import Button from '@components/ui/Button'
 import Input from '@components/ui/Input'
 import Card, { CardHeader, CardBody, CardFooter } from '@components/ui/Card'
@@ -35,13 +36,7 @@ const ResetPasswordPage = () => {
       }
 
       // Goi API reset password
-      // await authService.resetPassword({
-      //   token,
-      //   password: data.password
-      // })
-      
-      // Gia lap API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      await authService.resetPassword(token, data.password)
       
       toast.success('Đặt lại mật khẩu thành công!')
       navigate('/auth/login')

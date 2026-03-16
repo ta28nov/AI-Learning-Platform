@@ -3,7 +3,7 @@ Admin Schemas
 Định nghĩa request/response schemas cho admin endpoints
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from datetime import datetime
 from typing import List, Optional
 
@@ -32,7 +32,7 @@ class AdminUserListResponse(BaseModel):
     total: int
     skip: int
     limit: int
-    summary: UserSummary
+# Dư trường summary: UserSummary tại đây để mở rộng sau nếu cần
 
 
 class UserStatistics(BaseModel):
@@ -82,7 +82,7 @@ class AdminUserDetailResponse(BaseModel):
     created_at: datetime
     last_login_at: Optional[datetime] = None
     profile: ProfileInfo
-    activity_summary: ActivitySummary
+    #activity_summary: ActivitySummary
 
 
 class AdminCreateUserRequest(BaseModel):
@@ -106,7 +106,7 @@ class AdminCreateUserResponse(BaseModel):
 
 class AdminUpdateUserRequest(BaseModel):
     full_name: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     bio: Optional[str] = None
     avatar: Optional[str] = None
     status: Optional[str] = Field(None, description="active|inactive")

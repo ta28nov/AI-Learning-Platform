@@ -1,0 +1,57 @@
+.module-list-page {
+  padding: 16px;
+}
+
+@media (min-width: 768px) { .module-list-page { padding: 24px; } }
+@media (min-width: 1024px) { .module-list-page { padding: 32px; max-width: 900px; margin: 0 auto; } }
+
+.module-list-page .page-header { margin-bottom: 20px; }
+.module-list-page .page-header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.module-list-page .page-header p { color: var(--text-secondary, #6b7280); font-size: 0.85rem; }
+
+.module-list { display: flex; flex-direction: column; gap: 12px; }
+
+.module-card { position: relative; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+.module-card:hover { transform: translateY(-1px); }
+.module-card--locked { opacity: 0.6; cursor: not-allowed; }
+
+.module-card__header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+
+.module-card__order {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--color-primary, #6366f1); color: #fff;
+  font-weight: 700; font-size: 0.8rem; flex-shrink: 0;
+}
+
+.module-card__info { flex: 1; }
+.module-card__title { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+.module-card__desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; }
+.module-card__lock { font-size: 1.1rem; }
+
+.module-card__meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+.module-card__lessons, .module-card__time { font-size: 0.75rem; color: var(--text-secondary); }
+
+.badge { font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; }
+.badge--beginner { background: #dcfce7; color: #166534; }
+.badge--intermediate { background: #fef3c7; color: #92400e; }
+.badge--advanced { background: #fecaca; color: #991b1b; }
+
+.module-card__progress { display: flex; align-items: center; gap: 8px; }
+
+.progress-bar { flex: 1; height: 6px; background: var(--border-color, #e5e7eb); border-radius: 3px; overflow: hidden; }
+.progress-bar__fill { height: 100%; background: var(--color-primary, #6366f1); border-radius: 3px; transition: width 0.4s; }
+.progress-text { font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); min-width: 32px; text-align: right; }
+
+.status-dot {
+  position: absolute; top: 12px; right: 12px;
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.status-dot--completed { background: #10b981; }
+.status-dot--in-progress { background: #f59e0b; }
+.status-dot--not-started { background: #d1d5db; }
+
+.loading-spinner, .empty-state {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 200px; color: var(--text-secondary); font-size: 0.9rem;
+}

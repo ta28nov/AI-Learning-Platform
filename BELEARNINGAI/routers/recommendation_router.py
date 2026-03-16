@@ -34,6 +34,7 @@ async def get_assessment_recommendations(
     """Section 2.2.4 - Đề xuất lộ trình từ assessment"""
     return await handle_get_assessment_recommendations(session_id, current_user)
 
+"todo AI đề xuất khóa học dựa trên lịch sử học tập và sở thích"
 
 @router.get(
     "",

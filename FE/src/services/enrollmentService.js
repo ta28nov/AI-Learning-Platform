@@ -2,12 +2,14 @@ import api, { handleApiResponse, handleApiError } from './api'
 
 /**
  * Service xu ly dang ky khoa hoc
+ * Endpoints: POST /enrollments, GET /enrollments/my-courses,
+ *            GET /enrollments/{id}, DELETE /enrollments/{id}
  */
 export const enrollmentService = {
   /**
    * Dang ky khoa hoc
-   * @param {string} courseId - ID khoa hoc
-   * @returns {Promise} Thong tin enrollment
+   * @param {string} courseId - UUID khoa hoc
+   * @returns {Promise} EnrollmentCreateResponse
    */
   async enrollCourse(courseId) {
     try {
@@ -22,9 +24,8 @@ export const enrollmentService = {
 
   /**
    * Lay danh sach khoa hoc da dang ky
-   * @param {Object} params - Parameters filter
-   * @param {string} params.status - Trang thai enrollment
-   * @returns {Promise} Danh sach khoa hoc da dang ky
+   * @param {Object} params - status (in-progress|completed|cancelled), skip, limit
+   * @returns {Promise} EnrollmentListResponse
    */
   async getMyCourses(params = {}) {
     try {
@@ -36,9 +37,9 @@ export const enrollmentService = {
   },
 
   /**
-   * Lay thong tin chi tiet enrollment
-   * @param {string} enrollmentId - ID enrollment
-   * @returns {Promise} Thong tin enrollment
+   * Lay chi tiet enrollment
+   * @param {string} enrollmentId - UUID enrollment
+   * @returns {Promise} EnrollmentDetailResponse
    */
   async getEnrollmentDetail(enrollmentId) {
     try {
@@ -50,55 +51,13 @@ export const enrollmentService = {
   },
 
   /**
-   * Kiem tra trang thai dang ky khoa hoc
-   * @param {string} courseId - ID khoa hoc
-   * @returns {Promise} Trang thai dang ky
-   */
-  async getEnrollmentStatus(courseId) {
-    try {
-      const response = await api.get(`/courses/${courseId}/enrollment-status`)
-      return handleApiResponse(response)
-    } catch (error) {
-      handleApiError(error)
-    }
-  },
-
-  /**
    * Huy dang ky khoa hoc
-   * @param {string} enrollmentId - ID enrollment
-   * @returns {Promise}
+   * @param {string} enrollmentId - UUID enrollment
+   * @returns {Promise} EnrollmentCancelResponse
    */
   async cancelEnrollment(enrollmentId) {
     try {
       const response = await api.delete(`/enrollments/${enrollmentId}`)
-      return handleApiResponse(response)
-    } catch (error) {
-      handleApiError(error)
-    }
-  },
-
-  /**
-   * Cap nhat tien do hoc tap
-   * @param {string} enrollmentId - ID enrollment
-   * @param {Object} progressData - Du lieu tien do
-   * @returns {Promise}
-   */
-  async updateProgress(enrollmentId, progressData) {
-    try {
-      const response = await api.patch(`/enrollments/${enrollmentId}/progress`, progressData)
-      return handleApiResponse(response)
-    } catch (error) {
-      handleApiError(error)
-    }
-  },
-
-  /**
-   * Lay thong ke tien do hoc tap tong quan
-   * @returns {Promise} Thong ke tien do
-   */
-  async getProgressSummary() {
-    try {
-      const response = await api.get('/enrollments/progress-summary')
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)
