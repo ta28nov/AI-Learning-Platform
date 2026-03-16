@@ -428,7 +428,7 @@ async def delete_user_admin(user_id: str) -> Dict:
     if user.role == "student":
         active_enrollments = await Enrollment.find(
             Enrollment.user_id == user.id,
-            Enrollment.status.in_(["active", "completed"])
+            {"status": {"$in": ["active", "completed"]}} 
         ).count()
         
         if active_enrollments > 0:
@@ -441,7 +441,7 @@ async def delete_user_admin(user_id: str) -> Dict:
     if user.role == "instructor":
         active_courses = await Course.find(
             Course.instructor_id == user.id,
-            Course.status.in_(["published", "draft"])
+            {"status": {"$in": ["published", "draft"]}} 
         ).count()
         
         if active_courses > 0:
@@ -549,61 +549,60 @@ async def get_courses_list_admin(
     courses = await query.skip(skip).limit(limit).to_list()
     
     # Format course data
+    # Format course data
     courses_data = []
     for course in courses:
-        # Get instructor info
-        instructor = await User.get(course.instructor_id)
-        instructor_name = instructor.full_name if instructor else "Unknown"
+        # Get instructor info an toàn (giữ nguyên logic của bạn)
+        instructor = None
+        if getattr(course, "instructor_id", None):
+            instructor = await User.get(course.instructor_id)
+            
+        # 1. TẠO OBJECT AUTHOR THEO ĐÚNG KHUÔN CourseAuthor
+        author_data = {
+            "user_id": str(instructor.id) if instructor else str(getattr(course, "instructor_id", "Unknown")),
+            "full_name": instructor.full_name if instructor else "Unknown",
+            "email": getattr(instructor, "email", "unknown@example.com") if instructor else "unknown@example.com",
+            "role": getattr(instructor, "role", "instructor") if instructor else "instructor"
+        }
         
-        # Get enrollment stats
+        # Get enrollment stats (chỉ giữ lại phần đếm tổng số, bỏ qua completed_count vì schema không cần)
         enrollment_count = await Enrollment.find(
-            Enrollment.course_id == course.id
+            Enrollment.course_id == str(course.id)
         ).count()
         
-        completed_count = await Enrollment.find(
-            Enrollment.course_id == course.id,
-            Enrollment.status == "completed"
-        ).count()
-        
-        completion_rate = (completed_count / enrollment_count * 100) if enrollment_count > 0 else 0
-        
+        # 2. ĐÓNG GÓI CHUẨN XÁC THEO KHUÔN AdminCourseListItem
         courses_data.append({
             "course_id": str(course.id),
             "title": course.title,
-            "description": course.description[:200] + "..." if len(course.description) > 200 else course.description,
-            "category": course.category,
-            "status": course.status,
-            "instructor_id": str(course.instructor_id),
-            "instructor_name": instructor_name,
-            "created_at": course.created_at.isoformat(),
-            "updated_at": course.updated_at.isoformat(),
+            "thumbnail_url": getattr(course, "thumbnail_url", None),
+            
+            # Thay instructor_id và instructor_name bằng object author
+            "author": author_data, 
+            
+            # Cung cấp 2 trường bắt buộc bằng getattr để chống sập nếu DB cũ thiếu cột này
+            "course_type": getattr(course, "course_type", "public"),
+            "level": getattr(course, "level", "Beginner"),
+            
             "enrollment_count": enrollment_count,
-            "completed_count": completed_count,
-            "completion_rate": round(completion_rate, 2)
+            "status": course.status,
+            "category": course.category,
+            
+            # Bỏ đuôi .isoformat() để Pydantic xử lý
+            "created_at": course.created_at, 
+            "updated_at": course.updated_at  
         })
     
     # Calculate pagination
-    total_pages = (total_count + limit - 1) // limit
-    
+    has_next_page = (skip + limit) < total_count
+
     return {
-        "courses": courses_data,
-        "pagination": {
-            "current_page": page,
-            "total_pages": total_pages,
-            "total_items": total_count,
-            "items_per_page": limit,
-            "has_next": page < total_pages,
-            "has_prev": page > 1
-        },
-        "filters": {
-            "search": search,
-            "category_filter": category_filter,
-            "status_filter": status_filter,
-            "instructor_filter": instructor_filter,
-            "sort_by": sort_by,
-            "sort_order": sort_order
-        }
+        "data": courses_data,
+        "total": total_count,
+        "skip": skip,
+        "limit": limit,
+        "has_next": has_next_page
     }
+    
 
 
 async def update_course_status_admin(course_id: str, new_status: str, admin_id: str) -> Dict:
@@ -932,6 +931,7 @@ async def change_user_role_admin(user_id: str, new_role: str) -> Dict:
             "user_id": str(user.id),
             "old_role": old_role,
             "new_role": new_role,
+            "impact": f"Vai trò đã được thay đổi thành công sang {user.role}. Các quyền hạn mới đã được áp dụng.",
             "message": f"Vai trò đã được thay đổi từ {old_role} thành {new_role}",
             "updated_at": user.updated_at.isoformat()
         }
@@ -973,7 +973,7 @@ async def reset_user_password_admin(user_id: str, new_password: str) -> Dict:
         )
     
     # Hash new password
-    user.password = hash_password(new_password)
+    user.hashed_password = hash_password(new_password)
     user.updated_at = datetime.utcnow()
     
     try:
@@ -981,8 +981,10 @@ async def reset_user_password_admin(user_id: str, new_password: str) -> Dict:
         
         return {
             "user_id": str(user.id),
+            "note": f"Mật khẩu đã được reset bởi admin. Mật khẩu mới là: {new_password}",
             "message": "Mật khẩu đã được reset thành công",
-            "updated_at": user.updated_at.isoformat()
+            "updated_at": user.updated_at.isoformat(),
+            "new_password": new_password  
         }
     except Exception as e:
         raise HTTPException(

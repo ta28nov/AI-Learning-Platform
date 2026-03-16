@@ -44,3 +44,7 @@ Models: định nghĩa các đối tượng trong database, tương tác trực 
 middlewares: xử lý các tác vụ chung như xác thực, logging, xử lý lỗi,... trước khi request đến routers hoặc sau khi response được tạo ra từ routers
 controllers chỉ đơn giản là tách biệt logic ra khỏi routers
 (Hiện đang viết cả logic vào trong này, hơi rắc rối, có thể tách ra thành service riêng nếu cần)
+
+4/ Check point lại 4 api trong admin/v1/courses:
+Hiện tại từ đầu tới cuối đang sai lệch logic, trường dữ liệu so với mô tả.
+Schema file thiếu rất nhiều, khi so sánh với models ở database, thiếu rất nhiều trường dữ liệu, thiếu rất nhiều mô tả, thiếu rất nhiều validation..

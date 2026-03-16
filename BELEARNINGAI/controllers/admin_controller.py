@@ -389,13 +389,15 @@ async def handle_reset_user_password_admin(
 # ============================================================================
 
 async def handle_list_courses_admin(
-    author: Optional[str] = None,
+    author_id: Optional[str] = None,
     status: Optional[str] = None,
     category: Optional[str] = None,
     course_type: Optional[str] = None,
     keyword: Optional[str] = None,
     skip: int = 0,
     limit: int = 20,
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
     current_user: Dict = None
 ) -> AdminCourseListResponse:
     """
@@ -430,7 +432,7 @@ async def handle_list_courses_admin(
             search=keyword,
             category_filter=category,
             status_filter=status,
-            instructor_filter=author,
+            instructor_filter=author_id,
             sort_by="created_at",
             sort_order="desc"
         )
@@ -441,7 +443,7 @@ async def handle_list_courses_admin(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Lỗi khi lấy danh sách khóa học: {str(e)}"
         )
 

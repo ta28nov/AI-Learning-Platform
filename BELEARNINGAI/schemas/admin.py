@@ -133,13 +133,13 @@ class RoleChangeImpact(BaseModel):
 
 class AdminChangeRoleRequest(BaseModel):
     new_role: str = Field(..., description="student|instructor|admin")
-
+    impact: str = Field(..., description="Mô tả tác động của việc thay đổi vai trò này")   
 
 class AdminChangeRoleResponse(BaseModel):
     user_id: str = Field(..., description="UUID")
     old_role: str
     new_role: str
-    impact: RoleChangeImpact
+    impact: Optional[str] = None
     updated_at: datetime
     message: str
 
@@ -152,6 +152,7 @@ class AdminResetPasswordResponse(BaseModel):
     user_id: str = Field(..., description="UUID")
     message: str
     note: str
+    new_password: str = Field(..., description="Mật khẩu mới đã được đặt thành công")
 
 
 class UsersByRole(BaseModel):
