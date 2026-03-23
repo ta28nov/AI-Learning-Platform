@@ -110,9 +110,9 @@
 - **File**: `pages/recommendations/RecommendationsPage.jsx`
 - **Sửa**: Hiển thị match score %, difficulty badge
 
-### Task 3.9: SearchResultsPage — Thêm pagination + metadata
+### Task 3.9: ✅ SearchResultsPage — Thêm pagination + metadata (DONE 2026-03-19)
 - **File**: `pages/search/SearchResultsPage.jsx`
-- **Sửa**: Thêm pagination buttons, hiển thị thêm fields
+- **Sửa**: Viết lại hoàn toàn mapping đúng BE SearchResponse schema (results_by_category, total_results, search_time_ms, suggestions, filters_applied). Thêm pagination, filter sidebar, category groups.
 
 ### Task 3.10: ProgressPage — Render chart data
 - **File**: `pages/progress/ProgressPage.jsx`
@@ -148,9 +148,9 @@
 - Tạo `RecommendationsPage.css`
 - Chuyển inline styles sang CSS
 
-### Task 4.9: SearchResultsPage
-- Tạo `SearchResultsPage.css`
-- Chuyển inline styles sang CSS
+### Task 4.9: ✅ SearchResultsPage (DONE 2026-03-19)
+- Tạo `SearchResultsPage.css` — BEM naming, mobile-first, CSS variables
+- Chuyển toàn bộ inline styles sang CSS
 
 ### Task 4.10: ModuleListPage — Partial fix
 - Chuyển loading/empty state inline styles sang CSS

@@ -25,7 +25,7 @@ const AssessmentResultsPage = () => {
         const data = await assessmentService.getResults(sessionId)
         setResults(data)
       } catch (error) {
-        toast.error('Khong the tai ket qua')
+        toast.error('Không thể tải kết quả')
       } finally {
         setLoading(false)
       }
@@ -33,8 +33,8 @@ const AssessmentResultsPage = () => {
     fetchResults()
   }, [sessionId])
 
-  if (loading) return <div className="loading-spinner">Dang tai ket qua...</div>
-  if (!results) return <div className="empty-state">Khong tim thay ket qua</div>
+  if (loading) return <div className="loading-spinner">Đang tải kết quả...</div>
+  if (!results) return <div className="empty-state">Không tìm thấy kết quả</div>
 
   // Xac dinh mau theo diem
   const getScoreColor = (score) => {
@@ -46,7 +46,7 @@ const AssessmentResultsPage = () => {
   return (
     <div className="assessment-results-page">
       <div className="page-header">
-        <h1>Ket qua danh gia</h1>
+        <h1>Kết quả đánh giá</h1>
       </div>
 
       {/* Section 1: Diem tong */}
@@ -61,7 +61,7 @@ const AssessmentResultsPage = () => {
             >
               <div className="score-circle__inner">
                 <span className="score-circle__value">{Math.round(results.overall_score)}</span>
-                <span className="score-circle__label">diem</span>
+                <span className="score-circle__label">điểm</span>
               </div>
             </div>
             <div className="score-info">
@@ -70,10 +70,10 @@ const AssessmentResultsPage = () => {
               </span>
               <p className="score-summary">
                 {results.overall_score >= 80
-                  ? 'Xuat sac! Ban co nen tang vung chac.'
+                  ? 'Xuất sắc! Bạn có nền tảng vững chắc.'
                   : results.overall_score >= 50
-                  ? 'Kha tot! Can luyen tap them mot so ky nang.'
-                  : 'Can co gang them. Hay xem lo trinh hoc tap goi y.'}
+                  ? 'Khá tốt! Cần luyện tập thêm một số kỹ năng.'
+                  : 'Cần cố gắng thêm. Hãy xem lộ trình học tập gợi ý.'}
               </p>
             </div>
           </div>
@@ -84,7 +84,7 @@ const AssessmentResultsPage = () => {
       {results.skill_analysis && results.skill_analysis.length > 0 && (
         <Card>
           <CardHeader>
-            <h3>Phan tich ky nang</h3>
+            <h3>Phân tích kỹ năng</h3>
           </CardHeader>
           <CardBody>
             <div className="skills-list">
@@ -122,7 +122,7 @@ const AssessmentResultsPage = () => {
       {results.knowledge_gaps && results.knowledge_gaps.length > 0 && (
         <Card>
           <CardHeader>
-            <h3>Lo hong kien thuc</h3>
+            <h3>Lỗ hổng kiến thức</h3>
           </CardHeader>
           <CardBody>
             <div className="gaps-list">
@@ -148,21 +148,21 @@ const AssessmentResultsPage = () => {
       {results.time_analysis && (
         <Card>
           <CardHeader>
-            <h3>Phan tich thoi gian</h3>
+            <h3>Phân tích thời gian</h3>
           </CardHeader>
           <CardBody>
             <div className="time-stats">
               <div className="stat-card">
                 <span className="stat-card__value">
-                  {Math.round(results.time_analysis.total_time_seconds / 60)} phut
+                  {Math.round(results.time_analysis.total_time_seconds / 60)} phút
                 </span>
-                <span className="stat-card__label">Tong thoi gian</span>
+                <span className="stat-card__label">Tổng thời gian</span>
               </div>
               <div className="stat-card">
                 <span className="stat-card__value">
                   {Math.round(results.time_analysis.average_time_per_question)}s
                 </span>
-                <span className="stat-card__label">TB moi cau</span>
+                <span className="stat-card__label">TB mỗi câu</span>
               </div>
             </div>
           </CardBody>
@@ -173,7 +173,7 @@ const AssessmentResultsPage = () => {
       {results.ai_feedback && (
         <Card>
           <CardHeader>
-            <h3>Loi khuyen tu AI</h3>
+            <h3>Lời khuyên từ AI</h3>
           </CardHeader>
           <CardBody>
             <div className="ai-feedback">{results.ai_feedback}</div>
@@ -187,10 +187,10 @@ const AssessmentResultsPage = () => {
           variant="outline"
           onClick={() => navigate('/dashboard/assessment')}
         >
-          Lam lai danh gia
+          Làm lại đánh giá
         </Button>
         <Button onClick={() => navigate('/dashboard/recommendations')}>
-          Xem lo trinh hoc tap
+          Xem lộ trình học tập
         </Button>
       </div>
     </div>

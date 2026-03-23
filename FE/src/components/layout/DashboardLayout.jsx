@@ -59,7 +59,7 @@ const DashboardLayout = () => {
           />
           
           <SidebarNavItem 
-            to="/courses" 
+            to="/dashboard/courses" 
             icon={<CoursesIcon />}
             label="Khoa hoc"
             isActive={location.pathname.startsWith('/courses')}
@@ -67,7 +67,7 @@ const DashboardLayout = () => {
           />
           
           <SidebarNavItem 
-            to="/my-courses" 
+            to="/dashboard/my-courses" 
             icon={<MyCoursesIcon />}
             label="Khoa hoc cua toi"
             isActive={location.pathname.startsWith('/my-courses')}
@@ -75,7 +75,7 @@ const DashboardLayout = () => {
           />
           
           <SidebarNavItem 
-            to="/quiz" 
+            to="/dashboard/quiz" 
             icon={<QuizIcon />}
             label="Bai kiem tra"
             isActive={location.pathname.startsWith('/quiz')}
@@ -83,7 +83,7 @@ const DashboardLayout = () => {
           />
           
           <SidebarNavItem 
-            to="/chat" 
+            to="/dashboard/chat" 
             icon={<ChatIcon />}
             label="AI Chat"
             isActive={location.pathname.startsWith('/chat')}
@@ -91,7 +91,7 @@ const DashboardLayout = () => {
           />
           
           <SidebarNavItem 
-            to="/progress" 
+            to="/dashboard/progress" 
             icon={<ProgressIcon />}
             label="Tien do"
             isActive={location.pathname.startsWith('/progress')}
@@ -103,7 +103,7 @@ const DashboardLayout = () => {
             <>
               <div className="sidebar-divider"></div>
               <SidebarNavItem 
-                to="/admin" 
+                to="/dashboard/admin" 
                 icon={<AdminIcon />}
                 label="Quan tri"
                 isActive={location.pathname.startsWith('/admin')}
@@ -117,7 +117,7 @@ const DashboardLayout = () => {
             <>
               <div className="sidebar-divider"></div>
               <SidebarNavItem 
-                to="/instructor" 
+                to="/dashboard/instructor" 
                 icon={<InstructorIcon />}
                 label="Giang day"
                 isActive={location.pathname.startsWith('/instructor')}
@@ -168,7 +168,7 @@ const DashboardLayout = () => {
           </div>
 
           <div className="header-actions">
-            <Link to="/profile" className="profile-link">
+            <Link to="/dashboard/profile" className="profile-link">
               <div className="user-avatar">
                 {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
               </div>

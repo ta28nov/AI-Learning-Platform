@@ -24,7 +24,7 @@ export const enrollmentService = {
 
   /**
    * Lay danh sach khoa hoc da dang ky
-   * @param {Object} params - status (in-progress|completed|cancelled), skip, limit
+   * @param {Object} params - { status (in-progress|completed|cancelled), skip, limit }
    * @returns {Promise} EnrollmentListResponse
    */
   async getMyCourses(params = {}) {

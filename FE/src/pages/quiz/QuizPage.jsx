@@ -136,6 +136,7 @@ const QuizPage = () => {
               {quiz.total_students != null && (
                 <div className="quiz-card__meta">
                   <span>{quiz.completed_count || 0}/{quiz.total_students} đã làm</span>
+                  {quiz.pass_count != null && <span>Đạt: {quiz.pass_count}</span>}
                   {quiz.pass_rate != null && <span>Tỉ lệ đạt: {Math.round(quiz.pass_rate)}%</span>}
                   {quiz.average_score != null && <span>Điểm TB: {Math.round(quiz.average_score)}</span>}
                 </div>

@@ -93,65 +93,65 @@ const AppRouter = () => {
         <Route index element={<DashboardPage />} />
         
         {/* Profile & Progress */}
-        <Route path="profile" element={<ProfilePage />} />
-        <Route path="progress" element={<ProgressPage />} />
+        <Route path="/dashboard/profile" element={<ProfilePage />} />
+        <Route path="/dashboard/progress" element={<ProgressPage />} />
         
         {/* Courses - tim kiem va chi tiet */}
-        <Route path="courses" element={<CoursesPage />} />
-        <Route path="courses/:courseId" element={<CourseDetailPage />} />
+        <Route path="/dashboard/courses" element={<CoursesPage />} />
+        <Route path="/dashboard/courses/:courseId" element={<CourseDetailPage />} />
 
         {/* Learning - modules va lessons */}
-        <Route path="courses/:courseId/modules" element={<ModuleListPage />} />
-        <Route path="courses/:courseId/modules/:moduleId" element={<ModuleDetailPage />} />
-        <Route path="courses/:courseId/lessons/:lessonId" element={<LessonPage />} />
+        <Route path="/dashboard/courses/:courseId/modules" element={<ModuleListPage />} />
+        <Route path="/dashboard/courses/:courseId/modules/:moduleId" element={<ModuleDetailPage />} />
+        <Route path="/dashboard/courses/:courseId/lessons/:lessonId" element={<LessonPage />} />
         
         {/* My Courses (Enrollments) */}
-        <Route path="my-courses" element={<MyCoursesPage />} />
-        <Route path="enrollment/:enrollmentId" element={<StudentEnrollmentPage />} />
+        <Route path="/dashboard/my-courses" element={<MyCoursesPage />} />
+        <Route path="/dashboard/enrollment/:enrollmentId" element={<StudentEnrollmentPage />} />
 
         {/* Assessment - danh gia nang luc AI */}
-        <Route path="assessment" element={<AssessmentSetupPage />} />
-        <Route path="assessment/:sessionId" element={<AssessmentQuizPage />} />
-        <Route path="assessment/:sessionId/results" element={<AssessmentResultsPage />} />
+        <Route path="/dashboard/assessment" element={<AssessmentSetupPage />} />
+        <Route path="/dashboard/assessment/:sessionId" element={<AssessmentQuizPage />} />
+        <Route path="/dashboard/assessment/:sessionId/results" element={<AssessmentResultsPage />} />
         
         {/* Quiz */}
-        <Route path="quiz" element={<QuizPage />} />
-        <Route path="quiz/:quizId" element={<QuizDetailPage />} />
-        <Route path="quiz/:quizId/attempt" element={<QuizAttemptPage />} />
-        <Route path="quiz/:quizId/results" element={<QuizResultsPage />} />
+        <Route path="/dashboard/quiz" element={<QuizPage />} />
+        <Route path="/dashboard/quiz/:quizId" element={<QuizDetailPage />} />
+        <Route path="/dashboard/quiz/:quizId/attempt" element={<QuizAttemptPage />} />
+        <Route path="/dashboard/quiz/:quizId/results" element={<QuizResultsPage />} />
         
         {/* Chat AI */}
-        <Route path="chat" element={<ChatPage />} />
+        <Route path="/dashboard/chat" element={<ChatPage />} />
 
         {/* Personal Courses - khoa hoc ca nhan */}
-        <Route path="personal-courses" element={<PersonalCoursesPage />} />
+        <Route path="/dashboard/personal-courses" element={<PersonalCoursesPage />} />
 
         {/* Search */}
-        <Route path="search" element={<SearchResultsPage />} />
+        <Route path="/dashboard/search" element={<SearchResultsPage />} />
 
         {/* Recommendations */}
-        <Route path="recommendations" element={<RecommendationsPage />} />
+        <Route path="/dashboard/recommendations" element={<RecommendationsPage />} />
         
         {/* Instructor routes */}
-        <Route path="instructor" element={
+        <Route path="/dashboard/instructor" element={
           <InstructorRoute>
             <InstructorDashboardPage />
           </InstructorRoute>
         } />
         
         {/* Classes (Instructor) */}
-        <Route path="classes" element={
+        <Route path="/dashboard/instructor/classes" element={
           <InstructorRoute><ClassListPage /></InstructorRoute>
         } />
-        <Route path="classes/create" element={
+        <Route path="/dashboard/instructor/classes/create" element={
           <InstructorRoute><ClassCreatePage /></InstructorRoute>
         } />
-        <Route path="classes/:classId" element={
+        <Route path="/dashboard/instructor/classes/:classId" element={
           <InstructorRoute><ClassDetailPage /></InstructorRoute>
         } />
         
         {/* Admin routes */}
-        <Route path="admin/*" element={
+        <Route path="/dashboard/admin/*" element={
           <AdminRoute>
             <AdminPage />
           </AdminRoute>

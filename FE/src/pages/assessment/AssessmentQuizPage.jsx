@@ -49,7 +49,7 @@ const AssessmentQuizPage = () => {
           setTotalTime(parsed.time_limit_minutes * 60)
         }
       } catch {
-        toast.error('Khong the tai bai danh gia')
+        toast.error('Không thể tải bài đánh giá')
       } finally {
         setLoading(false)
       }
@@ -101,18 +101,18 @@ const AssessmentQuizPage = () => {
         total_time_seconds: totalTime - timeLeft
       })
 
-      toast.success('Nop bai thanh cong!')
+      toast.success('Nộp bài thành công!')
       sessionStorage.removeItem(`assessment_${sessionId}`)
       navigate(`/dashboard/assessment/${sessionId}/results`)
     } catch (error) {
-      toast.error(error.message || 'Khong the nop bai')
+      toast.error(error.message || 'Không thể nộp bài')
     } finally {
       setSubmitting(false)
     }
   }
 
-  if (loading) return <div className="loading-spinner">Dang tai...</div>
-  if (!questions.length) return <div className="empty-state">Khong tim thay bai danh gia</div>
+  if (loading) return <div className="loading-spinner">Đang tải...</div>
+  if (!questions.length) return <div className="empty-state">Không tìm thấy bài đánh giá</div>
 
   const currentQuestion = questions[currentIndex]
   const answeredCount = Object.keys(answers).length
@@ -123,7 +123,7 @@ const AssessmentQuizPage = () => {
       {/* Header: timer + progress */}
       <div className="quiz-header">
         <div className="quiz-progress">
-          <span>Cau {currentIndex + 1}/{questions.length}</span>
+          <span>Câu {currentIndex + 1}/{questions.length}</span>
           <div className="quiz-progress__bar">
             <div
               className="quiz-progress__fill"
@@ -149,7 +149,7 @@ const AssessmentQuizPage = () => {
               <span className="skill-badge">{currentQuestion.skill_tag}</span>
             )}
             {currentQuestion.points && (
-              <span className="points-badge">{currentQuestion.points} diem</span>
+              <span className="points-badge">{currentQuestion.points} điểm</span>
             )}
           </div>
 
@@ -181,7 +181,7 @@ const AssessmentQuizPage = () => {
               <input
                 type="text"
                 className="fill-input"
-                placeholder="Nhap cau tra loi..."
+                placeholder="Nhập câu trả lời..."
                 value={answers[currentQuestion.question_id] || ''}
                 onChange={(e) => handleAnswer(currentQuestion.question_id, e.target.value)}
               />
@@ -216,12 +216,12 @@ const AssessmentQuizPage = () => {
           onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
           disabled={currentIndex === 0}
         >
-          ← Cau truoc
+          ← Câu trước
         </Button>
 
         {currentIndex < questions.length - 1 ? (
           <Button onClick={() => setCurrentIndex((i) => i + 1)}>
-            Cau tiep →
+            Câu tiếp →
           </Button>
         ) : (
           <Button
@@ -230,7 +230,7 @@ const AssessmentQuizPage = () => {
             loading={submitting}
             disabled={submitting}
           >
-            Nop bai ({answeredCount}/{questions.length})
+            Nộp bài ({answeredCount}/{questions.length})
           </Button>
         )}
       </div>

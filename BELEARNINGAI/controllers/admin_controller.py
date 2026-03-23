@@ -597,7 +597,7 @@ async def handle_list_classes_admin(
     sort_order: str = "desc",
     current_user: Dict = None
 ) -> AdminClassListResponse:
-    """
+    """x
     4.3.1: Xem tất cả lớp học từ mọi giảng viên
     
     Flow:

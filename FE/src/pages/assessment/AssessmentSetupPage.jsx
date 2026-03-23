@@ -51,10 +51,10 @@ const AssessmentSetupPage = () => {
     setIsLoading(true)
     try {
       const response = await assessmentService.generate(data)
-      toast.success('Tao bai danh gia thanh cong!')
+      toast.success('Tạo bài đánh giá thành công!')
       navigate(`/dashboard/assessment/${response.session_id}`)
     } catch (error) {
-      toast.error(error.message || 'Khong the tao bai danh gia')
+      toast.error(error.message || 'Không thể tạo bài đánh giá')
     } finally {
       setIsLoading(false)
     }
@@ -63,25 +63,25 @@ const AssessmentSetupPage = () => {
   return (
     <div className="assessment-setup-page">
       <div className="page-header">
-        <h1>Danh gia nang luc</h1>
-        <p>AI se tao bai kiem tra phu hop voi trinh do cua ban</p>
+        <h1>Đánh giá năng lực</h1>
+        <p>AI sẽ tạo bài kiểm tra phù hợp với trình độ của bạn</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="assessment-form">
         {/* Buoc 1: Chon linh vuc */}
         <Card>
           <CardHeader>
-            <h3>Buoc 1: Chon linh vuc</h3>
+            <h3>Bước 1: Chọn lĩnh vực</h3>
           </CardHeader>
           <CardBody>
             <div className="form-group">
-              <label htmlFor="category">Linh vuc</label>
+              <label htmlFor="category">Lĩnh vực</label>
               <select
                 id="category"
-                {...register('category', { required: 'Vui long chon linh vuc' })}
+                {...register('category', { required: 'Vui lòng chọn lĩnh vực' })}
                 className="form-select"
               >
-                <option value="">-- Chon linh vuc --</option>
+                <option value="">-- Chọn lĩnh vực --</option>
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
@@ -95,17 +95,17 @@ const AssessmentSetupPage = () => {
         {selectedCategory && (
           <Card>
             <CardHeader>
-              <h3>Buoc 2: Chon mon hoc</h3>
+              <h3>Bước 2: Chọn môn học</h3>
             </CardHeader>
             <CardBody>
               <div className="form-group">
-                <label htmlFor="subject">Mon hoc</label>
+                <label htmlFor="subject">Môn học</label>
                 <select
                   id="subject"
-                  {...register('subject', { required: 'Vui long chon mon hoc' })}
+                  {...register('subject', { required: 'Vui lòng chọn môn học' })}
                   className="form-select"
                 >
-                  <option value="">-- Chon mon hoc --</option>
+                  <option value="">-- Chọn môn học --</option>
                   {availableSubjects.map((sub) => (
                     <option key={sub} value={sub}>{sub}</option>
                   ))}
@@ -119,7 +119,7 @@ const AssessmentSetupPage = () => {
         {/* Buoc 3: Chon cap do */}
         <Card>
           <CardHeader>
-            <h3>Buoc 3: Chon cap do</h3>
+            <h3>Bước 3: Chọn cấp độ</h3>
           </CardHeader>
           <CardBody>
             <div className="level-options">
@@ -136,7 +136,7 @@ const AssessmentSetupPage = () => {
                   <div className="level-option__content">
                     <span className="level-option__name">{level}</span>
                     <span className="level-option__info">
-                      {config.questions} cau - {config.time} phut
+                      {config.questions} câu - {config.time} phút
                     </span>
                   </div>
                 </label>
@@ -153,7 +153,7 @@ const AssessmentSetupPage = () => {
             disabled={isLoading}
             size="lg"
           >
-            Bat dau danh gia
+            Bắt đầu đánh giá
           </Button>
         </div>
       </form>

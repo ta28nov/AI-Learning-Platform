@@ -171,13 +171,22 @@ const MyCoursesPage = () => {
                   {enrollment.status === 'in-progress' && (
                     <>
                       {enrollment.next_lesson?.lesson_id ? (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => navigate(`/dashboard/courses/${enrollment.course_id}/lessons/${enrollment.next_lesson.lesson_id}`)}
-                        >
-                          Tiếp tục học
-                        </Button>
+                        <>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => navigate(`/dashboard/courses/${enrollment.course_id}/lessons/${enrollment.next_lesson.lesson_id}`)}
+                          >
+                            Tiếp tục học
+                          </Button>
+                          {/* Hien thi thong tin bai hoc tiep theo */}
+                          {enrollment.next_lesson?.lesson_title && (
+                            <span className="mc-card__next-lesson">
+                              {enrollment.next_lesson.module_title && `${enrollment.next_lesson.module_title} · `}
+                              {enrollment.next_lesson.lesson_title}
+                            </span>
+                          )}
+                        </>
                       ) : (
                         <Button
                           variant="primary"
