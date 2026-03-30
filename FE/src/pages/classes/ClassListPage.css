@@ -1,0 +1,125 @@
+/* ClassListPage.css — BEM naming, mobile-first */
+
+.class-list-page {
+  padding: var(--spacing-md);
+}
+
+/* Header */
+.class-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.class-list-header__title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.class-list-header__count {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* Danh sách lớp */
+.class-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Card lớp học */
+.class-card {
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.class-card:hover {
+  transform: translateY(-1px);
+}
+
+.class-card__name {
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.class-card__course {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.class-card__meta {
+  display: flex;
+  gap: 12px;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.class-card__status {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.class-card__status--completed {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.class-card__status--cancelled {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+/* Progress bar trong card */
+.class-card__progress-wrap {
+  margin-top: 8px;
+}
+
+.class-card__progress-bar {
+  height: 6px;
+  background: var(--border-color);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.class-card__progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 3px;
+  transition: width 0.4s;
+}
+
+/* Empty state */
+.class-list-empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+
+/* Loading state */
+.class-list-loading {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .class-list-page {
+    padding: var(--spacing-lg);
+  }
+}

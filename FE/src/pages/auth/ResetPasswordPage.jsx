@@ -96,13 +96,15 @@ const ResetPasswordPage = () => {
                   placeholder="Mật khẩu mới"
                   {...register('password', {
                     required: 'Vui lòng nhập mật khẩu',
+                    // BE yeu cau toi thieu 8 ky tu
                     minLength: {
-                      value: 6,
-                      message: 'Mật khẩu phải có ít nhất 6 ký tự'
+                      value: 8,
+                      message: 'Mật khẩu phải có ít nhất 8 ký tự'
                     },
+                    // BE yeu cau: chu hoa, chu thuong, so, ky tu dac biet
                     pattern: {
-                      value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                      message: 'Mật khẩu phải có ít nhất 1 chữ hoa, 1 chữ thường và 1 số'
+                      value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/,
+                      message: 'Mật khẩu cần có chữ hoa, chữ thường, số và ký tự đặc biệt'
                     }
                   })}
                   error={errors.password?.message}

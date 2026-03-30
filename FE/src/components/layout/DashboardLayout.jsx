@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@stores/authStore'
 import Button from '@components/ui/Button'
+import GlobalSearchBar from '@components/search/GlobalSearchBar'
 import './DashboardLayout.css'
 
 /**
@@ -139,7 +140,7 @@ const DashboardLayout = () => {
             </div>
           </div>
           <Button variant="ghost" onClick={handleLogout} size="sm">
-            Dang xuat
+            Đăng xuất
           </Button>
         </div>
       </aside>
@@ -162,9 +163,8 @@ const DashboardLayout = () => {
           </button>
           
           <div className="header-content">
-            <h1 className="page-title">
-              {getPageTitle(location.pathname)}
-            </h1>
+            {/* GlobalSearchBar thay the page-title — autocomplete real-time */}
+            <GlobalSearchBar />
           </div>
 
           <div className="header-actions">
@@ -204,11 +204,11 @@ const SidebarNavItem = ({ to, icon, label, isActive, onClick }) => {
 // Helper functions
 const getRoleDisplayName = (role) => {
   const roleNames = {
-    student: 'Hoc vien',
-    instructor: 'Giang vien', 
-    admin: 'Quan tri vien'
+    student: 'Học viên',
+    instructor: 'Giảng viên',
+    admin: 'Quản trị viên'
   }
-  return roleNames[role] || 'Nguoi dung'
+  return roleNames[role] || 'Người dùng'
 }
 
 const getPageTitle = (pathname) => {

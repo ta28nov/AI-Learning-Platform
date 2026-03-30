@@ -366,3 +366,50 @@ select:focus {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* ==========================================================================
+   FORM UTILITIES — Global, dùng được ở mọi page
+   (Không đặt trong page-specific CSS vì dùng nhiều nơi: RegisterPage,
+   ClassCreatePage, ResetPasswordPage, AssessmentSetupPage,...)
+   ========================================================================== */
+
+/* Nhóm field: label + input/textarea + error message */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.form-group label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* Input/select/textarea dùng chung class form-select */
+.form-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  font-family: inherit;
+  transition: border-color var(--transition-fast);
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Thông báo lỗi validation */
+.form-error {
+  font-size: var(--font-size-xs);
+  color: var(--danger);
+  font-weight: 500;
+  margin-top: 2px;
+}

@@ -140,9 +140,4 @@
   }
 }
 
-/* Animation keyframes */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* @keyframes spin da co trong index.css — khong dinh nghia lai */

@@ -1,0 +1,135 @@
+/* JoinClassModal.css — BEM naming */
+
+/* Form nhập mã mời */
+.join-class-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.join-class-form__desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.join-class-form__input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.join-class-form__input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-align: center;
+  text-transform: uppercase;
+  font-family: 'Courier New', monospace;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  transition: border-color 0.15s;
+}
+
+.join-class-form__input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.join-class-form__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.join-class-form__hint {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.join-class-form__note {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  padding: 10px 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.join-class-form__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* Màn hình thành công */
+.join-class-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.join-class-success__icon {
+  font-size: 3rem;
+  animation: join-bounce 0.5s ease-out;
+}
+
+@keyframes join-bounce {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.join-class-success__title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--success);
+}
+
+.join-class-success__info {
+  width: 100%;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.join-class-success__row {
+  display: flex;
+  gap: 8px;
+  font-size: var(--font-size-sm);
+  text-align: left;
+}
+
+.join-class-success__label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.join-class-success__value {
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.join-class-success__redirect {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.join-class-success__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}

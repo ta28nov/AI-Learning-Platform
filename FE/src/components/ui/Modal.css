@@ -150,26 +150,7 @@
   }
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
+/* @keyframes slideUp va spin da co trong index.css — khong dinh nghia lai */
 
 /* Dark theme adjustments */
 [data-theme="dark"] .modal-overlay {

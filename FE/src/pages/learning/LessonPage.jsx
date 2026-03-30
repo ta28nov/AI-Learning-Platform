@@ -4,10 +4,11 @@ import toast from 'react-hot-toast'
 import learningService from '@services/learningService'
 import Button from '@components/ui/Button'
 import Card, { CardHeader, CardBody } from '@components/ui/Card'
+import ChatWidget from '@components/chat/ChatWidget'
 import './LessonPage.css'
 
 /**
- * Trang hien thi noi dung bai hoc
+ * Trang hiển thị nội dung bài học
  * Route: /dashboard/courses/:courseId/lessons/:lessonId
  * API: GET /courses/{courseId}/lessons/{lessonId}
  * Render: text_content, video_info, attachments, navigation, quiz_info
@@ -18,7 +19,7 @@ const LessonPage = () => {
   const [lesson, setLesson] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // Lay noi dung bai hoc khi mount hoac khi lessonId thay doi
+  // Lấy nội dung bài học khi mount hoặc khi lessonId thay đổi
   useEffect(() => {
     const fetchLesson = async () => {
       try {
@@ -26,7 +27,7 @@ const LessonPage = () => {
         const data = await learningService.getLessonContent(courseId, lessonId)
         setLesson(data)
       } catch (error) {
-        toast.error('Khong the tai bai hoc')
+        toast.error('Không thể tải bài học')
       } finally {
         setLoading(false)
       }
@@ -34,8 +35,8 @@ const LessonPage = () => {
     fetchLesson()
   }, [courseId, lessonId])
 
-  if (loading) return <div className="loading-spinner">Dang tai bai hoc...</div>
-  if (!lesson) return <div className="empty-state">Khong tim thay bai hoc</div>
+  if (loading) return <div className="loading-spinner">Đang tải bài học...</div>
+  if (!lesson) return <div className="empty-state">Không tìm thấy bài học</div>
 
   return (
     <div className="lesson-page">
@@ -45,7 +46,7 @@ const LessonPage = () => {
           className="breadcrumb-link"
           onClick={() => navigate(`/dashboard/courses/${courseId}`)}
         >
-          Khoa hoc
+          Khóa học
         </span>
         {lesson.module_title && (
           <>
@@ -66,15 +67,15 @@ const LessonPage = () => {
       <div className="lesson-header">
         <h1>{lesson.title}</h1>
         <div className="lesson-meta">
-          <span>Bai {lesson.order}</span>
-          <span>{lesson.duration_minutes} phut</span>
+          <span>Bài {lesson.order}</span>
+          <span>{lesson.duration_minutes} phút</span>
           {lesson.content_type && (
             <span>
               {lesson.content_type === 'text' ? '📝' : lesson.content_type === 'video' ? '🎥' : '📝🎥'}
             </span>
           )}
           {lesson.completion_status?.is_completed && (
-            <span className="completed-badge">✓ Da hoan thanh</span>
+            <span className="completed-badge">✓ Đã hoàn thành</span>
           )}
         </div>
       </div>
@@ -88,7 +89,7 @@ const LessonPage = () => {
             className="video-player"
           >
             <source src={lesson.video_info.url} type="video/mp4" />
-            Trinh duyet khong ho tro video.
+            Trình duyệt không hỗ trợ video.
           </video>
         </div>
       )}
@@ -109,7 +110,7 @@ const LessonPage = () => {
       {lesson.learning_objectives && lesson.learning_objectives.length > 0 && (
         <Card>
           <CardHeader>
-            <h3>Muc tieu bai hoc</h3>
+            <h3>Mục tiêu bài học</h3>
           </CardHeader>
           <CardBody>
             <ul className="objectives-list">
@@ -125,7 +126,7 @@ const LessonPage = () => {
       {lesson.attachments && lesson.attachments.length > 0 && (
         <Card>
           <CardHeader>
-            <h3>Tai lieu dinh kem</h3>
+            <h3>Tài liệu đính kèm</h3>
           </CardHeader>
           <CardBody>
             <div className="attachments-list">
@@ -155,15 +156,15 @@ const LessonPage = () => {
           <CardBody>
             <div className="quiz-prompt">
               <div className="quiz-prompt__info">
-                <h3>Quiz: {lesson.quiz_info.question_count} cau hoi</h3>
+                <h3>Quiz: {lesson.quiz_info.question_count} câu hỏi</h3>
                 {lesson.quiz_info.is_mandatory && (
-                  <span className="mandatory-badge">Bat buoc</span>
+                  <span className="mandatory-badge">Bắt buộc</span>
                 )}
               </div>
               <Button
                 onClick={() => navigate(`/dashboard/quiz/${lesson.quiz_info.quiz_id}`)}
               >
-                Lam quiz
+                Làm quiz
               </Button>
             </div>
           </CardBody>
@@ -197,6 +198,9 @@ const LessonPage = () => {
           </Button>
         )}
       </div>
+
+      {/* AI Chat Widget (Vị trí 2 Dual-UI) */}
+      <ChatWidget />
     </div>
   )
 }

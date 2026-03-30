@@ -1,0 +1,46 @@
+/* ClassCreatePage.css — BEM naming, mobile-first */
+
+.class-create-page {
+  padding: var(--spacing-md);
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.class-create-page__title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+
+.class-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.class-create-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.class-create-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 640px) {
+  .class-create-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .class-create-page {
+    padding: var(--spacing-lg);
+  }
+}

@@ -127,12 +127,7 @@
   outline-offset: 2px;
 }
 
-/* Animation keyframes */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* @keyframes spin da co trong index.css — khong dinh nghia lai */
 
 /* Responsive adjustments */
 @media (max-width: 640px) {

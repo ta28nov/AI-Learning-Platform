@@ -1,0 +1,159 @@
+/* ClassDetailPage.css — BEM naming, mobile-first */
+
+.class-detail-page {
+  padding: var(--spacing-md);
+}
+
+/* Header */
+.class-detail-header {
+  margin-bottom: 20px;
+}
+
+.class-detail-header__title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 8px 0 0;
+}
+
+/* Tabs */
+.class-detail-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.class-detail-tab {
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: 400;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.class-detail-tab--active {
+  font-weight: 600;
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.class-detail-tab:hover:not(.class-detail-tab--active) {
+  color: var(--text-primary);
+}
+
+/* Info grid */
+.class-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.class-detail-info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  font-size: var(--font-size-sm);
+}
+
+.class-detail-info-item strong {
+  color: var(--text-primary);
+}
+
+/* Invite code */
+.class-detail-invite-code {
+  background: var(--bg-secondary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-family: monospace;
+  font-size: 1rem;
+  color: var(--primary);
+}
+
+/* Stats */
+.class-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  text-align: center;
+}
+
+.class-detail-stat__value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.class-detail-stat__label {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* Bảng học viên */
+.class-detail-table-wrap {
+  overflow-x: auto;
+}
+
+.class-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.class-detail-table th {
+  text-align: left;
+  padding: 8px 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.class-detail-table th:last-child {
+  text-align: right;
+}
+
+.class-detail-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+}
+
+.class-detail-table td:last-child {
+  text-align: right;
+  color: var(--text-secondary);
+}
+
+/* Empty state */
+.class-detail-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 20px;
+}
+
+/* Loading/error states */
+.class-detail-state {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (min-width: 640px) {
+  .class-detail-info-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .class-detail-page {
+    padding: var(--spacing-lg);
+  }
+}

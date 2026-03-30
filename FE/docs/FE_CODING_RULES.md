@@ -425,34 +425,58 @@ QuizDetailPage (/dashboard/quiz/:quizId)
   │                       └─ Nut "Tiếp tục bài học tiếp theo" → LessonPage(next_lesson)
 ```
 
-### Flow 5: Chat với AI
+### Flow 5: Chat với AI — Kiến trúc Dual-UI
+
+> [!IMPORTANT]
+> **Nguyên tắc "Một logic - Hai giao diện" (DRY):** Tất cả API call và state management được dùng chung.
+> Chỉ khác nhau ở layout/UI. KHÔNG viết lặp logic.
 
 ```
-ChatPage (/dashboard/chat)
-  ├─ Layout: Sidebar (danh sach conversations) + Main (chat area)
+📐 Kiến trúc:
+  useChatLogic (custom hook)          ← Logic dùng chung
+    ├─ state: conversations, messages, sending...
+    ├─ actions: sendMessage, loadHistory, deleteConversation...
+    └─ API calls: chatService.*
+         ↓                    ↓
+  ChatPage (full-page)    ChatWidget (floating)
+  /dashboard/chat         Nhúng trong LessonPage
+
+
+[Vị trí 1] ChatPage (/dashboard/chat) — Trang đầy đủ (Deep-dive Study)
+  ├─ Layout: Sidebar trái (list conversations) + Main phải (chat area)
   ├─ Sidebar:
   │   ├─ GET /chat/history → hien thi grouped_by_date
   │   │   ├─ "Hôm nay": conversation items
   │   │   ├─ "Hôm qua": ...
   │   │   └─ "Tuần này": ...
   │   ├─ Moi item: course_title, topic_summary, last_message_preview
-  │   ├─ Click item → GET /chat/conversations/:id → load messages vao main area
+  │   ├─ Click item → GET /chat/conversations/:id → load messages
   │   ├─ Nut "Xóa tất cả" → DELETE /chat/conversations (confirm modal)
   │   └─ Nut "X" tren moi item → DELETE /chat/history/:id (confirm)
-  │
   └─ Main chat area:
-      ├─ Messages list:
-      │   ├─ User bubble (can phai, nen xam)
-      │   └─ AI bubble (can trai, nen trang):
-      │       ├─ Content: Markdown rendered
-      │       ├─ Sources (collapsible): type icon + title + excerpt
-      │       └─ Related lessons: clickable links
-      ├─ Input area:
-      │   ├─ Textarea (Enter gui, Shift+Enter xuong dong)
-      │   └─ Nut "Gửi"
+      ├─ Messages list (User bubble + AI bubble)
+      │   ├─ AI bubble: Markdown rendered + Sources + Related lessons
+      ├─ Input: Textarea (Enter gui, Shift+Enter xuong dong)
       └─ Submit → POST /chat/course/:courseId
-          ├─ Hien thi typing indicator "AI đang trả lời..."
-          └─ Nhan response → append AI bubble
+
+
+[Vị trí 2] ChatWidget — Floating button trong LessonPage (Quick Q&A)
+  ├─ Hiển thị: Nút FAB (Floating Action Button) góc phải màn hình
+  ├─ Click → Drawer/Sidebar trượt ra (đè lên nội dung, KHÔNG fullscreen)
+  ├─ KHÔNG hiện sidebar lịch sử (tiết kiệm diện tích)
+  ├─ Context tự động: course_id lấy từ URL params của LessonPage
+  └─ Dùng chung useChatLogic hook với ChatPage
+```
+
+**Cấu trúc file:**
+```
+src/
+├─ hooks/useChatLogic.js          ← Logic dùng chung
+├─ pages/chat/ChatPage.jsx        ← Full-page UI
+└─ components/chat/
+       ├─ ChatWidget.jsx           ← Floating widget cho LessonPage
+       ├─ ChatMessageList.jsx      ← Shared: list tin nhan
+       └─ ChatInputBar.jsx         ← Shared: o nhap
 ```
 
 ### Flow 6: Quản lý lớp học (Instructor)
@@ -623,21 +647,72 @@ GlobalSearchBar (trong DashboardLayout header)
 
 ## 🎨 CSS CONVENTIONS
 
-### Naming: BEM-like
+### Naming: BEM-like + BẮT BUỘC Page Prefix
+
+> [!CAUTION]
+> **Rủi ro "CSS Collision" (Đụng độ CSS):** Vite/React gom tất cả CSS import thành **Global CSS** ở runtime.
+> Nếu hai file CSS khác nhau dùng cùng tên class (ví dụ `.title`, `.card`, `.header`), chúng sẽ đè lên nhau và gây lỗi hiển thị.
+
+**Quy tắc bắt buộc:** Mọi class CSS trong file riêng của một page/component **PHẢI** có prefix là tên page/component đó:
 
 ```css
-/* Block */
-.course-card { }
+/* ❌ SAI - class chung chung, dễ bị conflict toàn hệ thống */
+.title { font-size: 1.5rem; }
+.card { border-radius: 8px; }
+.header { display: flex; }
 
-/* Element */
-.course-card__title { }
-.course-card__thumbnail { }
-.course-card__stats { }
+/* ✅ ĐÚNG - prefix theo page name (BEM Block = tên page) */
+/* File: QuizResultsPage.css */
+.quiz-results-page { }           /* Block = tên page */
+.quiz-results-page__title { }    /* Element */
+.quiz-results-page__card { }     /* Element */
 
-/* Modifier */
-.course-card--enrolled { }
-.course-card--completed { }
+/* File: ClassListPage.css */
+.class-list-page { }             /* Block khác, không conflict */
+.class-list-header { }           /* Sub-block vẫn có prefix 'class-list' */
+.class-list-header__title { }    /* Element */
+.class-list-card--active { }     /* Modifier */
 ```
+
+**Kiểm tra nhanh:** Nếu copy một đoạn CSS từ page này sang page khác mà không thay tên class → đó là dấu hiệu đang vi phạm quy tắc.
+
+---
+
+### CSS Modules — Khi nào dùng?
+
+Vite hỗ trợ CSS Modules out-of-the-box (không cần cấu hình). Đổi tên thành `.module.css` và Vite sẽ tự động hash tên class, đảm bảo 100% scope không bị conflict:
+
+```css
+/* File: LoginPage.module.css */
+.title { color: var(--primary); }      /* Vite hash → _title_8a9b2c */
+.card  { border-radius: 8px; }         /* Vite hash → _card_2f4d1e */
+```
+
+```jsx
+// File: LoginPage.jsx
+import styles from './LoginPage.module.css'
+
+// Dung styles.tenClass thay vi className="ten-class"
+const LoginPage = () => (
+  <div className={styles.card}>
+    <h1 className={styles.title}>Đăng nhập</h1>
+  </div>
+)
+```
+
+**Chính sách dự án này:**
+
+| Trường hợp | Dùng gì | Lý do |
+|---|---|---|
+| Page mới (chưa tạo CSS) | `.css` thuần + BEM prefix nghiêm ngặt | Đơn giản, nhất quán với code hiện tại |
+| Component dùng lại nhiều nơi (`ui/`, `charts/`) | **Ưu tiên `.module.css`** | Tránh conflict khi dùng ở nhiều context |
+| Có bug CSS conflict | Migrate sang `.module.css` | Giải quyết triệt để |
+| `index.css` / design system tokens | Giữ Global CSS | CSS variables cần global scope |
+
+> [!TIP]
+> Nếu bắt đầu dùng CSS Modules cho một component, phải chuyển **toàn bộ** file đó sang `.module.css` — không được mix cả hai trong cùng một file JSX.
+
+---
 
 ### Layout Mobile-First
 

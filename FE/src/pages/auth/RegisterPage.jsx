@@ -63,13 +63,15 @@ const RegisterPage = () => {
               <Input
                 type="text"
                 label="Họ và tên"
-                placeholder="Nhập họ và tên đầy đủ"
+                placeholder="Nhập họ và tên đầy đủ (ít nhất 2 từ)"
                 error={errors.fullName?.message}
                 {...register('fullName', {
                   required: 'Họ và tên là bắt buộc',
-                  minLength: {
-                    value: 2,
-                    message: 'Họ và tên phải có ít nhất 2 ký tự'
+                  // BE yeu cau full_name >= 2 tu (khong chi ky tu)
+                  validate: (v) => {
+                    const words = v.trim().split(/\s+/).filter(Boolean)
+                    if (words.length < 2) return 'Vui lòng nhập đầy đủ họ và tên (ít nhất 2 từ)'
+                    return true
                   }
                 })}
               />
@@ -91,13 +93,18 @@ const RegisterPage = () => {
               <Input
                 type="password"
                 label="Mật khẩu"
-                placeholder="Tạo mật khẩu mạnh"
+                placeholder="Tạo mật khẩu mạnh (≥ 8 ký tự, chữ hoa, số)"
                 error={errors.password?.message}
                 {...register('password', {
                   required: 'Mật khẩu là bắt buộc',
                   minLength: {
                     value: 8,
                     message: 'Mật khẩu phải có ít nhất 8 ký tự'
+                  },
+                  // BE yeu cau: 1 chu hoa, 1 chu thuong, 1 so, 1 ky tu dac biet
+                  pattern: {
+                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/,
+                    message: 'Mật khẩu cần có chữ hoa, chữ thường, số và ký tự đặc biệt'
                   }
                 })}
               />

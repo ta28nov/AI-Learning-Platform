@@ -69,3 +69,5 @@ Nơi đặt: Nằm ở menu quản lý của riêng khóa học đó (ví dụ: 
 Giao diện: Là một trang toàn màn hình (Full-page) giống hệt đoạn code bạn vừa gửi (có cột Sidebar bên trái chứa các phiên chat cũ, cột bên phải là khung chat rộng rãi).
 
 Mục đích: Ôn tập sâu (Deep-dive Study). Học viên muốn ôn lại bài cũ, xem lại những thứ đã hỏi AI tuần trước, hoặc muốn thảo luận dài hạn (nhờ AI tạo đề thi thử, tóm tắt toàn bộ chương).
+
+

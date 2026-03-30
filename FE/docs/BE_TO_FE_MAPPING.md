@@ -709,7 +709,7 @@ Response: `total_students, average_progress, completion_rate, average_quiz_score
 
 ---
 
-## ✅ CHECKLIST TIẾN ĐỘ MAPPING FE (Cập nhật: 2026-03-10)
+## ✅ CHECKLIST TIẾN ĐỘ MAPPING FE (Cập nhật: 2026-03-30)
 
 > Đối chiếu code thực tế vs schema ở trên. Đánh dấu ✅ = mapping đúng, ⚠️ = có ghi chú
 
@@ -721,40 +721,39 @@ Tất cả services đã tạo đúng endpoints + request/response theo docs.
 
 | # | Page | API kết nối | Fields mapping đúng docs | Status |
 |---|------|-------------|--------------------------|--------|
-| 1 | LoginPage | `POST /auth/login` -> LoginResponse | access_token, refresh_token, user{id,full_name,email,role,**avatar** (⚠️ KHÔNG có _url)} | ✅ ⚠️ cần map `avatar`→`avatar_url` |
-| 2 | RegisterPage | `POST /auth/register` -> RegisterResponse | full_name, email, password → **id**, full_name, email, role, **status**, **created_at**, message | ✅ ⚠️ BE không có `role` trong request |
+| 1 | LoginPage | `POST /auth/login` -> LoginResponse | access_token, refresh_token, user{id,full_name,email,role,avatar} | ✅ |
+| 2 | RegisterPage | `POST /auth/register` -> RegisterResponse | full_name, email, password → id, full_name, email, role, status, created_at, message | ✅ |
 | 3 | ForgotPasswordPage | authService.forgotPassword | email | ✅ |
 | 4 | ResetPasswordPage | authService.resetPassword | token, new_password | ✅ |
 | 5 | VerifyEmailPage | authService.verifyEmail | token | ✅ |
 | 6 | ProfilePage | `GET /users/me`, `PATCH /users/me` | full_name, email, role, avatar_url, bio(max500), contact_info(str), learning_preferences(List[str]), created_at, updated_at | ✅ |
 | 7 | AssessmentSetupPage | `POST /assessments/generate` | category, subject, level, focus_areas | ✅ |
-| 8 | AssessmentQuizPage | submit `POST /assessments/{id}/submit` | answers[]{question_id, answer_content, selected_option, time_taken_seconds}, **total_time_seconds**, **submitted_at** | ✅ |
+| 8 | AssessmentQuizPage | submit `POST /assessments/{id}/submit` | answers[]{question_id, answer_content, selected_option, time_taken_seconds}, total_time_seconds, submitted_at | ✅ |
 | 9 | AssessmentResultsPage | `GET /assessments/{id}/results` | overall_score, proficiency_level, score_breakdown, skill_analysis[], knowledge_gaps[] | ✅ |
-| 10 | CoursesPage | `GET /courses/search` via courseStore | courses[]{id, title, description, category, level, thumbnail_url, total_modules, total_lessons, total_duration_minutes, enrollment_count, **avg_rating**, instructor_name, instructor_avatar, is_enrolled, **created_at**}, total, search_metadata | ✅ |
-| 11 | CourseDetailPage | `GET /courses/{id}` + `POST /enrollments` | title, description, category, level, thumbnail_url, **preview_video_url**, language, **status**, owner_info{**id**, name, avatar_url, **role**, bio, experience_years}, learning_outcomes[], prerequisites[], modules[]{lessons[]}, course_statistics{}, enrollment_info{}, **created_at, updated_at** | ✅ |
-| 12 | MyCoursesPage | `GET /enrollments/my-courses` | enrollments[]{**id**, course_id, course_title, **course_description**, course_thumbnail, **course_level**, **instructor_name**, status(**`in-progress`** hyphen!), progress_percent, enrolled_at, last_accessed_at, **completed_at**, next_lesson{lesson_id, **lesson_title**, **module_title**}, avg_quiz_score, total_time_spent_minutes}, summary{**total_enrollments**, in_progress, completed, cancelled} | ✅ ⚠️ field names sửa |
+| 10 | CoursesPage | `GET /courses/search` via courseStore | courses[]{id, title, description, category, level, thumbnail_url, total_modules, total_lessons, total_duration_minutes, enrollment_count, avg_rating, instructor_name, instructor_avatar, is_enrolled, created_at}, total, search_metadata | ✅ |
+| 11 | CourseDetailPage | `GET /courses/{id}` + `POST /enrollments` | title, description, category, level, thumbnail_url, preview_video_url, language, status, owner_info{id, name, avatar_url, role, bio, experience_years}, learning_outcomes[], prerequisites[], modules[]{lessons[]}, course_statistics{}, enrollment_info{}, created_at, updated_at | ✅ |
+| 12 | MyCoursesPage | `GET /enrollments/my-courses` | enrollments[]{id, course_id, course_title, course_description, course_thumbnail, course_level, instructor_name, status, progress_percent, enrolled_at, last_accessed_at, completed_at, next_lesson{lesson_id, lesson_title, module_title}, avg_quiz_score, total_time_spent_minutes}, summary{total_enrollments, in_progress, completed, cancelled} | ✅ |
 | 13 | ModuleListPage | `GET /courses/{id}/modules` | modules[]{id, title, description, difficulty, order, lesson_count, completed_lessons, estimated_hours, progress_percent, is_accessible, is_locked, status} | ✅ |
 | 14 | ModuleDetailPage | `GET /courses/{id}/modules/{id}` | + lessons[]{has_quiz, is_completed, is_locked}, learning_outcomes[], resources[], prerequisites[] | ✅ |
 | 15 | LessonPage | `GET /courses/{id}/lessons/{id}` | title, content_type, text_content, video_info{url,duration_seconds,thumbnail_url,quality[]}, learning_objectives[], resources[], attachments[], navigation{previous_lesson,next_lesson}, has_quiz, quiz_info, completion_status | ✅ |
-| 16 | QuizPage | `GET /quizzes` | data[]{quiz_id, title, **description**, lesson_id, lesson_title, course_id, course_title, **class_id, class_name**, status, question_count, time_limit, pass_threshold, total_students, completed_count, **pass_count**, pass_rate, average_score, created_at, **updated_at**}, total, skip, limit, has_next | ✅ ⚠️ thêm fields |
+| 16 | QuizPage | `GET /quizzes` | data[]{quiz_id, title, description, lesson_id, lesson_title, course_id, course_title, class_id, class_name, status, question_count, time_limit, pass_threshold, total_students, completed_count, pass_count, pass_rate, average_score, created_at, updated_at}, total, skip, limit, has_next | ✅ |
 | 17 | QuizDetailPage | `GET /quizzes/{id}` | title, description, question_count, time_limit, pass_threshold, mandatory_question_count, user_attempts, best_score, last_attempt_at | ✅ |
-| 18 | QuizAttemptPage | `POST /quizzes/{id}/attempt` | answers[]{question_id, selected_option}, time_spent_minutes -> attempt_id, score, passed, total_questions, correct_answers, **time_spent_minutes, attempt_number, submitted_at**, message | ✅ ⚠️ thêm fields |
-| 19 | QuizResultsPage | `GET /quizzes/{id}/results` | total_score, status, pass_threshold, **mandatory_passed, can_retake**, results[]{question_content, student_answer, correct_answer, is_correct, **is_mandatory**, explanation, related_lesson_link} | ✅ ⚠️ thêm fields |
-| 20 | ChatPage | chatService (5 methods) | sendMessage: question, conversation_id, context_type -> answer(markdown), sources[], **related_lessons[]**. getHistory: conversations[]{conversation_id, course_id, course_title, topic_summary, message_count, last_message_preview, **created_at, last_updated**}, **grouped_by_date{today[], yesterday[], this_week[], older[]}** | ✅ ⚠️ thêm fields |
+| 18 | QuizAttemptPage | `POST /quizzes/{id}/attempt` | answers[]{question_id, selected_option}, time_spent_minutes -> attempt_id, score, passed, total_questions, correct_answers, time_spent_minutes, attempt_number, submitted_at, message | ✅ |
+| 19 | QuizResultsPage | `GET /quizzes/{id}/results` | total_score, status, pass_threshold, mandatory_passed, can_retake, results[]{question_content, student_answer, correct_answer, is_correct, is_mandatory, explanation, related_lesson_link} | ✅ |
+| 20 | ChatPage | chatService (5 methods) | sendMessage: question, conversation_id, context_type -> answer(markdown), sources[], related_lessons[]. getHistory: conversations[]{conversation_id, course_id, course_title, topic_summary, message_count, last_message_preview, created_at, last_updated}, grouped_by_date{today[], yesterday[], this_week[], older[]} | ✅ |
 | 21 | PersonalCoursesPage | personalCourseService | from-prompt, personal, my-personal, update, delete | ✅ |
-| 22 | ClassListPage | classService | my-classes -> {id, name, course_title, student_count (**⚠️ kiểu `str` "25/30"**), status, start_date, end_date, progress} | ✅ ⚠️ student_count là string |
+| 22 | ClassListPage | classService | my-classes -> {id, name, course_title, student_count, status, start_date, end_date, progress} | ✅ |
 | 23 | ClassCreatePage | classService | name, description, course_id, start_date, end_date, max_students | ✅ |
-| 24 | ClassDetailPage | classService | name, description, course{id,title,**module_count**}, invite_code, **max_students**, **student_count**(int), recent_students[]{id, name, email, avatar_url, progress, joined_at}, class_stats{total_students, lessons_completed, avg_quiz_score} | ✅ |
+| 24 | ClassDetailPage | classService | name, description, course{id,title,module_count}, invite_code, max_students, student_count, recent_students[]{id, name, email, avatar_url, progress, joined_at}, class_stats{total_students, lessons_completed, avg_quiz_score} | ✅ |
 | 25 | SearchResultsPage | searchService | q, category, level, page, limit -> results[] | ✅ |
 | 26 | RecommendationsPage | recommendationService | from-assessment, general | ✅ |
-| 27 | DashboardPage (Student) | `GET /dashboard/student` | overview{total_courses_enrolled, total_lessons_completed, total_study_hours, current_streak_days}, recent_courses[]{course_id, title, progress_percent, next_lesson{lesson_id, title}}, pending_quizzes[]{quiz_id, title, course_title, lesson_title, due_date, status(**not_started\|failed**)}, performance_summary{average_quiz_score, **quiz_pass_rate, lessons_this_week**}, recommendations[] | ✅ |
+| 27 | DashboardPage (Student) | `GET /dashboard/student` | overview{total_courses_enrolled, total_lessons_completed, total_study_hours, current_streak_days}, recent_courses[]{course_id, title, progress_percent, next_lesson{lesson_id, title}}, pending_quizzes[]{quiz_id, title, course_title, lesson_title, due_date, status}, performance_summary{average_quiz_score, quiz_pass_rate, lessons_this_week}, recommendations[] | ✅ |
 | 28 | DashboardPage (Instructor) | `GET /dashboard/instructor` | active_classes_count, total_students, quizzes_created_count, avg_completion_rate, recent_classes[], quick_actions[]{action_type, label, link, icon} | ✅ |
-| 29 | DashboardPage (Admin) | `GET /dashboard/admin` | total_users, users_by_role{**student, instructor, admin** — SỐ ÍT!}, total_courses, course_stats{public_courses, personal_courses, published_courses, draft_courses}, total_classes, class_stats{active_classes, completed_classes, preparing_classes}, activity_stats{new_enrollments_this_week, quizzes_completed_today, active_users_today, total_lesson_completions}, **last_updated** | ✅ ⚠️ singular |
+| 29 | DashboardPage (Admin) | `GET /dashboard/admin` | total_users, users_by_role{student, instructor, admin}, total_courses, course_stats{public_courses, personal_courses, published_courses, draft_courses}, total_classes, class_stats{active_classes, completed_classes, preparing_classes}, activity_stats{new_enrollments_this_week, quizzes_completed_today, active_users_today, total_lesson_completions}, last_updated | ✅ |
 | 30 | LandingPage | Không cần API | — | ✅ |
 | 31 | NotFoundPage | Không cần API | — | ✅ |
 | 32 | UnauthorizedPage | Không cần API | — | ✅ |
 
-### Pages chưa hoàn thành
 
 | # | Page | Vấn đề | Ưu tiên |
 |---|------|--------|---------|

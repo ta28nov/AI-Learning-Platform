@@ -4,9 +4,10 @@ import toast from 'react-hot-toast'
 import quizService from '@services/quizService'
 import Button from '@components/ui/Button'
 import Card, { CardBody } from '@components/ui/Card'
+import './QuizAttemptPage.css'
 
 /**
- * Trang lam bai quiz
+ * Trang làm bài quiz
  * Route: /dashboard/quiz/:quizId/attempt
  * API: POST /quizzes/{quizId}/attempt
  */
@@ -22,19 +23,19 @@ const QuizAttemptPage = () => {
   const [submitting, setSubmitting] = useState(false)
   const startTime = useState(() => Date.now())[0]
 
-  // Lay du lieu quiz khi mount
+  // Lấy dữ liệu quiz khi mount
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
         setLoading(true)
         const data = await quizService.getQuizDetail(quizId)
         setQuiz(data)
-        // Thiet lap timer (phut → giay)
+        // Thiết lập timer (phút → giây)
         if (data.time_limit) {
           setTimeLeft(data.time_limit * 60)
         }
       } catch (error) {
-        toast.error('Khong the tai quiz')
+        toast.error('Không thể tải quiz')
       } finally {
         setLoading(false)
       }
@@ -42,7 +43,7 @@ const QuizAttemptPage = () => {
     fetchQuiz()
   }, [quizId])
 
-  // Dong ho dem nguoc
+  // Đồng hồ đếm ngược
   useEffect(() => {
     if (timeLeft <= 0 || loading || !quiz) return
     const timer = setInterval(() => {
@@ -58,19 +59,19 @@ const QuizAttemptPage = () => {
     return () => clearInterval(timer)
   }, [timeLeft, loading, quiz])
 
-  // Format thoi gian
+  // Format thời gian mm:ss
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
 
-  // Xu ly chon dap an
+  // Xử lý chọn đáp án
   const handleAnswer = useCallback((questionId, value) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }))
   }, [])
 
-  // Xu ly nop bai
+  // Xử lý nộp bài
   const handleSubmit = async () => {
     setSubmitting(true)
     try {
@@ -85,106 +86,115 @@ const QuizAttemptPage = () => {
         time_spent_minutes: timeSpentMinutes
       })
 
-      toast.success('Nop bai thanh cong!')
+      toast.success('Nộp bài thành công!')
       navigate(`/dashboard/quiz/${quizId}/results`)
     } catch (error) {
-      toast.error(error.message || 'Khong the nop bai')
+      toast.error(error.message || 'Không thể nộp bài')
     } finally {
       setSubmitting(false)
     }
   }
 
-  if (loading) return <div style={{ padding: 24, textAlign: 'center' }}>Dang tai quiz...</div>
-  if (!quiz || !quiz.questions) return <div style={{ padding: 24, textAlign: 'center' }}>Khong co cau hoi</div>
+  if (loading) return <div className="quiz-attempt-state">Đang tải quiz...</div>
+  if (!quiz || !quiz.questions) return <div className="quiz-attempt-state">Không có câu hỏi</div>
 
   const currentQuestion = quiz.questions[currentIndex]
   const questionId = currentQuestion.question_id || currentQuestion.id
   const answeredCount = Object.keys(answers).length
   const isWarning = timeLeft < 60 && timeLeft > 0
+  const progressPercent = ((currentIndex + 1) / quiz.questions.length) * 100
 
   return (
-    <div style={{ padding: 16, maxWidth: 900, margin: '0 auto' }}>
-      {/* Header: timer + progress */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-        marginBottom: 20, padding: '12px 16px', background: '#f8f9fa', borderRadius: 10,
-        position: 'sticky', top: 0, zIndex: 10
-      }}>
-        <div style={{ flex: 1 }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#6b7280' }}>
-            Cau {currentIndex + 1}/{quiz.questions.length}
+    <div className="quiz-attempt-page">
+      {/* Header: timer + thanh tiến trình */}
+      <div className="quiz-attempt-header">
+        <div className="quiz-attempt-header__progress">
+          <span className="quiz-attempt-header__label">
+            Câu {currentIndex + 1}/{quiz.questions.length}
           </span>
-          <div style={{ height: 6, background: '#e5e7eb', borderRadius: 3, overflow: 'hidden', marginTop: 4 }}>
-            <div style={{ height: '100%', width: `${((currentIndex + 1) / quiz.questions.length) * 100}%`, background: '#6366f1', borderRadius: 3, transition: 'width 0.3s' }} />
+          <div className="quiz-attempt-header__bar">
+            <div
+              className="quiz-attempt-header__bar-fill"
+              style={{ width: `${progressPercent}%` }}
+            />
           </div>
         </div>
         {timeLeft > 0 && (
-          <div style={{
-            fontSize: '1.25rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums',
-            color: isWarning ? '#ef4444' : '#1a1a2e', minWidth: 70, textAlign: 'center',
-            animation: isWarning ? 'pulse 1s infinite' : 'none'
-          }}>
+          <div className={`quiz-attempt-timer ${isWarning ? 'quiz-attempt-timer--warning' : ''}`}>
             {formatTime(timeLeft)}
           </div>
         )}
       </div>
 
-      {/* Cau hoi */}
-      <Card style={{ marginBottom: 20 }}>
+      {/* Câu hỏi */}
+      <Card className="quiz-attempt-question">
         <CardBody>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+          {/* Metadata: bắt buộc + điểm */}
+          <div className="quiz-attempt-question__meta">
             {currentQuestion.is_mandatory && (
-              <span style={{ fontSize: '0.65rem', padding: '2px 8px', background: '#fef3c7', color: '#92400e', borderRadius: 10, fontWeight: 600 }}>Bat buoc</span>
+              <span className="quiz-attempt-question__badge quiz-attempt-question__badge--mandatory">
+                Bắt buộc
+              </span>
             )}
             {currentQuestion.points && (
-              <span style={{ fontSize: '0.65rem', padding: '2px 8px', background: '#f3f4f6', color: '#6b7280', borderRadius: 10, fontWeight: 600 }}>{currentQuestion.points} diem</span>
+              <span className="quiz-attempt-question__badge quiz-attempt-question__badge--points">
+                {currentQuestion.points} điểm
+              </span>
             )}
           </div>
 
-          <h3 style={{ fontSize: '1rem', fontWeight: 600, lineHeight: 1.6, marginBottom: 16 }}>
+          <h3 className="quiz-attempt-question__text">
             {currentQuestion.question_text}
           </h3>
 
-          {/* Options */}
+          {/* Danh sách lựa chọn */}
           {currentQuestion.options && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {currentQuestion.options.map((option, idx) => (
-                <label
-                  key={idx}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px',
-                    border: `2px solid ${answers[questionId] === idx ? '#6366f1' : '#e5e7eb'}`,
-                    borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
-                    background: answers[questionId] === idx ? 'rgba(99,102,241,0.06)' : 'transparent'
-                  }}
-                >
-                  <input type="radio" name={`q_${questionId}`} checked={answers[questionId] === idx} onChange={() => handleAnswer(questionId, idx)} style={{ accentColor: '#6366f1' }} />
-                  <span style={{
-                    width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontWeight: 700, fontSize: '0.75rem', flexShrink: 0,
-                    background: answers[questionId] === idx ? '#6366f1' : '#f3f4f6',
-                    color: answers[questionId] === idx ? '#fff' : '#6b7280'
-                  }}>
-                    {String.fromCharCode(65 + idx)}
-                  </span>
-                  <span style={{ flex: 1, fontSize: '0.875rem' }}>{option}</span>
-                </label>
-              ))}
+            <div className="quiz-attempt-options">
+              {currentQuestion.options.map((option, idx) => {
+                const isSelected = answers[questionId] === idx
+                return (
+                  <label
+                    key={idx}
+                    className={`quiz-attempt-option ${isSelected ? 'quiz-attempt-option--selected' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      className="quiz-attempt-option__input"
+                      name={`q_${questionId}`}
+                      checked={isSelected}
+                      onChange={() => handleAnswer(questionId, idx)}
+                    />
+                    <span className={`quiz-attempt-option__letter ${isSelected ? 'quiz-attempt-option__letter--selected' : 'quiz-attempt-option__letter--default'}`}>
+                      {String.fromCharCode(65 + idx)}
+                    </span>
+                    <span className="quiz-attempt-option__text">{option}</span>
+                  </label>
+                )
+              })}
             </div>
           )}
         </CardBody>
       </Card>
 
-      {/* Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-        <Button variant="outline" onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))} disabled={currentIndex === 0}>
-          ← Cau truoc
+      {/* Điều hướng câu hỏi */}
+      <div className="quiz-attempt-nav">
+        <Button
+          variant="outline"
+          onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
+          disabled={currentIndex === 0}
+        >
+          ← Câu trước
         </Button>
         {currentIndex < quiz.questions.length - 1 ? (
-          <Button onClick={() => setCurrentIndex((i) => i + 1)}>Cau tiep →</Button>
+          <Button onClick={() => setCurrentIndex((i) => i + 1)}>Câu tiếp →</Button>
         ) : (
-          <Button variant="primary" onClick={handleSubmit} loading={submitting} disabled={submitting}>
-            Nop bai ({answeredCount}/{quiz.questions.length})
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            loading={submitting}
+            disabled={submitting}
+          >
+            Nộp bài ({answeredCount}/{quiz.questions.length})
           </Button>
         )}
       </div>

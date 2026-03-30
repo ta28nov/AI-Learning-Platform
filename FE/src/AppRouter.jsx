@@ -46,6 +46,7 @@ import ChatPage from '@pages/chat/ChatPage'
 
 // Personal courses
 import PersonalCoursesPage from '@pages/personal-courses/PersonalCoursesPage'
+import CourseEditorPage from '@pages/personal-courses/CourseEditorPage'
 
 // Classes pages
 import ClassListPage from '@pages/classes/ClassListPage'
@@ -125,6 +126,7 @@ const AppRouter = () => {
 
         {/* Personal Courses - khoa hoc ca nhan */}
         <Route path="/dashboard/personal-courses" element={<PersonalCoursesPage />} />
+        <Route path="/dashboard/personal-courses/:courseId/edit" element={<CourseEditorPage />} />
 
         {/* Search */}
         <Route path="/dashboard/search" element={<SearchResultsPage />} />

@@ -6,7 +6,7 @@ import Card, { CardBody } from '@components/ui/Card'
 import './ModuleListPage.css'
 
 /**
- * Trang danh sach modules trong khoa hoc
+ * Trang danh sách modules trong khóa học
  * Route: /dashboard/courses/:courseId/modules
  * API: GET /courses/{courseId}/modules
  */
@@ -16,7 +16,7 @@ const ModuleListPage = () => {
   const [modules, setModules] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // Lay danh sach modules khi mount
+  // Lấy danh sách modules khi mount
   useEffect(() => {
     const fetchModules = async () => {
       try {
@@ -24,7 +24,7 @@ const ModuleListPage = () => {
         const data = await learningService.getCourseModules(courseId)
         setModules(data.modules || [])
       } catch (error) {
-        toast.error('Khong the tai danh sach module')
+        toast.error('Không thể tải danh sách module')
       } finally {
         setLoading(false)
       }
@@ -32,22 +32,22 @@ const ModuleListPage = () => {
     fetchModules()
   }, [courseId])
 
-  // Chuyen den trang module detail
+  // Chuyển đến trang module detail, kiểm tra locked trước
   const handleModuleClick = (module) => {
     if (module.is_locked) {
-      toast.error('Module nay chua duoc mo khoa')
+      toast.error('Module này chưa được mở khóa')
       return
     }
     navigate(`/dashboard/courses/${courseId}/modules/${module.id}`)
   }
 
-  if (loading) return <div className="loading-spinner">Dang tai...</div>
+  if (loading) return <div className="module-list-page__loading">Đang tải...</div>
 
   return (
     <div className="module-list-page">
-      <div className="page-header">
-        <h1>Noi dung khoa hoc</h1>
-        <p>{modules.length} modules</p>
+      <div className="module-list-page__header">
+        <h1>Nội dung khóa học</h1>
+        <p>{modules.length} module</p>
       </div>
 
       <div className="module-list">
@@ -71,39 +71,40 @@ const ModuleListPage = () => {
               </div>
 
               <div className="module-card__meta">
+                {/* Badge độ khó — dùng module-card__badge thay .badge chung */}
                 {mod.difficulty && (
-                  <span className={`badge badge--${mod.difficulty?.toLowerCase()}`}>
+                  <span className={`module-card__badge module-card__badge--${mod.difficulty?.toLowerCase()}`}>
                     {mod.difficulty}
                   </span>
                 )}
-                <span className="module-card__lessons">{mod.lesson_count} bai hoc</span>
+                <span className="module-card__lessons">{mod.lesson_count} bài học</span>
                 {mod.estimated_hours && (
                   <span className="module-card__time">~{mod.estimated_hours}h</span>
                 )}
               </div>
 
-              {/* Progress bar */}
+              {/* Thanh tiến độ — dùng module-card__progress-bar thay .progress-bar */}
               {mod.progress_percent !== undefined && mod.progress_percent > 0 && (
                 <div className="module-card__progress">
-                  <div className="progress-bar">
+                  <div className="module-card__progress-bar">
                     <div
-                      className="progress-bar__fill"
+                      className="module-card__progress-fill"
                       style={{ width: `${mod.progress_percent}%` }}
                     />
                   </div>
-                  <span className="progress-text">{Math.round(mod.progress_percent)}%</span>
+                  <span className="module-card__progress-text">{Math.round(mod.progress_percent)}%</span>
                 </div>
               )}
 
-              {/* Status dot */}
-              <div className={`status-dot status-dot--${mod.status || 'not-started'}`} />
+              {/* Status dot — dùng module-card__status-dot thay .status-dot */}
+              <div className={`module-card__status-dot module-card__status-dot--${mod.status || 'not-started'}`} />
             </CardBody>
           </Card>
         ))}
       </div>
 
       {modules.length === 0 && !loading && (
-        <div className="empty-state">Khoa hoc chua co module nao</div>
+        <div className="module-list-page__empty">Khóa học chưa có module nào</div>
       )}
     </div>
   )

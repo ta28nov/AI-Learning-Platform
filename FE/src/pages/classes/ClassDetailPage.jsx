@@ -4,9 +4,10 @@ import toast from 'react-hot-toast'
 import classService from '@services/classService'
 import Button from '@components/ui/Button'
 import Card, { CardHeader, CardBody } from '@components/ui/Card'
+import './ClassDetailPage.css'
 
 /**
- * Trang chi tiet lop hoc (Instructor)
+ * Trang chi tiết lớp học (Instructor)
  * Route: /dashboard/classes/:classId
  * API: GET /classes/{classId}, GET /classes/{classId}/students
  */
@@ -29,7 +30,7 @@ const ClassDetailPage = () => {
         setClassData(detail)
         setStudents(studentList.data || [])
       } catch (error) {
-        toast.error('Khong the tai thong tin lop hoc')
+        toast.error('Không thể tải thông tin lớp học')
       } finally {
         setLoading(false)
       }
@@ -37,71 +38,82 @@ const ClassDetailPage = () => {
     fetchData()
   }, [classId])
 
-  if (loading) return <div style={{ padding: 24, textAlign: 'center' }}>Dang tai...</div>
-  if (!classData) return <div style={{ padding: 24, textAlign: 'center' }}>Khong tim thay lop hoc</div>
+  if (loading) return <div className="class-detail-state">Đang tải...</div>
+  if (!classData) return <div className="class-detail-state">Không tìm thấy lớp học</div>
 
   const tabs = [
-    { id: 'info', label: 'Thong tin' },
-    { id: 'students', label: `Hoc vien (${students.length})` },
+    { id: 'info', label: 'Thông tin' },
+    { id: 'students', label: `Học viên (${students.length})` }
   ]
 
   return (
-    <div style={{ padding: 16 }}>
-      <div style={{ marginBottom: 20 }}>
-        <Button variant="ghost" onClick={() => navigate('/dashboard/classes')}>← Quay lai</Button>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginTop: 8 }}>{classData.name}</h1>
+    <div className="class-detail-page">
+      <div className="class-detail-header">
+        <Button variant="ghost" onClick={() => navigate('/dashboard/classes')}>← Quay lại</Button>
+        <h1 className="class-detail-header__title">{classData.name}</h1>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderBottom: '1px solid #e5e7eb' }}>
+      <div className="class-detail-tabs">
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            className={`class-detail-tab ${activeTab === tab.id ? 'class-detail-tab--active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
-            style={{
-              padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer',
-              fontWeight: activeTab === tab.id ? 600 : 400,
-              borderBottom: activeTab === tab.id ? '2px solid #6366f1' : '2px solid transparent',
-              color: activeTab === tab.id ? '#6366f1' : '#6b7280', fontSize: '0.85rem'
-            }}
           >
             {tab.label}
           </button>
         ))}
       </div>
 
-      {/* Tab: Thong tin */}
+      {/* Tab: Thông tin */}
       {activeTab === 'info' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="class-detail-info">
           <Card>
             <CardBody>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: '0.85rem' }}>
-                <div><strong>Ma moi:</strong> <code style={{ background: '#f3f4f6', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>{classData.invite_code}</code></div>
-                <div><strong>Trang thai:</strong> {classData.status}</div>
-                <div><strong>Khoa hoc:</strong> {classData.course?.title}</div>
-                <div><strong>So hoc vien:</strong> {classData.student_count}</div>
-                <div><strong>Bat dau:</strong> {classData.start_date ? new Date(classData.start_date).toLocaleDateString('vi') : '-'}</div>
-                <div><strong>Ket thuc:</strong> {classData.end_date ? new Date(classData.end_date).toLocaleDateString('vi') : '-'}</div>
+              <div className="class-detail-info-grid">
+                <div className="class-detail-info-item">
+                  <strong>Mã mời:</strong>{' '}
+                  <code className="class-detail-invite-code">{classData.invite_code}</code>
+                </div>
+                <div className="class-detail-info-item">
+                  <strong>Trạng thái:</strong> {classData.status}
+                </div>
+                <div className="class-detail-info-item">
+                  <strong>Khóa học:</strong> {classData.course?.title}
+                </div>
+                <div className="class-detail-info-item">
+                  {/* student_count la string "25/30" hoac int tuy endpoint */}
+                  <strong>Số học viên:</strong> {classData.student_count}
+                </div>
+                <div className="class-detail-info-item">
+                  <strong>Bắt đầu:</strong>{' '}
+                  {classData.start_date ? new Date(classData.start_date).toLocaleDateString('vi-VN') : '-'}
+                </div>
+                <div className="class-detail-info-item">
+                  <strong>Kết thúc:</strong>{' '}
+                  {classData.end_date ? new Date(classData.end_date).toLocaleDateString('vi-VN') : '-'}
+                </div>
               </div>
             </CardBody>
           </Card>
 
           {classData.class_stats && (
             <Card>
-              <CardHeader><h3>Thong ke</h3></CardHeader>
+              <CardHeader><h3>Thống kê</h3></CardHeader>
               <CardBody>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, textAlign: 'center' }}>
+                <div className="class-detail-stats">
                   <div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{classData.class_stats.total_students}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Hoc vien</div>
+                    <div className="class-detail-stat__value">{classData.class_stats.total_students}</div>
+                    <div className="class-detail-stat__label">Học viên</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{classData.class_stats.lessons_completed || 0}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Bai hoan thanh</div>
+                    <div className="class-detail-stat__value">{classData.class_stats.lessons_completed || 0}</div>
+                    <div className="class-detail-stat__label">Bài hoàn thành</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{classData.class_stats.avg_quiz_score || 0}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Diem TB quiz</div>
+                    <div className="class-detail-stat__value">{classData.class_stats.avg_quiz_score || 0}</div>
+                    <div className="class-detail-stat__label">Điểm TB quiz</div>
                   </div>
                 </div>
               </CardBody>
@@ -110,30 +122,30 @@ const ClassDetailPage = () => {
         </div>
       )}
 
-      {/* Tab: Hoc vien */}
+      {/* Tab: Học viên */}
       {activeTab === 'students' && (
         <Card>
           <CardBody>
             {students.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#6b7280', padding: 20 }}>Chua co hoc vien nao</p>
+              <p className="class-detail-empty">Chưa có học viên nào</p>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+              <div className="class-detail-table-wrap">
+                <table className="class-detail-table">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-                      <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 600 }}>Hoc vien</th>
-                      <th style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 600 }}>Email</th>
-                      <th style={{ textAlign: 'right', padding: '8px 12px', fontWeight: 600 }}>Tien do</th>
-                      <th style={{ textAlign: 'right', padding: '8px 12px', fontWeight: 600 }}>Diem quiz TB</th>
+                    <tr>
+                      <th>Học viên</th>
+                      <th>Email</th>
+                      <th>Tiến độ</th>
+                      <th>Điểm quiz TB</th>
                     </tr>
                   </thead>
                   <tbody>
                     {students.map((student) => (
-                      <tr key={student.student_id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                        <td style={{ padding: '10px 12px' }}>{student.student_name}</td>
-                        <td style={{ padding: '10px 12px', color: '#6b7280' }}>{student.email}</td>
-                        <td style={{ padding: '10px 12px', textAlign: 'right' }}>{student.progress}%</td>
-                        <td style={{ padding: '10px 12px', textAlign: 'right' }}>{student.quiz_average || '-'}</td>
+                      <tr key={student.student_id}>
+                        <td>{student.student_name}</td>
+                        <td>{student.email}</td>
+                        <td>{student.progress}%</td>
+                        <td>{student.quiz_average || '-'}</td>
                       </tr>
                     ))}
                   </tbody>

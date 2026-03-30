@@ -4,9 +4,10 @@ import toast from 'react-hot-toast'
 import learningService from '@services/learningService'
 import Button from '@components/ui/Button'
 import Card, { CardHeader, CardBody } from '@components/ui/Card'
+import './ModuleDetailPage.css'
 
 /**
- * Trang chi tiet module (lessons, outcomes, resources)
+ * Trang chi tiết module (lessons, outcomes, resources)
  * Route: /dashboard/courses/:courseId/modules/:moduleId
  * API: GET /courses/{courseId}/modules/{moduleId}
  */
@@ -23,7 +24,7 @@ const ModuleDetailPage = () => {
         const data = await learningService.getModuleDetail(courseId, moduleId)
         setModule(data)
       } catch (error) {
-        toast.error('Khong the tai thong tin module')
+        toast.error('Không thể tải thông tin module')
       } finally {
         setLoading(false)
       }
@@ -31,117 +32,118 @@ const ModuleDetailPage = () => {
     fetchModule()
   }, [courseId, moduleId])
 
-  if (loading) return <div style={{ padding: 24, textAlign: 'center' }}>Dang tai...</div>
-  if (!module) return <div style={{ padding: 24, textAlign: 'center' }}>Khong tim thay module</div>
+  if (loading) return <div className="module-detail-state">Đang tải...</div>
+  if (!module) return <div className="module-detail-state">Không tìm thấy module</div>
 
   return (
-    <div style={{ padding: 16 }}>
-      {/* Breadcrumb */}
-      <div style={{ display: 'flex', gap: 6, fontSize: '0.75rem', color: '#6b7280', marginBottom: 16, flexWrap: 'wrap' }}>
-        <span style={{ cursor: 'pointer', color: '#6366f1' }} onClick={() => navigate(`/dashboard/courses/${courseId}`)}>Khoa hoc</span>
-        <span>/</span>
-        <span style={{ cursor: 'pointer', color: '#6366f1' }} onClick={() => navigate(`/dashboard/courses/${courseId}/modules`)}>Modules</span>
-        <span>/</span>
-        <span style={{ fontWeight: 500, color: '#1a1a2e' }}>{module.title}</span>
+    <div className="module-detail-page">
+      {/* Breadcrumb điều hướng */}
+      <div className="module-detail-breadcrumb">
+        <button className="module-detail-breadcrumb__link" onClick={() => navigate(`/dashboard/courses/${courseId}`)}>
+          Khóa học
+        </button>
+        <span className="module-detail-breadcrumb__sep">/</span>
+        <button className="module-detail-breadcrumb__link" onClick={() => navigate(`/dashboard/courses/${courseId}/modules`)}>
+          Modules
+        </button>
+        <span className="module-detail-breadcrumb__sep">/</span>
+        <span className="module-detail-breadcrumb__current">{module.title}</span>
       </div>
 
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 6 }}>{module.title}</h1>
+      {/* Header module */}
+      <div className="module-detail-header">
+        <h1 className="module-detail-header__title">{module.title}</h1>
         {module.description && (
-          <p style={{ fontSize: '0.85rem', color: '#6b7280', lineHeight: 1.6 }}>{module.description}</p>
+          <p className="module-detail-header__desc">{module.description}</p>
         )}
-        <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap', fontSize: '0.75rem' }}>
+        <div className="module-detail-header__badges">
           {module.difficulty && (
-            <span style={{
-              padding: '2px 8px', borderRadius: 10, fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem',
-              background: module.difficulty === 'Beginner' ? '#dcfce7' : module.difficulty === 'Intermediate' ? '#fef3c7' : '#fecaca',
-              color: module.difficulty === 'Beginner' ? '#166534' : module.difficulty === 'Intermediate' ? '#92400e' : '#991b1b'
-            }}>
+            <span className={`module-detail-badge module-detail-badge--${module.difficulty}`}>
               {module.difficulty}
             </span>
           )}
-          {module.estimated_hours && <span style={{ color: '#6b7280' }}>~{module.estimated_hours}h</span>}
-          {module.lesson_count && <span style={{ color: '#6b7280' }}>{module.lesson_count} bai hoc</span>}
+          {module.estimated_hours && (
+            <span className="module-detail-header__meta">~{module.estimated_hours} giờ</span>
+          )}
+          {module.lesson_count && (
+            <span className="module-detail-header__meta">{module.lesson_count} bài học</span>
+          )}
         </div>
       </div>
 
-      {/* Progress */}
+      {/* Thanh tiến độ */}
       {module.progress_percent !== undefined && (
         <Card>
           <CardBody>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ flex: 1, height: 8, background: '#e5e7eb', borderRadius: 4, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${module.progress_percent}%`, background: '#6366f1', borderRadius: 4, transition: 'width 0.4s' }} />
+            <div className="module-detail-progress">
+              <div className="module-detail-progress__bar">
+                <div
+                  className="module-detail-progress__fill"
+                  style={{ width: `${module.progress_percent}%` }}
+                />
               </div>
-              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#6b7280' }}>{Math.round(module.progress_percent)}%</span>
+              <span className="module-detail-progress__text">
+                {Math.round(module.progress_percent)}%
+              </span>
             </div>
           </CardBody>
         </Card>
       )}
 
-      {/* Lessons list */}
-      <Card style={{ marginTop: 12 }}>
-        <CardHeader><h3>Danh sach bai hoc</h3></CardHeader>
+      {/* Danh sách bài học */}
+      <Card className="module-detail-section">
+        <CardHeader><h3>Danh sách bài học</h3></CardHeader>
         <CardBody>
           {module.lessons && module.lessons.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div className="module-detail-lessons">
               {module.lessons.map((lesson, idx) => (
                 <div
                   key={lesson.id}
+                  className={`module-detail-lesson ${lesson.is_locked ? 'module-detail-lesson--locked' : ''}`}
                   onClick={() => {
                     if (lesson.is_locked) {
-                      toast.error('Bai hoc nay chua duoc mo khoa')
+                      toast.error('Bài học này chưa được mở khóa')
                       return
                     }
                     navigate(`/dashboard/courses/${courseId}/lessons/${lesson.id}`)
                   }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                    borderRadius: 8, cursor: lesson.is_locked ? 'not-allowed' : 'pointer',
-                    opacity: lesson.is_locked ? 0.5 : 1, transition: 'background 0.15s',
-                    background: 'transparent'
-                  }}
-                  onMouseEnter={(e) => { if (!lesson.is_locked) e.currentTarget.style.background = '#f8f9fa' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
                 >
-                  <span style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    width: 28, height: 28, borderRadius: '50%', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0,
-                    background: lesson.is_completed ? '#10b981' : '#f3f4f6',
-                    color: lesson.is_completed ? '#fff' : '#6b7280'
-                  }}>
+                  <span className={`module-detail-lesson__number ${lesson.is_completed ? 'module-detail-lesson__number--completed' : 'module-detail-lesson__number--default'}`}>
                     {lesson.is_completed ? '✓' : idx + 1}
                   </span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 500, fontSize: '0.85rem' }}>{lesson.title}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#6b7280', display: 'flex', gap: 8, marginTop: 2 }}>
-                      {lesson.duration_minutes && <span>{lesson.duration_minutes} phut</span>}
-                      {lesson.content_type && <span>{lesson.content_type === 'video' ? '🎥' : lesson.content_type === 'text' ? '📝' : '📝🎥'}</span>}
+                  <div className="module-detail-lesson__info">
+                    <div className="module-detail-lesson__title">{lesson.title}</div>
+                    <div className="module-detail-lesson__meta">
+                      {lesson.duration_minutes && <span>{lesson.duration_minutes} phút</span>}
+                      {lesson.content_type && (
+                        <span>{lesson.content_type === 'video' ? '🎥' : lesson.content_type === 'text' ? '📝' : '📝🎥'}</span>
+                      )}
                       {lesson.has_quiz && <span>📋 Quiz</span>}
                     </div>
                   </div>
-                  {lesson.is_locked && <span>🔒</span>}
+                  {lesson.is_locked && <span className="module-detail-lesson__lock">🔒</span>}
                 </div>
               ))}
             </div>
           ) : (
-            <p style={{ textAlign: 'center', color: '#6b7280', padding: 20 }}>Chua co bai hoc nao</p>
+            <p className="module-detail-empty">Chưa có bài học nào</p>
           )}
         </CardBody>
       </Card>
 
-      {/* Learning Outcomes */}
+      {/* Mục tiêu học tập */}
       {module.learning_outcomes && module.learning_outcomes.length > 0 && (
-        <Card style={{ marginTop: 12 }}>
-          <CardHeader><h3>Muc tieu hoc tap</h3></CardHeader>
+        <Card className="module-detail-section">
+          <CardHeader><h3>Mục tiêu học tập</h3></CardHeader>
           <CardBody>
-            <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <ul className="module-detail-outcomes">
               {module.learning_outcomes.map((outcome, idx) => (
-                <li key={idx} style={{ display: 'flex', gap: 8, fontSize: '0.85rem', alignItems: 'flex-start' }}>
-                  <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
+                <li key={idx} className="module-detail-outcome">
+                  <span className="module-detail-outcome__check">✓</span>
                   <span>{outcome.outcome || outcome}</span>
-                  {outcome.is_mandatory && <span style={{ fontSize: '0.65rem', padding: '1px 6px', background: '#fef3c7', color: '#92400e', borderRadius: 8 }}>Bat buoc</span>}
+                  {outcome.is_mandatory && (
+                    <span className="module-detail-outcome__mandatory">Bắt buộc</span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -149,26 +151,23 @@ const ModuleDetailPage = () => {
         </Card>
       )}
 
-      {/* Resources */}
+      {/* Tài nguyên học tập */}
       {module.resources && module.resources.length > 0 && (
-        <Card style={{ marginTop: 12 }}>
-          <CardHeader><h3>Tai nguyen</h3></CardHeader>
+        <Card className="module-detail-section">
+          <CardHeader><h3>Tài nguyên</h3></CardHeader>
           <CardBody>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div className="module-detail-resources">
               {module.resources.map((res, idx) => (
                 <a
                   key={idx}
                   href={res.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
-                    background: '#f8f9fa', borderRadius: 8, textDecoration: 'none', color: '#1a1a2e', fontSize: '0.85rem'
-                  }}
+                  className="module-detail-resource"
                 >
                   <span>{res.type === 'pdf' ? '📄' : res.type === 'video' ? '🎥' : res.type === 'code' ? '💻' : '📎'}</span>
-                  <span style={{ flex: 1, fontWeight: 500 }}>{res.title}</span>
-                  {res.size_mb && <span style={{ fontSize: '0.7rem', color: '#6b7280' }}>{res.size_mb} MB</span>}
+                  <span className="module-detail-resource__title">{res.title}</span>
+                  {res.size_mb && <span className="module-detail-resource__size">{res.size_mb} MB</span>}
                 </a>
               ))}
             </div>
@@ -176,22 +175,22 @@ const ModuleDetailPage = () => {
         </Card>
       )}
 
-      {/* Prerequisites */}
+      {/* Điều kiện tiên quyết */}
       {module.prerequisites && module.prerequisites.length > 0 && (
-        <Card style={{ marginTop: 12 }}>
-          <CardHeader><h3>Dieu kien tien quyet</h3></CardHeader>
+        <Card className="module-detail-section">
+          <CardHeader><h3>Điều kiện tiên quyết</h3></CardHeader>
           <CardBody>
-            <ul style={{ margin: 0, paddingLeft: 20, fontSize: '0.85rem', color: '#6b7280' }}>
-              {module.prerequisites.map((pre, idx) => <li key={idx} style={{ marginBottom: 4 }}>{pre}</li>)}
+            <ul className="module-detail-prerequisites">
+              {module.prerequisites.map((pre, idx) => <li key={idx}>{pre}</li>)}
             </ul>
           </CardBody>
         </Card>
       )}
 
-      {/* Actions */}
-      <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+      {/* Điều hướng */}
+      <div className="module-detail-actions">
         <Button variant="outline" onClick={() => navigate(`/dashboard/courses/${courseId}/modules`)}>
-          ← Danh sach modules
+          ← Danh sách modules
         </Button>
       </div>
     </div>

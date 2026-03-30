@@ -1,0 +1,186 @@
+/* QuizResultsPage.css — BEM naming, mobile-first */
+
+.quiz-results-page {
+  padding: var(--spacing-md);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Score overview card */
+.quiz-results-overview {
+  text-align: center;
+  padding: 24px 0 8px;
+}
+
+/* Vòng tròn điểm số */
+.quiz-results-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quiz-results-circle__inner {
+  width: 95px;
+  height: 95px;
+  border-radius: 50%;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.quiz-results-circle__score {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.quiz-results-circle__label {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+/* Badge pass/fail */
+.quiz-results-badge {
+  display: inline-block;
+  padding: 6px 20px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.quiz-results-badge--pass {
+  background: var(--success-light);
+  color: #166534;
+}
+
+.quiz-results-badge--fail {
+  background: var(--danger-light);
+  color: #991b1b;
+}
+
+/* Thông tin điều kiện */
+.quiz-results-condition {
+  margin-top: 8px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+/* Section chi tiết câu hỏi */
+.quiz-results-section {
+  margin-bottom: 16px;
+}
+
+/* Item từng câu hỏi */
+.quiz-results-item {
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.quiz-results-item--correct {
+  border-left: 4px solid var(--success);
+  background: #f0fdf4;
+}
+
+.quiz-results-item--wrong {
+  border-left: 4px solid var(--danger);
+  background: #fef2f2;
+}
+
+.quiz-results-item__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
+.quiz-results-item__question {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  flex: 1;
+  line-height: 1.5;
+}
+
+.quiz-results-item__badges {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.quiz-results-item__badge {
+  font-size: 0.6rem;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.quiz-results-item__badge--mandatory {
+  background: var(--warning-light);
+  color: #92400e;
+}
+
+.quiz-results-item__badge--score-correct {
+  background: var(--success-light);
+  color: #166534;
+}
+
+.quiz-results-item__badge--score-wrong {
+  background: var(--danger-light);
+  color: #991b1b;
+}
+
+.quiz-results-item__answer {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.quiz-results-item__correct-answer {
+  font-size: var(--font-size-sm);
+  color: #166534;
+  margin-bottom: 4px;
+}
+
+.quiz-results-item__explanation {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.quiz-results-item__link {
+  font-size: var(--font-size-xs);
+  color: var(--primary);
+  margin-top: 4px;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.quiz-results-item__link:hover {
+  text-decoration: underline;
+}
+
+/* Actions */
+.quiz-results-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-bottom: 24px;
+}
+
+/* Loading/error states */
+.quiz-results-state {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}

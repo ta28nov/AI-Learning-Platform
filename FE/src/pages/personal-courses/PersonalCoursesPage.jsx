@@ -5,9 +5,10 @@ import personalCourseService from '@services/personalCourseService'
 import Button from '@components/ui/Button'
 import Card, { CardBody } from '@components/ui/Card'
 import Modal from '@components/ui/Modal'
+import './PersonalCoursesPage.css'
 
 /**
- * Trang danh sach khoa hoc ca nhan
+ * Trang danh sách khóa học cá nhân
  * Route: /dashboard/personal-courses
  * API: GET /courses/my-personal, POST /courses/from-prompt
  */
@@ -26,7 +27,7 @@ const PersonalCoursesPage = () => {
         const data = await personalCourseService.getMyPersonalCourses()
         setCourses(data.courses || data || [])
       } catch (error) {
-        toast.error('Khong the tai khoa hoc ca nhan')
+        toast.error('Không thể tải khóa học cá nhân')
       } finally {
         setLoading(false)
       }
@@ -34,10 +35,10 @@ const PersonalCoursesPage = () => {
     fetchCourses()
   }, [])
 
-  // Tao khoa hoc bang AI prompt
+  // Tạo khóa học bằng AI prompt
   const handleCreateFromPrompt = async () => {
     if (prompt.length < 20) {
-      toast.error('Prompt can it nhat 20 ky tu')
+      toast.error('Mô tả cần ít nhất 20 ký tự')
       return
     }
     setGenerating(true)
@@ -47,47 +48,61 @@ const PersonalCoursesPage = () => {
         level: 'Beginner',
         language: 'vi'
       })
-      toast.success('AI dang tao khoa hoc cho ban!')
+      toast.success('AI đang tạo khóa học cho bạn!')
       setShowPromptModal(false)
       setPrompt('')
       navigate(`/dashboard/personal-courses/${response.course_id || response.id}/edit`)
     } catch (error) {
-      toast.error(error.message || 'Khong the tao khoa hoc')
+      toast.error(error.message || 'Không thể tạo khóa học')
     } finally {
       setGenerating(false)
     }
   }
 
-  if (loading) return <div style={{ padding: 24, textAlign: 'center' }}>Dang tai...</div>
+  if (loading) return <div className="personal-courses-loading">Đang tải...</div>
 
   return (
-    <div style={{ padding: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
+    <div className="personal-courses-page">
+      <div className="personal-courses-header">
         <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Khoa hoc ca nhan</h1>
-          <p style={{ color: '#6b7280', fontSize: '0.85rem' }}>{courses.length} khoa hoc</p>
+          <h1 className="personal-courses-header__title">Khóa học cá nhân</h1>
+          <p className="personal-courses-header__count">{courses.length} khóa học</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="personal-courses-actions">
           <Button variant="outline" onClick={() => setShowPromptModal(true)}>
-            Tao bang AI
+            🤖 Tạo bằng AI
           </Button>
           <Button onClick={() => navigate('/dashboard/personal-courses/create')}>
-            + Tao thu cong
+            + Tạo thủ công
           </Button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+      <div className="personal-courses-grid">
         {courses.map((course) => (
-          <Card key={course.id || course.course_id} hover onClick={() => navigate(`/dashboard/courses/${course.id || course.course_id}`)}>
+          <Card
+            key={course.id || course.course_id}
+            hover
+            className="personal-course-card"
+            onClick={() => navigate(`/dashboard/courses/${course.id || course.course_id}`)}
+          >
             <CardBody>
-              <h3 style={{ fontWeight: 600, marginBottom: 4 }}>{course.title}</h3>
-              <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: 6 }}>
-                {course.description?.substring(0, 100)}
-              </p>
-              <div style={{ display: 'flex', gap: 8, fontSize: '0.7rem' }}>
-                <span style={{ padding: '2px 8px', background: '#f3f4f6', borderRadius: 10 }}>{course.status || 'draft'}</span>
-                <span style={{ padding: '2px 8px', background: '#e0e7ff', borderRadius: 10, color: '#3730a3' }}>{course.level}</span>
+              <h3 className="personal-course-card__title">{course.title}</h3>
+              {course.description && (
+                <p className="personal-course-card__desc">
+                  {course.description.substring(0, 100)}
+                  {course.description.length > 100 && '...'}
+                </p>
+              )}
+              <div className="personal-course-card__badges">
+                <span className={`personal-course-card__badge personal-course-card__badge--status${course.status === 'published' ? '-published' : ''}`}>
+                  {course.status === 'published' ? 'Đã xuất bản' : 'Bản nháp'}
+                </span>
+                {course.level && (
+                  <span className="personal-course-card__badge personal-course-card__badge--level">
+                    {course.level}
+                  </span>
+                )}
               </div>
             </CardBody>
           </Card>
@@ -95,38 +110,36 @@ const PersonalCoursesPage = () => {
       </div>
 
       {courses.length === 0 && (
-        <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>
-          Ban chua co khoa hoc ca nhan nao. Hay tao khoa hoc bang AI hoac thu cong!
+        <div className="personal-courses-empty">
+          Bạn chưa có khóa học cá nhân nào. Hãy tạo bằng AI hoặc thủ công!
         </div>
       )}
 
-      {/* Modal tao bang AI */}
+      {/* Modal tạo bằng AI */}
       <Modal
         isOpen={showPromptModal}
         onClose={() => setShowPromptModal(false)}
-        title="Tao khoa hoc bang AI"
+        title="Tạo khóa học bằng AI"
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-            Mo ta nhung gi ban muon hoc, AI se tao khoa hoc phu hop:
+        <div className="personal-courses-prompt">
+          <p className="personal-courses-prompt__desc">
+            Mô tả những gì bạn muốn học, AI sẽ tạo khóa học phù hợp:
           </p>
           <textarea
+            className="personal-courses-prompt__textarea"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="VD: Toi muon hoc lap trinh Python co ban, tu cac khai niem bien, vong lap den ham va lop..."
+            placeholder="VD: Tôi muốn học lập trình Python cơ bản, từ các khái niệm biến, vòng lặp đến hàm và lớp..."
             rows={4}
-            style={{
-              width: '100%', padding: '10px 12px', border: '1px solid #e5e7eb',
-              borderRadius: 8, fontSize: '0.875rem', resize: 'vertical'
-            }}
+            maxLength={1000}
           />
-          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-            {prompt.length}/1000 ky tu (toi thieu 20)
+          <span className="personal-courses-prompt__counter">
+            {prompt.length}/1000 ký tự (tối thiểu 20)
           </span>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <Button variant="outline" onClick={() => setShowPromptModal(false)}>Huy</Button>
+          <div className="personal-courses-prompt__actions">
+            <Button variant="outline" onClick={() => setShowPromptModal(false)}>Hủy</Button>
             <Button onClick={handleCreateFromPrompt} loading={generating}>
-              Tao khoa hoc
+              Tạo khóa học
             </Button>
           </div>
         </div>
