@@ -224,8 +224,13 @@ const ProfilePage = () => {
                     type="text"
                     {...register('full_name', {
                       required: 'Vui lòng nhập họ tên',
-                      minLength: { value: 3, message: 'Tối thiểu 3 ký tự' },
-                      maxLength: { value: 100, message: 'Tối đa 100 ký tự' }
+                      maxLength: { value: 100, message: 'Tối đa 100 ký tự' },
+                      validate: (v) => {
+                        const words = v.trim().split(/\s+/).filter(Boolean)
+                        if (words.length < 2) return 'Vui lòng nhập đầy đủ họ và tên (ít nhất 2 từ)'
+                        if (v.trim().length < 3) return 'Tối thiểu 3 ký tự'
+                        return true
+                      }
                     })}
                     className={errors.full_name ? 'input--error' : ''}
                   />

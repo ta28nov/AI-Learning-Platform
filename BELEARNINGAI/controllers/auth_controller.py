@@ -12,9 +12,12 @@ from schemas.auth import (
     LoginRequest,
     LoginResponse,
     LogoutResponse,
-    UserInfo
+    UserInfo,
+    RefreshTokenRequest,
+    RefreshTokenResponse
 )
 from services import auth_service, user_service
+from models.models import User
 
 
 async def handle_register(request: RegisterRequest) -> RegisterResponse:
@@ -160,3 +163,54 @@ async def logout_all(current_user_id: str) -> Dict:
     return {
         "message": f"Đã đăng xuất {count} phiên đăng nhập"
     }
+
+
+async def handle_refresh_token(request: RefreshTokenRequest) -> RefreshTokenResponse:
+    """
+    Làm mới access token - POST /api/v1/auth/refresh
+    
+    Dùng refresh_token để tạo access_token mới khi token cũ hết hạn (15 phút).
+    Không cần Bearer header vì access token đã hết hạn.
+    
+    Args:
+        request: RefreshTokenRequest chứa refresh_token
+        
+    Returns:
+        RefreshTokenResponse: access_token mới + token_type
+        
+    Raises:
+        HTTPException 401: Refresh token không hợp lệ, hết hạn, hoặc bị thu hồi
+    """
+    # Validate refresh token (decode JWT + check DB)
+    stored_token = await auth_service.validate_refresh_token(request.refresh_token)
+    
+    if not stored_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token không hợp lệ hoặc đã hết hạn"
+        )
+    
+    # Lấy user từ DB để tạo access token mới
+    user = await User.get(stored_token.user_id)
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Người dùng không tồn tại"
+        )
+    
+    if user.status != "active":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tài khoản đã bị vô hiệu hóa"
+        )
+    
+    # Tạo access token mới (15 phút)
+    new_access_token = auth_service.create_access_token(
+        data={"sub": str(user.id), "email": user.email, "role": user.role}
+    )
+    
+    return RefreshTokenResponse(
+        access_token=new_access_token,
+        token_type="Bearer"
+    )

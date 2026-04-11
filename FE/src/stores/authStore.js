@@ -92,6 +92,17 @@ export const useAuthStore = create(
           // Xoa tokens khoi localStorage
           localStorage.removeItem('access_token')
           localStorage.removeItem('refresh_token')
+          localStorage.removeItem('token_type')
+          
+          // Reset tat ca stores de tranh state leakage (User A → User B)
+          try {
+            const { useCourseStore } = await import('./courseStore')
+            const { useUiStore } = await import('./uiStore')
+            useCourseStore.getState().reset()
+            useUiStore.getState().reset()
+          } catch (storeError) {
+            console.error('Error resetting stores:', storeError)
+          }
           
           set({
             user: null,

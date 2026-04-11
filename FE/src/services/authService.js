@@ -85,6 +85,7 @@ export const authService = {
    * Gui email khoi phuc mat khau
    * @param {string} email - Email nguoi dung
    * @returns {Promise}
+   * @deprecated [TODO] BE chua implement route POST /auth/forgot-password → se nhan 404
    */
   async forgotPassword(email) {
     try {
@@ -100,6 +101,7 @@ export const authService = {
    * @param {string} token - Reset token
    * @param {string} password - Mat khau moi
    * @returns {Promise}
+   * @deprecated [TODO] BE chua implement route POST /auth/reset-password → se nhan 404
    */
   async resetPassword(token, password) {
     try {
@@ -117,6 +119,7 @@ export const authService = {
    * Xac thuc email
    * @param {string} token - Verification token
    * @returns {Promise}
+   * @deprecated [TODO] BE chua implement route POST /auth/verify-email → se nhan 404
    */
   async verifyEmail(token) {
     try {
@@ -131,6 +134,7 @@ export const authService = {
    * Gui lai email xac thuc
    * @param {string} email - Email nguoi dung
    * @returns {Promise}
+   * @deprecated [TODO] BE chua implement route POST /auth/resend-verification → se nhan 404
    */
   async resendVerificationEmail(email) {
     try {

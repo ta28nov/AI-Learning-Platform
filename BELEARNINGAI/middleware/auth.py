@@ -82,56 +82,6 @@ async def get_current_user(
         )
 
 
-async def get_optional_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))
-) -> Optional[Dict[str, str]]:
-    """
-    Xác thực người dùng từ JWT token (tùy chọn)
-    
-    Hàm này tương tự get_current_user nhưng không bắt buộc token.
-    Nếu có token hợp lệ, trả về user info.
-    Nếu không có token hoặc token không hợp lệ, trả về None.
-    
-    Args:
-        credentials: Bearer token từ header Authorization (tùy chọn)
-        
-    Returns:
-        dict: User payload chứa user_id, email, role nếu token hợp lệ
-        None: Nếu không có token hoặc token không hợp lệ
-        
-    Usage:
-        Dùng cho các endpoint có thể truy cập cả khi đăng nhập và không đăng nhập,
-        nhưng có chức năng khác nhau tùy trạng thái (ví dụ: hiển thị is_enrolled)
-    """
-    if not credentials:
-        return None
-    
-    try:
-        token = credentials.credentials
-        payload = decode_token(token)
-        
-        if not payload:
-            return None
-        
-        # Kiểm tra token type phải là "access"
-        if payload.get("type") != "access":
-            return None
-        
-        # Lấy user_id từ "sub" claim
-        user_id = payload.get("sub")
-        if not user_id:
-            return None
-        
-        # Trả về user info
-        return {
-            "user_id": user_id,
-            "email": payload.get("email"),
-            "role": payload.get("role")
-        }
-        
-    except Exception:
-        # Bỏ qua lỗi, trả về None
-        return None
 
 
 async def require_role(required_role: str):

@@ -7,12 +7,14 @@ from fastapi import APIRouter, Depends, status
 from schemas.auth import (
     RegisterRequest, RegisterResponse,
     LoginRequest, LoginResponse,
-    LogoutResponse
+    LogoutResponse,
+    RefreshTokenRequest, RefreshTokenResponse
 )
 from controllers.auth_controller import (
     handle_register,
     handle_login,
-    handle_logout
+    handle_logout,
+    handle_refresh_token
 )
 from middleware.auth import get_current_user
 
@@ -86,3 +88,24 @@ async def logout(current_user: dict = Depends(get_current_user)):
     - 200 OK: Message xác nhận đăng xuất thành công
     """
     return await handle_logout(current_user["user_id"])
+
+
+@router.post(
+    "/refresh",
+    response_model=RefreshTokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Làm mới access token",
+    description="Dùng refresh token để lấy access token mới khi token cũ hết hạn (15 phút)."
+)
+async def refresh_token(request: RefreshTokenRequest):
+    """
+    Refresh token - POST /api/v1/auth/refresh
+    
+    **Thông tin bắt buộc:**
+    - **refresh_token**: Refresh token hiện tại (từ login response)
+    
+    **Returns:**
+    - 200 OK: Access token mới (15 phút)
+    - 401 Unauthorized: Refresh token không hợp lệ hoặc đã hết hạn
+    """
+    return await handle_refresh_token(request)

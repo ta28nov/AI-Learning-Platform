@@ -2,14 +2,21 @@ import axios from 'axios'
 
 /**
  * Cau hinh axios instance cho viec goi API
+ * BaseURL tu .env da bao gom /api/v1
  */
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
   }
 })
+
+/**
+ * Timeout cho cac AI endpoints (Gemini API co the mat 20-120 giay)
+ * Su dung: api.post('/assessments/generate', data, { timeout: AI_TIMEOUT })
+ */
+export const AI_TIMEOUT = 120000 // 2 phut
 
 /**
  * Request interceptor - Them token vao header
@@ -31,8 +38,28 @@ api.interceptors.request.use(
 )
 
 /**
- * Response interceptor - Xu ly loi va refresh token
+ * Response interceptor - Xu ly loi 401 voi refresh token queue
+ * 
+ * Co che:
+ * 1. Khi nhan 401, kiem tra co dang refresh khong
+ * 2. Neu dang refresh → dua request vao hang doi (failedQueue)
+ * 3. Neu chua refresh → bat dau refresh, sau do retry tat ca queue
+ * 4. Neu refresh that bai → force logout + toast thong bao
  */
+let isRefreshing = false
+let failedQueue = []
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error)
+    } else {
+      resolve(token)
+    }
+  })
+  failedQueue = []
+}
+
 api.interceptors.response.use(
   (response) => {
     return response
@@ -40,36 +67,63 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
     
-    // Neu loi 401 va chua thu refresh token
+    // Chi xu ly 401 va chua thu retry
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Neu dang trong qua trinh refresh → dua vao queue cho
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
+        }).then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`
+          return api(originalRequest)
+        }).catch((err) => {
+          return Promise.reject(err)
+        })
+      }
+      
       originalRequest._retry = true
+      isRefreshing = true
       
       try {
-        // Lay refresh token
+        // Lay refresh token tu localStorage
         const refreshToken = localStorage.getItem('refresh_token')
         
-        if (refreshToken) {
-          // Goi API refresh token
-          const response = await axios.post(
-            `${api.defaults.baseURL}/auth/refresh`,
-            { refresh_token: refreshToken }
-          )
-          
-          const { access_token } = response.data
-          
-          // Luu token moi
-          localStorage.setItem('access_token', access_token)
-          
-          // Retry request ban dau voi token moi
-          originalRequest.headers.Authorization = `Bearer ${access_token}`
-          return api(originalRequest)
+        if (!refreshToken) {
+          throw new Error('Khong co refresh token')
         }
+        
+        // Goi API refresh token (dung axios goc, khong dung api instance de tranh loop)
+        const response = await axios.post(
+          `${api.defaults.baseURL}/auth/refresh`,
+          { refresh_token: refreshToken }
+        )
+        
+        const { access_token } = response.data
+        
+        // Luu token moi vao localStorage
+        localStorage.setItem('access_token', access_token)
+        
+        // Retry tat ca request trong queue
+        processQueue(null, access_token)
+        
+        // Retry request ban dau voi token moi
+        originalRequest.headers.Authorization = `Bearer ${access_token}`
+        return api(originalRequest)
       } catch (refreshError) {
-        // Neu refresh token het han, xoa token va chuyen ve login
+        // Refresh that bai → force logout
+        processQueue(refreshError, null)
+        
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
+        localStorage.removeItem('token_type')
+        
+        // Dispatch event de UI co the hien thi toast
+        window.dispatchEvent(new CustomEvent('auth:session-expired'))
+        
         window.location.href = '/auth/login'
         return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
       }
     }
     
@@ -84,12 +138,21 @@ export const handleApiResponse = (response) => {
   return response.data
 }
 
+/**
+ * Helper xu ly API error - ho tro ca 422 Pydantic validation array
+ */
 export const handleApiError = (error) => {
   if (error.response) {
-    // Server tra ve response voi status code loi
-    const message = error.response.data?.message || 
-                   error.response.data?.detail || 
-                   'Co loi xay ra tu server'
+    const detail = error.response.data?.detail
+    
+    // 422 Pydantic validation error: detail thuong la array of objects
+    let message
+    if (Array.isArray(detail)) {
+      message = detail.map(d => d.msg || d.message || JSON.stringify(d)).join('. ')
+    } else {
+      message = detail || error.response.data?.message || 'Co loi xay ra tu server'
+    }
+    
     throw new Error(message)
   } else if (error.request) {
     // Request duoc gui nhung khong nhan duoc response
