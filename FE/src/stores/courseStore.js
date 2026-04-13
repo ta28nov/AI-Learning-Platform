@@ -24,7 +24,7 @@ export const useCourseStore = create((set, get) => ({
     keyword: '',
     category: '',
     level: '',
-    sort_by: 'newest'
+    sort_by: ''  // Client-side only, BE không hỗ trợ sort param
   },
 
   /**
@@ -35,12 +35,20 @@ export const useCourseStore = create((set, get) => ({
     set({ isLoading: true, error: null })
     
     try {
-      const mergedParams = {
-        ...get().filters,
-        ...get().pagination,
+      const { keyword, category, level } = get().filters
+      const { skip, limit } = get().pagination
+      
+      // Chỉ gửi params mà BE hỗ trợ: keyword, category, level, skip, limit
+      // KHÔNG gửi sort_by vì BE /courses/search không có param này
+      const apiParams = {
+        ...(keyword && { keyword }),
+        ...(category && { category }),
+        ...(level && { level }),
+        skip,
+        limit,
         ...params
       }
-      const response = await courseService.searchCourses(mergedParams)
+      const response = await courseService.searchCourses(apiParams)
       
       set({
         courses: response.courses || [],
@@ -170,7 +178,7 @@ export const useCourseStore = create((set, get) => ({
       isLoading: false,
       error: null,
       pagination: { skip: 0, limit: 12, total: 0 },
-      filters: { keyword: '', category: '', level: '', sort_by: 'newest' }
+      filters: { keyword: '', category: '', level: '', sort_by: '' }
     })
   }
 }))

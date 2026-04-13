@@ -22,9 +22,9 @@ export default defineConfig({
 
   // Cau hinh server phat trien
   server: {
-    port: 4000,
+    port: 3000,
     host: true,
-    open: true
+    open: false
   },
 
   // Cau hinh build

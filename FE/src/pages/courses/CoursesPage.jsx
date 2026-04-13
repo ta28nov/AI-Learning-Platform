@@ -106,16 +106,14 @@ const CoursesPage = () => {
             className="courses-filters__select"
             value={filters.category}
             onChange={(e) => setFilters({ category: e.target.value })}
+            data-testid="filter-category"
           >
             <option value="">Tất cả danh mục</option>
-            <option value="programming">Lập trình</option>
-            <option value="data_science">Khoa học dữ liệu</option>
-            <option value="ai_ml">AI / Machine Learning</option>
-            <option value="web_dev">Phát triển Web</option>
-            <option value="mobile">Phát triển Mobile</option>
-            <option value="database">Cơ sở dữ liệu</option>
-            <option value="devops">DevOps</option>
-            <option value="other">Khác</option>
+            <option value="Programming">Lập trình</option>
+            <option value="Data Science">Khoa học dữ liệu</option>
+            <option value="Math">Toán học</option>
+            <option value="Business">Kinh doanh</option>
+            <option value="Languages">Ngôn ngữ</option>
           </select>
         </div>
 
@@ -125,11 +123,12 @@ const CoursesPage = () => {
             className="courses-filters__select"
             value={filters.level}
             onChange={(e) => setFilters({ level: e.target.value })}
+            data-testid="filter-level"
           >
             <option value="">Tất cả trình độ</option>
-            <option value="beginner">Cơ bản</option>
-            <option value="intermediate">Trung cấp</option>
-            <option value="advanced">Nâng cao</option>
+            <option value="Beginner">Cơ bản</option>
+            <option value="Intermediate">Trung cấp</option>
+            <option value="Advanced">Nâng cao</option>
           </select>
         </div>
 
@@ -139,10 +138,12 @@ const CoursesPage = () => {
             className="courses-filters__select"
             value={filters.sort_by}
             onChange={(e) => setFilters({ sort_by: e.target.value })}
+            data-testid="filter-sort"
+            title="Sắp xếp (client-side vì BE chưa hỗ trợ sort param)"
           >
+            <option value="">Mặc định</option>
             <option value="newest">Mới nhất</option>
             <option value="popular">Phổ biến nhất</option>
-            <option value="rating">Đánh giá cao</option>
           </select>
         </div>
       </motion.div>
@@ -207,7 +208,7 @@ const CoursesPage = () => {
                   <img src={course.thumbnail_url} alt={course.title} className="course-card__img" />
                 ) : (
                   <div className="course-card__img-placeholder">
-                    <span>{course.category === 'programming' ? '💻' : course.category === 'ai_ml' ? '🤖' : '📚'}</span>
+                    <span>{course.category === 'Programming' ? '💻' : course.category === 'Data Science' ? '🔬' : course.category === 'Math' ? '🔢' : course.category === 'Business' ? '💼' : course.category === 'Languages' ? '🌍' : '📚'}</span>
                   </div>
                 )}
                 {course.is_enrolled && (
@@ -224,10 +225,11 @@ const CoursesPage = () => {
                     </span>
                   )}
                   {course.level && (
-                    <span className={`course-card__badge course-card__badge--${course.level}`}>
-                      {course.level === 'beginner' ? 'Cơ bản'
-                        : course.level === 'intermediate' ? 'Trung cấp'
-                        : 'Nâng cao'}
+                    <span className={`course-card__badge course-card__badge--${course.level?.toLowerCase()}`}>
+                      {course.level === 'Beginner' ? 'Cơ bản'
+                        : course.level === 'Intermediate' ? 'Trung cấp'
+                        : course.level === 'Advanced' ? 'Nâng cao'
+                        : course.level}
                     </span>
                   )}
                 </div>
@@ -296,7 +298,7 @@ const CoursesPage = () => {
             variant="outline"
             onClick={() => {
               setSearchInput('')
-              setFilters({ keyword: '', category: '', level: '', sort_by: 'newest' })
+              setFilters({ keyword: '', category: '', level: '', sort_by: '' })
             }}
           >
             Xóa bộ lọc

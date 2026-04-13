@@ -1,4 +1,4 @@
-import api, { handleApiResponse, handleApiError } from './api'
+import api, { handleApiResponse, handleApiError, AI_TIMEOUT } from './api'
 
 /**
  * Service xu ly hoc tap - modules va lessons
@@ -91,7 +91,8 @@ export const learningService = {
     try {
       const response = await api.post(
         `/courses/${courseId}/modules/${moduleId}/assessments/generate`,
-        data
+        data,
+        { timeout: AI_TIMEOUT }  // AI endpoint cần timeout dài hơn (120s)
       )
       return handleApiResponse(response)
     } catch (error) {

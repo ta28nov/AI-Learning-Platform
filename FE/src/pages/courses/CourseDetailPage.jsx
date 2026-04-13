@@ -52,7 +52,7 @@ const CourseDetailPage = () => {
         enrollment_info: {
           ...prev?.enrollment_info,
           is_enrolled: true,
-          enrollment_id: result?.enrollment_id,
+          enrollment_id: result?.id,  // BE trả về field "id" (EnrollmentCreateResponse.id)
           progress_percent: 0,
           can_access_content: true
         }
@@ -138,8 +138,8 @@ const CourseDetailPage = () => {
           <div className="cd-hero__badges">
             {course.category && <span className="cd-badge cd-badge--cat">{course.category}</span>}
             {course.level && (
-              <span className={`cd-badge cd-badge--${course.level}`}>
-                {course.level === 'beginner' ? 'Cơ bản' : course.level === 'intermediate' ? 'Trung cấp' : 'Nâng cao'}
+              <span className={`cd-badge cd-badge--${course.level?.toLowerCase()}`}>
+                {course.level === 'Beginner' ? 'Cơ bản' : course.level === 'Intermediate' ? 'Trung cấp' : course.level === 'Advanced' ? 'Nâng cao' : course.level}
               </span>
             )}
             {course.language && <span className="cd-badge">{course.language === 'vi' ? '🇻🇳 Tiếng Việt' : '🇬🇧 English'}</span>}

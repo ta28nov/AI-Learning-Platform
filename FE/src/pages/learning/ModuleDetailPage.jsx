@@ -65,8 +65,8 @@ const ModuleDetailPage = () => {
           {module.estimated_hours && (
             <span className="module-detail-header__meta">~{module.estimated_hours} giờ</span>
           )}
-          {module.lesson_count && (
-            <span className="module-detail-header__meta">{module.lesson_count} bài học</span>
+          {module.total_lessons && (
+            <span className="module-detail-header__meta">{module.total_lessons} bài học</span>
           )}
         </div>
       </div>
