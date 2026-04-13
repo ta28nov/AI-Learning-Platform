@@ -7,11 +7,14 @@ import api, { handleApiResponse, handleApiError } from './api'
 export const recommendationService = {
   /**
    * Lay de xuat lo trinh hoc tap tu ket qua danh gia
-   * @returns {Promise} RecommendationsFromAssessmentResponse
+   * @param {string} sessionId - UUID phien danh gia (required by BE)
+   * @returns {Promise} AssessmentRecommendationResponse
    */
-  async getFromAssessment() {
+  async getFromAssessment(sessionId) {
     try {
-      const response = await api.get('/recommendations/from-assessment')
+      const response = await api.get('/recommendations/from-assessment', {
+        params: { session_id: sessionId }
+      })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)

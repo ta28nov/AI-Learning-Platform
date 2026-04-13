@@ -1,4 +1,4 @@
-import api, { handleApiResponse, handleApiError } from './api'
+import api, { handleApiResponse, handleApiError, AI_TIMEOUT } from './api'
 
 /**
  * Service xu ly khoa hoc ca nhan
@@ -8,12 +8,12 @@ import api, { handleApiResponse, handleApiError } from './api'
 export const personalCourseService = {
   /**
    * Tao khoa hoc tu AI prompt
-   * @param {Object} data - { prompt (20-1000 chars), level, duration_weeks, language }
-   * @returns {Promise} Course draft duoc tao
+   * @param {Object} data - { prompt (20-1000 chars), level, estimated_duration_weeks, language }
+   * @returns {Promise} CourseFromPromptResponse
    */
   async createFromPrompt(data) {
     try {
-      const response = await api.post('/courses/from-prompt', data)
+      const response = await api.post('/courses/from-prompt', data, { timeout: AI_TIMEOUT })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)

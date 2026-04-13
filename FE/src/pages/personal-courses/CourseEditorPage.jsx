@@ -21,7 +21,7 @@ const CourseEditorPage = () => {
     title: '',
     description: '',
     category: '',
-    level: 'beginner',
+    level: 'Beginner',
     modules: []
   })
 
@@ -36,7 +36,7 @@ const CourseEditorPage = () => {
           title: data.title || '',
           description: data.description || '',
           category: data.category || '',
-          level: data.level || 'beginner',
+          level: data.level || 'Beginner',
           modules: data.modules || []
         })
       } catch (error) {
@@ -120,10 +120,11 @@ const CourseEditorPage = () => {
                   onChange={handleChange}
                 >
                   <option value="">Chọn danh mục</option>
-                  <option value="programming">Lập trình</option>
-                  <option value="data">Dữ liệu</option>
-                  <option value="design">Thiết kế</option>
-                  <option value="business">Kinh doanh</option>
+                  <option value="Programming">Lập trình</option>
+                  <option value="Data Science">Khoa học dữ liệu</option>
+                  <option value="Math">Toán học</option>
+                  <option value="Business">Kinh doanh</option>
+                  <option value="Languages">Ngôn ngữ</option>
                 </select>
               </div>
 
@@ -136,9 +137,9 @@ const CourseEditorPage = () => {
                   value={course.level}
                   onChange={handleChange}
                 >
-                  <option value="beginner">Người mới bắt đầu</option>
-                  <option value="intermediate">Trung bình</option>
-                  <option value="advanced">Nâng cao</option>
+                  <option value="Beginner">Người mới bắt đầu</option>
+                  <option value="Intermediate">Trung bình</option>
+                  <option value="Advanced">Nâng cao</option>
                 </select>
               </div>
 

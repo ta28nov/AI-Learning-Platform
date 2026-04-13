@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import recommendationService from '@services/recommendationService'
@@ -14,6 +14,7 @@ import './RecommendationsPage.css'
  */
 const RecommendationsPage = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [recommendations, setRecommendations] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -22,15 +23,21 @@ const RecommendationsPage = () => {
     const fetchRecommendations = async () => {
       try {
         setLoading(true)
-        // Thu lay de xuat tu assessment truoc
         let data
-        try {
-          data = await recommendationService.getFromAssessment()
-        } catch {
-          // Neu chua co assessment, lay de xuat chung
+        // Nếu có session_id từ assessment → lấy đề xuất từ assessment
+        const sessionId = searchParams.get('session_id')
+        if (sessionId) {
+          try {
+            data = await recommendationService.getFromAssessment(sessionId)
+          } catch {
+            // Fallback nếu session_id không hợp lệ
+            data = await recommendationService.getRecommendations()
+          }
+        } else {
+          // Không có session_id → lấy đề xuất chung
           data = await recommendationService.getRecommendations()
         }
-        setRecommendations(data?.recommendations || data?.courses || [])
+        setRecommendations(data?.recommended_courses || data?.recommendations || data?.courses || [])
       } catch (error) {
         toast.error('Không thể tải đề xuất')
       } finally {
@@ -38,7 +45,7 @@ const RecommendationsPage = () => {
       }
     }
     fetchRecommendations()
-  }, [])
+  }, [searchParams])
 
   const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }
 

@@ -189,7 +189,7 @@ const AssessmentResultsPage = () => {
         >
           Làm lại đánh giá
         </Button>
-        <Button onClick={() => navigate('/dashboard/recommendations')}>
+        <Button onClick={() => navigate(`/dashboard/recommendations?session_id=${sessionId}`)}>
           Xem lộ trình học tập
         </Button>
       </div>
