@@ -76,9 +76,12 @@ const QuizAttemptPage = () => {
     setSubmitting(true)
     try {
       const timeSpentMinutes = Math.round((Date.now() - startTime) / 60000)
+      // BE QuizAttemptRequest.AnswerItem: question_id (str), selected_option (str: "A"|"B"|"C"|"D" or fill-in text)
       const formattedAnswers = (quiz.questions || []).map((q) => ({
         question_id: q.question_id || q.id,
-        selected_option: typeof answers[q.question_id || q.id] === 'number' ? answers[q.question_id || q.id] : null
+        selected_option: typeof answers[q.question_id || q.id] === 'number'
+          ? String.fromCharCode(65 + answers[q.question_id || q.id])  // 0→"A", 1→"B", 2→"C", 3→"D"
+          : (answers[q.question_id || q.id] || '')
       }))
 
       await quizService.submitAttempt(quizId, {

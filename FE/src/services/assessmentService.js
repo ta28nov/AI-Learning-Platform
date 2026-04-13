@@ -1,4 +1,4 @@
-import api, { handleApiResponse, handleApiError } from './api'
+import api, { handleApiResponse, handleApiError, AI_TIMEOUT } from './api'
 
 /**
  * Service xu ly danh gia nang luc AI
@@ -12,7 +12,7 @@ export const assessmentService = {
    */
   async generate(data) {
     try {
-      const response = await api.post('/assessments/generate', data)
+      const response = await api.post('/assessments/generate', data, { timeout: AI_TIMEOUT })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)
@@ -22,12 +22,17 @@ export const assessmentService = {
   /**
    * Nop bai danh gia
    * @param {string} sessionId - UUID session
-   * @param {Object} data - { answers[], total_time_seconds }
+   * @param {Object} data - { answers[], total_time_seconds, submitted_at }
    * @returns {Promise} { session_id, message }
    */
   async submit(sessionId, data) {
     try {
-      const response = await api.post(`/assessments/${sessionId}/submit`, data)
+      // BE yeu cau submitted_at (datetime ISO 8601) - tu dong them neu thieu
+      const payload = {
+        ...data,
+        submitted_at: data.submitted_at || new Date().toISOString()
+      }
+      const response = await api.post(`/assessments/${sessionId}/submit`, payload)
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)

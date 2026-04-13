@@ -33,14 +33,14 @@ const AssessmentSetupPage = () => {
     Advanced: { questions: 35, time: 30 }
   }
 
-  // Danh sach categories va subjects
-  const categories = ['Programming', 'Mathematics', 'Business', 'Science', 'Language']
+  // Danh sach categories va subjects - khop voi DB courses (scripts/init_data.py)
+  const categories = ['Programming', 'Data Science', 'Math', 'Business', 'Languages']
   const subjectsByCategory = {
     Programming: ['Python', 'JavaScript', 'Java', 'C++', 'Web Development'],
-    Mathematics: ['Algebra', 'Calculus', 'Statistics', 'Linear Algebra'],
+    'Data Science': ['Data Analysis', 'Machine Learning', 'Statistics', 'Pandas'],
+    Math: ['Algebra', 'Calculus', 'Statistics', 'Linear Algebra'],
     Business: ['Marketing', 'Finance', 'Management', 'Accounting'],
-    Science: ['Physics', 'Chemistry', 'Biology', 'Computer Science'],
-    Language: ['English', 'Japanese', 'Korean', 'Chinese']
+    Languages: ['English', 'Japanese', 'Korean', 'Chinese']
   }
 
   const selectedCategory = watch('category')

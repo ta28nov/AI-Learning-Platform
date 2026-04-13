@@ -98,7 +98,8 @@ const AssessmentQuizPage = () => {
 
       await assessmentService.submit(sessionId, {
         answers: formattedAnswers,
-        total_time_seconds: totalTime - timeLeft
+        total_time_seconds: totalTime - timeLeft,
+        submitted_at: new Date().toISOString()  // BE yêu cầu submitted_at (required)
       })
 
       toast.success('Nộp bài thành công!')

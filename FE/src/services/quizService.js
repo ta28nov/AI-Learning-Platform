@@ -1,4 +1,4 @@
-import api, { handleApiResponse, handleApiError } from './api'
+import api, { handleApiResponse, handleApiError, AI_TIMEOUT } from './api'
 
 /**
  * Service xu ly quiz va bai kiem tra
@@ -74,7 +74,7 @@ export const quizService = {
    */
   async generatePractice(data) {
     try {
-      const response = await api.post('/ai/generate-practice', data)
+      const response = await api.post('/ai/generate-practice', data, { timeout: AI_TIMEOUT })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)

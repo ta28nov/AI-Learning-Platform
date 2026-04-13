@@ -16,7 +16,8 @@ export default defineConfig({
       '@stores': resolve(__dirname, 'src/stores'),
       '@styles': resolve(__dirname, 'src/styles'),
       '@utils': resolve(__dirname, 'src/utils'),
-      '@contexts': resolve(__dirname, 'src/contexts')
+      '@contexts': resolve(__dirname, 'src/contexts'),
+      '@hooks': resolve(__dirname, 'src/hooks')
     }
   },
 
@@ -24,7 +25,8 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
-    open: false
+    open: false,
+    allowedHosts: true
   },
 
   // Cau hinh build
