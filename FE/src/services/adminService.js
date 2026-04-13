@@ -11,12 +11,18 @@ export const adminService = {
 
   /**
    * Lay danh sach nguoi dung
-   * @param {Object} params - { role?, status?, search?, sort_by?, sort_order?, skip?, limit? }
+   * @param {Object} params - { role?, status?, keyword?, sort_by?, sort_order?, skip?, limit? }
    * @returns {Promise} AdminUserListResponse
    */
   async getUsers(params = {}) {
     try {
-      const response = await api.get('/admin/users', { params })
+      // BE admin_router.py dùng param name "keyword" (không phải "search")
+      const mappedParams = { ...params }
+      if (mappedParams.search) {
+        mappedParams.keyword = mappedParams.search
+        delete mappedParams.search
+      }
+      const response = await api.get('/admin/users', { params: mappedParams })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)
@@ -84,12 +90,14 @@ export const adminService = {
    * Thay doi vai tro nguoi dung
    * @param {string} userId - UUID
    * @param {string} newRole - student|instructor|admin
+   * @param {string} impact - Mo ta tac dong cua viec thay doi vai tro (required by BE)
    * @returns {Promise} AdminChangeRoleResponse (bao gom impact analysis)
    */
-  async changeUserRole(userId, newRole) {
+  async changeUserRole(userId, newRole, impact = '') {
     try {
       const response = await api.put(`/admin/users/${userId}/role`, {
-        new_role: newRole
+        new_role: newRole,
+        impact: impact || `Thay đổi vai trò thành ${newRole}`
       })
       return handleApiResponse(response)
     } catch (error) {
