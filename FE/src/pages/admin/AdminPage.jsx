@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import adminService from '@services/adminService'
 import analyticsService from '@services/analyticsService'
+import dashboardService from '@services/dashboardService'
 import Button from '@components/ui/Button'
 import './AdminPage.css'
 
@@ -73,21 +74,64 @@ const AdminPage = () => {
 /* ========== OVERVIEW ========== */
 const AdminOverview = () => {
   const navigate = useNavigate()
+  const [dashboard, setDashboard] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        setLoading(true)
+        const data = await dashboardService.getAdminDashboard()
+        setDashboard(data)
+      } catch (error) {
+        // Dashboard stats optional — dashboard vẫn hiển thị navigation cards
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchDashboard()
+  }, [])
+
   const cards = [
-    { icon: '👥', title: 'Người dùng', desc: 'Quản lý tài khoản, vai trò, mật khẩu', path: '/dashboard/admin/users' },
-    { icon: '📚', title: 'Khóa học', desc: 'Quản lý nội dung, tác giả, trạng thái', path: '/dashboard/admin/courses' },
-    { icon: '🏫', title: 'Lớp học', desc: 'Giám sát lớp học, tiến độ', path: '/dashboard/admin/classes' },
+    { icon: '👥', title: 'Người dùng', desc: 'Quản lý tài khoản, vai trò, mật khẩu', path: '/dashboard/admin/users', stat: dashboard?.total_users },
+    { icon: '📚', title: 'Khóa học', desc: 'Quản lý nội dung, tác giả, trạng thái', path: '/dashboard/admin/courses', stat: dashboard?.total_courses },
+    { icon: '🏫', title: 'Lớp học', desc: 'Giám sát lớp học, tiến độ', path: '/dashboard/admin/classes', stat: dashboard?.total_classes },
     { icon: '📊', title: 'Analytics', desc: 'Thống kê, tăng trưởng, sức khỏe hệ thống', path: '/dashboard/admin/analytics' }
   ]
 
   return (
     <motion.div className="admin-overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      {/* Dashboard stats from GET /dashboard/admin */}
+      {dashboard && (
+        <div className="admin-summary">
+          <div className="admin-summary__item">
+            <span className="admin-summary__value">{dashboard.total_users || 0}</span>
+            <span className="admin-summary__label">Tổng người dùng</span>
+          </div>
+          <div className="admin-summary__item">
+            <span className="admin-summary__value">{dashboard.total_courses || 0}</span>
+            <span className="admin-summary__label">Tổng khóa học</span>
+          </div>
+          <div className="admin-summary__item">
+            <span className="admin-summary__value">{dashboard.total_classes || 0}</span>
+            <span className="admin-summary__label">Tổng lớp học</span>
+          </div>
+          {dashboard.activity_stats && (
+            <div className="admin-summary__item">
+              <span className="admin-summary__value">{dashboard.activity_stats.active_users_today || 0}</span>
+              <span className="admin-summary__label">Hoạt động hôm nay</span>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="admin-grid">
         {cards.map(card => (
           <div key={card.title} className="admin-card" onClick={() => navigate(card.path)}>
             <span className="admin-card__icon">{card.icon}</span>
             <h3 className="admin-card__title">{card.title}</h3>
             <p className="admin-card__desc">{card.desc}</p>
+            {card.stat != null && <span className="admin-card__stat">{card.stat}</span>}
           </div>
         ))}
       </div>
@@ -104,12 +148,13 @@ const AdminOverview = () => {
  */
 const AdminUsers = () => {
   const [users, setUsers] = useState([])
-  const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({ role: '', status: '', search: '' })
   const [pagination, setPagination] = useState({ skip: 0, limit: 20, total: 0 })
 
   // Lấy danh sách users
+  // BE AdminUserListResponse: { data: AdminUserListItem[], total: int, skip: int, limit: int }
+  // KHÔNG có trường summary — dùng total từ root level
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true)
@@ -118,8 +163,7 @@ const AdminUsers = () => {
       Object.keys(params).forEach(k => { if (!params[k] && params[k] !== 0) delete params[k] })
       const data = await adminService.getUsers(params)
       setUsers(data?.data || [])
-      if (data?.summary) setSummary(data.summary)
-      setPagination(prev => ({ ...prev, total: data?.summary?.total_users || 0 }))
+      setPagination(prev => ({ ...prev, total: data?.total || 0 }))
     } catch (error) {
       toast.error('Không thể tải danh sách người dùng')
     } finally {
@@ -177,23 +221,17 @@ const AdminUsers = () => {
 
   return (
     <motion.div initial="hidden" animate="visible" variants={fadeUp}>
-      {/* Summary stats */}
-      {summary && (
-        <div className="admin-summary">
-          <div className="admin-summary__item">
-            <span className="admin-summary__value">{summary.total_users || 0}</span>
-            <span className="admin-summary__label">Tổng người dùng</span>
-          </div>
-          <div className="admin-summary__item">
-            <span className="admin-summary__value">{summary.active_users || 0}</span>
-            <span className="admin-summary__label">Đang hoạt động</span>
-          </div>
-          <div className="admin-summary__item">
-            <span className="admin-summary__value">{summary.new_users_this_month || 0}</span>
-            <span className="admin-summary__label">Mới tháng này</span>
-          </div>
+      {/* Pagination info — BE trả total ở root level, không có summary */}
+      <div className="admin-summary">
+        <div className="admin-summary__item">
+          <span className="admin-summary__value">{pagination.total}</span>
+          <span className="admin-summary__label">Tổng người dùng</span>
         </div>
-      )}
+        <div className="admin-summary__item">
+          <span className="admin-summary__value">{users.length}</span>
+          <span className="admin-summary__label">Đang hiển thị</span>
+        </div>
+      </div>
 
       {/* Filters */}
       <div className="admin-filters">
@@ -295,7 +333,8 @@ const AdminCourses = () => {
     try {
       setLoading(true)
       const params = {}
-      if (search) params.search = search
+      // BE admin_router.py dùng param name "keyword" (không phải "search")
+      if (search) params.keyword = search
       const data = await adminService.getCourses(params)
       setCourses(data?.data || [])
     } catch (error) {
