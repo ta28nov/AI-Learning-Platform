@@ -1,9 +1,12 @@
+---
+description: # AI LEARNING PLATFORM — ANTIGRAVITY AGENT RULES # 
+---
+
 # AI LEARNING PLATFORM — ANTIGRAVITY AGENT RULES
 # ==================================================
 # File này được đọc tự động khi Antigravity khởi động trong workspace này.
 # Mục đích: Giữ nguyên ngữ cảnh, rules, conventions trên mọi máy / mọi session.
 # Cập nhật lần cuối: 2026-04-03
-
 ---
 
 ## 🗂️ CẤU TRÚC DỰ ÁN
@@ -168,86 +171,6 @@ VITE_API_BASE_URL (env var) + /api/v1
 
 ---
 
-## 📋 TRẠNG THÁI HIỆN TẠI CỦA DỰ ÁN
-
-### ✅ Đã hoàn thành
-- BE: Toàn bộ routers, controllers, services, schemas (trừ các mục ghi chú trong note.md)
-- FE: Mapping BE→FE hoàn tất (tất cả pages, services, stores, components)
-- FE: DashboardLayout tích hợp GlobalSearchBar
-- FE: LessonPage tích hợp ChatWidget qua `useChatLogic` hook
-- Chat: Dual-UI pattern (ChatWidget inline trong lesson + ChatPage full-screen)
-
-### ⚠️ Known Issues (từ note.md)
-1. `GET /api/v1/recommendations` — service chưa hoàn chỉnh (recommendation_router.py)
-2. Analytics endpoints chưa có controller/service đầy đủ:
-   - `GET /api/v1/analytics/learning-stats`
-   - `GET /api/v1/analytics/progress-chart`
-   - `GET /api/v1/analytics/instructor/*`
-3. `GET /api/v1/admin/analytics/courses` → trả 500
-4. `GET /api/v1/admin/analytics/system-health` → trả 500
-5. Admin course endpoints: logic và schema lệch nhau đáng kể
-
-### 🔄 Giai đoạn tiếp theo
-- **Phase hiện tại:** Kiểm tra 1-1 BE ↔ FE theo implementation_plan.md
-- **Thứ tự:** Phase 1 (Auth) → 2 (Courses) → 3 (Learning) → 4 (AI) → 5 (Mgmt) → 6 (Analytics) → 7 (Admin)
-- Sau khi kiểm tra xong → Fix lỗi → Integration test
-
----
-
-## 📁 FILE MAPPING QUAN TRỌNG
-
-### BE → FE Service Mapping
-| BE Module | BE Files | FE Service |
-|-----------|----------|------------|
-| Auth | `auth_router`, `auth_controller`, `auth_service`, `schemas/auth.py` | `authService.js` |
-| User | `users_router`, `user_controller`, `user_service`, `schemas/user.py` | `userService.js` |
-| Course | `courses_router`, `course_controller`, `course_service`, `schemas/course.py` | `courseService.js` |
-| Enrollment | `enrollments_router`, `enrollment_controller`, `enrollment_service` | `enrollmentService.js` |
-| Learning | `learning_router`, `learning_controller`, `learning_service` | `learningService.js` |
-| Quiz | `quiz_router`, `quiz_controller`, `quiz_service`, `schemas/quiz.py` | `quizService.js` |
-| Assessment | `assessments_router`, `assessment_controller`, `assessment_service` | `assessmentService.js` |
-| Personal Course | `personal_courses_router`, `personal_courses_controller` | `personalCourseService.js` |
-| Chat | `chat_router`, `chat_controller`, `chat_service`, `schemas/chat.py` | `chatService.js` |
-| Dashboard | `dashboard_router`, `dashboard_controller`, `dashboard_service` | `dashboardService.js` |
-| Analytics | `analytics_router` | `analyticsService.js` |
-| Class | `classes_router`, `class_controller`, `class_service`, `schemas/classes.py` | `classService.js` |
-| Recommendation | `recommendation_router`, `recommendation_controller` | `recommendationService.js` |
-| Search | `search_router`, `search_controller`, `search_service` | `searchService.js` |
-| Admin | `admin_router`, `admin_controller`, `admin_service`, `schemas/admin.py` | `adminService.js` |
-| Progress | `progress_router`, `progress_controller` | `progressService.js` |
-
-### FE Page → Service Mapping
-| Page | Sử dụng Services |
-|------|-----------------|
-| `LoginPage.jsx` | `authService` |
-| `RegisterPage.jsx` | `authService` |
-| `ProfilePage.jsx` | `userService` |
-| `DashboardPage.jsx` | `dashboardService` |
-| `CoursesPage.jsx` | `courseService` |
-| `CourseDetailPage.jsx` | `courseService`, `enrollmentService` |
-| `MyCoursesPage.jsx` | `enrollmentService` |
-| `ModuleListPage.jsx` | `learningService` |
-| `ModuleDetailPage.jsx` | `learningService` |
-| `LessonPage.jsx` | `learningService`, `chatService` (useChatLogic) |
-| `QuizDetailPage.jsx` | `quizService` |
-| `QuizAttemptPage.jsx` | `quizService` |
-| `QuizResultsPage.jsx` | `quizService` |
-| `AssessmentSetupPage.jsx` | `assessmentService` |
-| `AssessmentQuizPage.jsx` | `assessmentService` |
-| `AssessmentResultsPage.jsx` | `assessmentService`, `recommendationService` |
-| `PersonalCoursesPage.jsx` | `personalCourseService` |
-| `CourseEditorPage.jsx` | `personalCourseService` |
-| `ChatPage.jsx` | `chatService` |
-| `ClassListPage.jsx` | `classService` |
-| `ClassCreatePage.jsx` | `classService` |
-| `ClassDetailPage.jsx` | `classService` |
-| `SearchResultsPage.jsx` | `searchService` |
-| `RecommendationsPage.jsx` | `recommendationService` |
-| `ProgressPage.jsx` | `progressService`, `analyticsService` |
-| `AdminPage.jsx` | `adminService`, `dashboardService`, `analyticsService` |
-| `InstructorDashboardPage.jsx` | `dashboardService`, `analyticsService` |
-
----
 
 ## 🔗 TÀI LIỆU THAM KHẢO
 
@@ -293,11 +216,10 @@ docker-compose up --build
 ## 🧭 HƯỚNG DẪN CHO AI AGENT KHI BẮT ĐẦU SESSION MỚI
 
 1. **Đọc file này trước** — hiểu context tổng thể
-2. **Đọc `note.md`** — nắm known issues hiện tại
 3. **Đọc `implementation_plan.md`** — biết giai đoạn hiện tại đang làm gì
 4. Nếu user yêu cầu sửa endpoint X → Đọc BE schema tương ứng trước, rồi mới đọc FE
 5. Khi phát hiện lỗi → Dùng format FAIL chuẩn, đề xuất fix ngay
-6. Khi hoàn thành một phase → Cập nhật `note.md` với kết quả
+6. Khi hoàn thành một phase → Cập nhật với kết quả
 
 ---
 
