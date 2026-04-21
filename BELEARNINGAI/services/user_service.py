@@ -7,7 +7,7 @@ Tuân thủ: CHUCNANG.md Section 2.1, 4.1 (User Management)
 from datetime import datetime
 from typing import Optional, List
 from models.models import User
-from services.auth_service import hash_password
+from utils.security import hash_password
 from beanie import PydanticObjectId
 
 

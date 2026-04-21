@@ -208,7 +208,7 @@ async def list_courses_admin(
     return await handle_list_courses_admin(
         current_user=current_user,
         author_id=author_id,
-        status=status_param,
+        status_filter=status_param,
         category=category,
         course_type=course_type,
         keyword=keyword,

@@ -493,3 +493,184 @@ const payload = { full_name, email, password };
 
 > [!NOTE]
 > Kết quả tổng hợp sau mỗi phase sẽ được ghi vào `task.md`. Các sửa đổi phát hiện ra sẽ được thực thi trực tiếp lên file FE source code, không đặt câu hỏi lại trừ khi có ambiguity nghiêm trọng về business logic.
+
+
+
+Kế Hoạch Kiểm Tra Backend Toàn Diện: API Logic, Validation, Error Handling, Business Rules
+Audit chuyên sâu Backend — tập trung kiểm tra logic nghiệp vụ, error handling, validation, RBAC enforcement, DB queries, và đảm bảo mọi luồng hoạt động chính xác khi FE gọi vào.
+
+IMPORTANT
+
+Nguyên tắc: Đọc Router → Controller → Service → Model theo chuỗi. Phát hiện lỗi → sửa ngay. Không sửa FE trừ khi BE thay đổi schema.
+
+Phương Pháp Kiểm Tra
+Mỗi nhóm chức năng sẽ được kiểm tra theo các trục:
+
+Validation — Pydantic schemas validate đúng không? Edge cases (empty strings, negative numbers, invalid UUIDs)?
+RBAC — Mỗi endpoint có check role đúng không? Admin-only endpoints có guard không?
+Error Handling — Try/catch trong controller/service đầy đủ không? HTTPException đúng status code?
+Business Logic — Luồng logic đúng không? Race conditions? Side effects?
+DB Operations — Queries tối ưu? Index được dùng? Data integrity?
+Edge Cases — Null handling, empty arrays, duplicate operations?
+Format báo cáo
+❌ BUG | [Severity: Critical/High/Medium/Low] | [File] [Line]
+Mô tả: ...
+Tác động: ...
+Fix đề xuất: ...
+⚠️ WARN | [File] [Line]
+Vấn đề: ...
+Đề xuất: ...
+✅ PASS | [Component]
+Ghi chú: ...
+User Review Required
+IMPORTANT
+
+Kế hoạch này rất lớn (15 services, 15 controllers, 16 routers, 15 schemas). Đề xuất thực hiện theo phases, sau mỗi phase báo cáo + sửa lỗi trước khi đi tiếp.
+
+WARNING
+
+Phạm vi sửa: Chỉ sửa BE code. Nếu fix BE thay đổi response schema → cập nhật FE service tương ứng để đồng bộ.
+
+Danh Sách Kiểm Tra Theo Phase
+🔐 PHASE 1: Nền Tảng — Auth, Security, Middleware, Config
+Mục tiêu: Đảm bảo xương sống hệ thống vững chắc.
+
+#	File	Kiểm tra	Ưu tiên
+1.1	config/config.py	Env vars load đúng, defaults hợp lý, sensitive values required	🔴
+1.2	app/main.py + app/database.py	CORS config, lifespan, Beanie init đúng models	🔴
+1.3	utils/security.py	hash_password, verify_password, create_access_token, create_refresh_token, decode_token — edge cases	🔴
+1.4	middleware/auth.py	get_current_user — token validation flow, error messages chuẩn	🔴
+1.5	middleware/rbac.py	Role hierarchy, permission sets đầy đủ, require_role async function bug check	🔴
+1.6	services/auth_service.py	Duplicate hash_password/verify_password vs utils, authenticate_user status check, refresh token flow	🔴
+1.7	controllers/auth_controller.py	Register validation, login response format, refresh flow, logout	🔴
+1.8	routers/auth_router.py	Endpoint definitions, status codes	🟡
+1.9	schemas/auth.py	Field validation rules (email, password min length, remember_me)	🔴
+Điểm kiểm tra đặc biệt Phase 1:
+
+rbac.py line 87-111 và line 244-284 — CÓ HAI require_role functions (1 trong auth.py, 1 trong rbac.py) → conflict?
+check_enrollment_access (rbac.py line 390-409) trả return True — STUB chưa implement
+auth_service.py duplicate hash_password/verify_password với utils/security.py — dùng cái nào?
+authenticate_user trả None khi status != "active" nhưng KHÔNG phân biệt "inactive" vs "suspended" cho FE
+Refresh token lưu raw JWT vào DB thay vì hash — security concern?
+📚 PHASE 2: Course & Enrollment — Core Business Logic
+Mục tiêu: Luồng khám phá → đăng ký → học tập phải hoạt động chính xác.
+
+#	File	Kiểm tra	Ưu tiên
+2.1	schemas/course.py	Course create/update validation, enum values	🔴
+2.2	services/course_service.py (28KB)	Search logic, public listing, detail with enrollment info, pagination	🔴
+2.3	controllers/course_controller.py (23KB)	Error handling, response mapping	🔴
+2.4	routers/courses_router.py	URL conflicts (/courses/search vs /courses/{course_id})	🔴
+2.5	schemas/enrollment.py	Enrollment create/cancel validation	🟡
+2.6	services/enrollment_service.py (14KB)	Duplicate enrollment prevention, cancel logic, progress cleanup	🔴
+2.7	controllers/enrollment_controller.py (14KB)	Ownership check (student can only see own enrollments)	🔴
+2.8	routers/enrollments_router.py	RBAC guards on all endpoints	🟡
+Điểm kiểm tra đặc biệt Phase 2:
+
+Course search vs public listing — logic khác nhau thế nào?
+Enrollment count on Course document — có được increment/decrement atomically không?
+Cancel enrollment → có cleanup Progress document không?
+URL conflict: /courses/search, /courses/public, /courses/from-prompt, /courses/personal, /courses/my-personal vs /courses/{course_id} — router priority đúng không?
+🎓 PHASE 3: Learning, Quiz & Progress — Complex Business Logic
+Mục tiêu: Luồng lesson → quiz → progress → unlock phải đúng.
+
+#	File	Kiểm tra	Ưu tiên
+3.1	schemas/learning.py (14KB)	Module/Lesson response schemas	🟡
+3.2	services/learning_service.py (26KB)	Module detail, lesson content, navigation, unlock logic	🔴
+3.3	controllers/learning_controller.py (19KB)	Enrollment check before lesson access	🔴
+3.4	schemas/quiz.py (9KB)	Quiz create/attempt/results validation	🔴
+3.5	services/quiz_service.py (39KB)	Attempt logic, scoring, max_attempts, passing_score, retake, mandatory questions	🔴
+3.6	controllers/quiz_controller.py (35KB)	Instructor ownership check, student enrollment check	🔴
+3.7	schemas/progress.py	Progress response schema	🟡
+3.8	services/learning_service.py	Lesson completion → progress update → unlock next lesson logic	🔴
+Điểm kiểm tra đặc biệt Phase 3:
+
+Quiz attempt: kiểm tra max_attempts enforcement
+Quiz scoring: mandatory_questions phải đúng 100% mới pass — logic đúng?
+Lesson completion → auto-update Progress document → auto-unlock next lesson chain
+Quiz retake: reset attempt_number hay increment?
+Instructor create quiz: validate course_id ownership?
+Class-results: chỉ instructor thấy kết quả class mình dạy?
+🤖 PHASE 4: AI Features — Assessment, Chat, Personal Courses, Recommendations
+Mục tiêu: AI integration hoạt động đúng, error handling cho Gemini API.
+
+#	File	Kiểm tra	Ưu tiên
+4.1	schemas/assessment.py	Generate request, submit answer, results schemas	🔴
+4.2	services/assessment_service.py (8KB)	Generate flow, submit + AI evaluate, session expiry	🔴
+4.3	services/ai_service.py (63KB!)	Gemini API calls, prompt engineering, error handling, timeout	🔴
+4.4	controllers/assessment_controller.py (14KB)	Session ownership check, expiry validation	🔴
+4.5	schemas/chat.py (7KB)	Chat message, conversation schemas	🟡
+4.6	services/chat_service.py (7KB)	Conversation management, message context, AI response	🔴
+4.7	controllers/chat_controller.py (13KB)	Enrollment check for course chat	🔴
+4.8	schemas/personal_courses.py (10KB)	From-prompt, create, update schemas	🟡
+4.9	services/personal_courses_service.py (15KB)	AI course generation, ownership CRUD	🔴
+4.10	services/recommendation_service.py (22KB)	Assessment-based + learning history recommendations	🟡
+Điểm kiểm tra đặc biệt Phase 4:
+
+ai_service.py là 63KB! — Cần kiểm tra error handling cho Gemini API failures
+Assessment session expiry: BE check expires_at trước khi cho submit?
+Chat context: gửi đúng course context cho AI không?
+from-prompt AI generation: validate prompt min 20 chars?
+Recommendation: session_id required? Timeline logic?
+🏫 PHASE 5: Classes, Search, Dashboard, Analytics
+Mục tiêu: Feature quản lý và analytics hoạt động đúng.
+
+#	File	Kiểm tra	Ưu tiên
+5.1	schemas/classes.py	Create/join/update validation	🟡
+5.2	services/class_service.py (28KB)	Join with code, student management, max_students enforcement	🔴
+5.3	controllers/class_controller.py (13KB)	Instructor ownership, student enrollment on join	🔴
+5.4	schemas/search.py	Search query params, response types	🟡
+5.5	services/search_service.py (27KB)	Multi-type search, relevance scoring, guest vs auth access	🔴
+5.6	schemas/dashboard.py (14KB)	Student/Instructor/Admin dashboard response structures	🟡
+5.7	services/dashboard_service.py (55KB!)	Dashboard data aggregation, chart data, system health	🔴
+5.8	controllers/dashboard_controller.py (18KB)	Role-based dashboard routing	🟡
+Điểm kiểm tra đặc biệt Phase 5:
+
+Class join: auto-enroll student vào course?
+Class max_students: enforce khi join?
+Search: guest access (get_optional_user) hoạt động đúng?
+Dashboard service 55KB — cần check DB query efficiency
+System health metrics: real values hay hardcoded?
+🛡️ PHASE 6: Admin & User Management
+Mục tiêu: Admin CRUD operations + role change impact analysis.
+
+#	File	Kiểm tra	Ưu tiên
+6.1	schemas/admin.py (12KB)	User/Course/Class CRUD schemas	🟡
+6.2	services/admin_service.py (37KB)	User CRUD, role change impact, course admin CRUD, class monitoring	🔴
+6.3	controllers/admin_controller.py (23KB)	Admin role enforcement on all handlers	🔴
+6.4	schemas/user.py (6KB)	Profile update validation	🟡
+6.5	services/user_service.py (29KB)	Profile CRUD, email uniqueness, avatar handling	🔴
+Điểm kiểm tra đặc biệt Phase 6:
+
+Admin delete user: cascade delete enrollments, progress, conversations?
+Admin change role: impact analysis accuracy?
+Admin delete course: cascade delete modules, lessons, enrollments, progress?
+Email uniqueness enforcement khi admin/user update email?
+Admin reset password: response trả new_password về client — bảo mật?
+Cross-Cutting Concerns (Kiểm tra xuyên suốt)
+Concern	Kiểm tra	Files
+Duplicate Code	hash_password/verify_password duplicate giữa auth_service.py và utils/security.py	auth_service, security
+Error Response Format	Tất cả HTTPException dùng detail field chuẩn	All controllers
+DateTime Consistency	datetime.utcnow() vs datetime.now(timezone.utc) — mixing?	All services
+UUID Validation	Path params {user_id}, {course_id} etc có validate UUID format?	All routers
+Null Safety	.get() trên optional fields có handle None?	All services
+Pagination	skip/limit consistent? total count accurate?	All list endpoints
+RBAC Stub	check_enrollment_access trả True hardcoded	rbac.py
+Index Coverage	DB queries match declared indexes?	models.py vs services
+Thứ Tự Thực Hiện
+IMPORTANT
+
+Từ nền tảng lên feature phức tạp:
+
+Phase 1 (Nền tảng)     → Auth, Security, Middleware, Config
+Phase 2 (Core)          → Course & Enrollment logic
+Phase 3 (Complex)       → Learning, Quiz, Progress chains
+Phase 4 (AI)            → Assessment, Chat, Personal Courses
+Phase 5 (Features)      → Classes, Search, Dashboard
+Phase 6 (Admin)         → Admin CRUD, User management
+Verification Plan
+Automated Tests
+Sau mỗi phase, chạy uvicorn để verify server khởi động không lỗi
+Test API endpoints bằng browser subagent nếu cần
+Manual Verification
+Review console log cho ImportError, DeprecationWarning
+Kiểm tra response format bằng Swagger UI (/docs)

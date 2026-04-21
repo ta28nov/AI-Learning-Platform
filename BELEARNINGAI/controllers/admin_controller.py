@@ -390,7 +390,7 @@ async def handle_reset_user_password_admin(
 
 async def handle_list_courses_admin(
     author_id: Optional[str] = None,
-    status: Optional[str] = None,
+    status_filter: Optional[str] = None,
     category: Optional[str] = None,
     course_type: Optional[str] = None,
     keyword: Optional[str] = None,
@@ -404,8 +404,8 @@ async def handle_list_courses_admin(
     4.2.1: Xem tất cả khóa học (public + personal)
     
     Args:
-        author: Lọc theo tác giả (instructor)
-        status: Lọc theo trạng thái (draft|published|archived)
+        author_id: Lọc theo tác giả (instructor)
+        status_filter: Lọc theo trạng thái (draft|published|archived)
         category: Lọc theo danh mục
         course_type: Lọc theo loại (public|personal)
         keyword: Tìm kiếm theo tên khóa học
@@ -431,10 +431,10 @@ async def handle_list_courses_admin(
             limit=limit,
             search=keyword,
             category_filter=category,
-            status_filter=status,
+            status_filter=status_filter,
             instructor_filter=author_id,
-            sort_by="created_at",
-            sort_order="desc"
+            sort_by=sort_by,
+            sort_order=sort_order
         )
         
         return AdminCourseListResponse(**courses_data)
