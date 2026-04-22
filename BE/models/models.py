@@ -25,8 +25,11 @@ class LessonProgressItem(BaseModel):
     Chi tiết tiến độ của một lesson
     Sử dụng trong Progress.lessons_progress array
     Tuân thủ: dashboard_service.py logic (parse by completion_date)
+    FIX: Thêm module_id để service có thể group lessons theo module
+    khi build ProgressCourseResponse.modules (progress.py schema)
     """
     lesson_id: str = Field(..., description="UUID của lesson")
+    module_id: Optional[str] = Field(None, description="UUID module chứa lesson (để group theo module)")
     lesson_title: str = Field(..., description="Tên lesson")
     status: str = Field(..., description="completed|in-progress|not-started")
     completion_date: Optional[datetime] = Field(None, description="Ngày hoàn thành (null nếu chưa xong)")
@@ -90,7 +93,8 @@ class User(Document):
     email: EmailStr = Field(..., description="Email unique trong hệ thống")
     hashed_password: str = Field(..., description="Mật khẩu đã hash")
     role: str = Field(default="student", description="student|instructor|admin")
-    status: str = Field(default="active", description="active|inactive|suspended")
+    # FIX: admin.py schema dùng "banned", thêm vào danh sách valid values
+    status: str = Field(default="active", description="active|inactive|banned|suspended")
     
     # Thông tin tùy chọn - theo UserProfileResponse schema
     avatar_url: Optional[str] = Field(None, description="URL ảnh đại diện, có thể null")
@@ -176,18 +180,18 @@ class Lesson(Document):
     # Learning objectives - ADDED theo API_SCHEMA.md Section 4.2
     learning_objectives: List[str] = Field(default_factory=list, description="Mục tiêu học tập cụ thể của bài học")
     
-    # Resources theo schema structure
+    # Resources theo ResourceItem schema (learning.py)
     resources: List[dict] = Field(default_factory=list, description="Tài liệu kèm theo")
-    # Resource structure: {
+    # FIX: ResourceItem schema (learning.py) chỉ có các fields sau:
+    # {
     #   "id": "uuid",
     #   "title": "Resource name",
-    #   "type": "pdf|slide|code|video|audio|link", 
+    #   "type": "pdf|slide|code|video|link",   # audio không có trong schema
     #   "url": "download/view link",
-    #   "size_mb": float,
-    #   "audio_format": "mp3|wav|ogg" (optional, for audio type),
-    #   "duration_seconds": int (optional, for video/audio),
-    #   "description": "optional"
+    #   "size_mb": float,                       # KHÔNG phải file_size_bytes
+    #   "description": "optional string"
     # }
+    # audio_format và duration_seconds KHÔNG có trong ResourceItem schema
     
     # Quiz liên kết
     quiz_id: Optional[str] = Field(None, description="Quiz kèm theo lesson này")
@@ -225,19 +229,25 @@ class Module(Document):
     difficulty: str = Field(default="Basic", description="Độ khó: Basic|Intermediate|Advanced")
     estimated_hours: float = Field(default=0, description="Thời gian học ước tính (giờ)")
     
-    # Learning outcomes cho module - theo LearningOutcome schema
+    # Learning outcomes cho module - theo LearningOutcome schema (learning.py)
     learning_outcomes: List[dict] = Field(default_factory=list, description="Mục tiêu học tập của module")
-    # Learning outcome structure từ learning.py LearningOutcome: {
+    # LearningOutcome structure (learning.py): {
     #   "id": "uuid",
-    #   "outcome": "Mô tả mục tiêu cụ thể",
-    #   "skill_tag": "python-functions", 
+    #   "outcome": "Mô tả mục tiêu cụ thể",    # key là "outcome", KHÔNG phải "description"
+    #   "skill_tag": "python-functions",
     #   "is_mandatory": boolean
     # }
-    
+
+    # FIX: Thêm resources và prerequisites còn thiếu so với ModuleDetailResponse (learning.py)
+    resources: List[dict] = Field(default_factory=list, description="Tài nguyên học tập module-level")
+    # ResourceItem structure: {id, title, type, url, size_mb, description}
+
+    prerequisites: List[str] = Field(default_factory=list, description="Danh sách module IDs tiên quyết")
+
     # Module statistics
     total_lessons: int = Field(default=0, description="Số lượng lessons trong module")
     total_duration_minutes: int = Field(default=0, description="Tổng thời lượng của module (phút)")
-    
+
     # Metadata
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -276,19 +286,24 @@ class Course(Document):
     instructor_avatar: Optional[str] = Field(None, description="Avatar giảng viên (denormalized for performance)")
     instructor_bio: Optional[str] = Field(None, description="Bio giảng viên (denormalized for performance)")
     
+    # FIX: Thêm course_type để phục vụ AdminCourseListItem.course_type (admin.py)
+    # Derive từ owner_type: "admin"|"instructor" → "public", "student" → "personal"
+    course_type: str = Field(default="public", description="public|personal — derive từ owner_type")
+
     # Nội dung học tập - theo LearningOutcome schema từ course.py
     learning_outcomes: List[dict] = Field(default_factory=list, description="Mục tiêu học tập")
-    # Learning outcome structure từ course.py: {
-    #   "id": "uuid",
+    # FIX: course.py LearningOutcome KHÔNG có field "id", chỉ có:
+    # {
     #   "description": "Mục tiêu cụ thể, đo lường được",
     #   "skill_tag": "Kỹ năng liên quan"
     # }
-    
+    # Khác với Module LearningOutcome (learning.py) dùng "outcome" thay vì "description"
+
     prerequisites: List[str] = Field(default_factory=list, description="Yêu cầu kiến thức đầu vào")
-    
+
     # Nội dung khóa học - embedded modules và lessons
     modules: List[EmbeddedModule] = Field(default_factory=list, description="Danh sách modules trong course")
-    
+
     # Thống kê - theo CourseStatistics schema
     total_duration_minutes: int = Field(default=0, description="Tổng thời lượng khóa học (phút)")
     total_modules: int = Field(default=0, description="Tổng số modules")
@@ -410,30 +425,35 @@ class AssessmentSession(Document):
     # Phân tích kết quả - theo AssessmentResultsResponse
     overall_score: Optional[float] = Field(None, description="0-100, điểm tổng thể")
     proficiency_level: Optional[str] = Field(None, description="Beginner|Intermediate|Advanced dựa trên kết quả thực tế")
-    
-    # Phân tích chi tiết - theo SkillAnalysis schema
-    skill_analysis: Optional[dict] = Field(None, description="Phân tích từng kỹ năng")
-    # Skill analysis structure từ assessment.py SkillAnalysis: {
+    correct_answers: Optional[int] = Field(None, description="Số câu trả lời đúng (tính từ answers sau khi evaluate)")
+
+    # FIX: skill_analysis phải là LIST[dict] theo List[SkillAnalysis] schema (assessment.py)
+    # KHÔNG phải Optional[dict] (single dict)
+    skill_analysis: Optional[List[dict]] = Field(None, description="Phân tích từng kỹ năng - LIST of SkillAnalysis")
+    # Mỗi item theo assessment.py SkillAnalysis: {
     #   "skill_tag": "python-syntax",
-    #   "questions_count": 5,
-    #   "correct_count": 3,
-    #   "proficiency_percentage": 60.0,
+    #   "questions_count": int,
+    #   "correct_count": int,
+    #   "proficiency_percentage": float,   # 0-100
     #   "strength_level": "Strong|Average|Weak",
-    #   "detailed_feedback": "Nhận xét chi tiết về skill này"
+    #   "detailed_feedback": "Nhận xét chi tiết"
     # }
-    
+
     # Lỗ hổng kiến thức - theo KnowledgeGap schema
     knowledge_gaps: List[dict] = Field(default_factory=list, description="Các lỗ hổng kiến thức được phát hiện")
-    # Knowledge gap structure từ assessment.py KnowledgeGap: {
+    # Mỗi item theo assessment.py KnowledgeGap: {
     #   "gap_area": "Lĩnh vực thiếu kiến thức",
     #   "description": "Mô tả chi tiết lỗ hổng",
     #   "importance": "High|Medium|Low",
     #   "suggested_action": "Hành động được đề xuất"
     # }
-    
+
+    # FIX: Thêm ai_feedback còn thiếu - AssessmentResultsResponse.ai_feedback (assessment.py)
+    ai_feedback: Optional[str] = Field(None, description="Nhận xét tổng quan và chi tiết từ AI")
+
     # Phân tích thời gian - theo TimeAnalysis schema
     time_analysis: Optional[dict] = Field(None, description="Phân tích thời gian làm bài")
-    # Time analysis structure từ assessment.py TimeAnalysis: {
+    # TimeAnalysis structure (assessment.py): {
     #   "total_time_seconds": int,
     #   "average_time_per_question": float,
     #   "fastest_question_time": int,

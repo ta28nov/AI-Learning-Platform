@@ -159,9 +159,8 @@ async def seed_users() -> Dict[str, List[str]]:
 
 async def seed_courses(user_ids: Dict[str, List[str]]) -> Dict[str, str]:
     """
-    Tạo 6 khóa học admin published với đầy đủ cấu trúc:
-    - 1 khóa Python siêu chi tiết (như cũ)
-    - 5 khóa khác với 2 modules mỗi khóa
+    Tạo 7 khóa học admin published với đầy đủ cấu trúc modules/lessons.
+    Distribute đều cho 3 instructors.
     """
     print("\n--- Bắt đầu tạo KHÓA HỌC CHI TIẾT ---")
     
@@ -170,20 +169,31 @@ async def seed_courses(user_ids: Dict[str, List[str]]) -> Dict[str, str]:
     instructor_ids = user_ids.get("instructor", [])
     
     admin_id = admin_ids[0] if admin_ids else None
-    instructor_id = instructor_ids[0] if instructor_ids else None
-    instructor_name = "Nguyễn Văn Minh"
-    
+
+    # BUG-10 FIX: Lấy tên thật của instructors từ DB thay vì hardcode
+    instructor_users = []
+    for iid in instructor_ids:
+        u = await User.get(iid)
+        if u:
+            instructor_users.append(u)
+
+    def get_instructor(index: int):
+        """Round-robin distribute courses cho instructors"""
+        if not instructor_users:
+            return None, "Giảng viên", None, None, "Giảng viên chuyên nghiệp."
+        u = instructor_users[index % len(instructor_users)]
+        return u.id, u.full_name, u.avatar_url, None, u.bio or "Giảng viên chuyên nghiệp với nhiều năm kinh nghiệm."
+
     course_ids_map = {}
     
     # ========== COURSE 1: Python (Siêu chi tiết - giữ nguyên) ==========
     course_id = str(uuid.uuid4())
+    # BUG-10 FIX: dùng get_instructor(0) - instructor đầu tiên cho Python course
+    instr_id_0, instr_name_0, instr_avatar_0, _, instr_bio_0 = get_instructor(0)
     course = Course(
         id=course_id,
         title="Lập trình Python từ Cơ bản đến Nâng cao",
-        description="""
-Khóa học toàn diện về lập trình Python, từ cơ bản đến nâng cao. 
-Học viên sẽ được học từ cú pháp cơ bản, lập trình hướng đối tượng, 
-xử lý dữ liệu với Pandas, phát triển web với FastAPI, đến machine learning cơ bản.
+        description="""Khóa học toàn diện về lập trình Python, từ cơ bản đến nâng cao. Học viên sẽ được học từ cú pháp cơ bản, lập trình hướng đối tượng, xử lý dữ liệu với Pandas, phát triển web với FastAPI, đến machine learning cơ bản.
 
 Khóa học bao gồm:
 - ✅ 8 modules với 32 bài học chi tiết
@@ -193,8 +203,7 @@ Khóa học bao gồm:
 - ✅ Certificate hoàn thành khóa học
 - ✅ Hỗ trợ 1-1 với instructor
 
-Phù hợp cho: Người mới bắt đầu lập trình, sinh viên IT, developer muốn học Python
-        """.strip(),
+Phù hợp cho: Người mới bắt đầu lập trình, sinh viên IT, developer muốn học Python""".strip(),
         category="Programming",
         level="Beginner",
         thumbnail_url="https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&h=450",
@@ -203,50 +212,32 @@ Phù hợp cho: Người mới bắt đầu lập trình, sinh viên IT, develop
         status="published",
         owner_id=admin_id,
         owner_type="admin",
-        instructor_id=instructor_id,
-        instructor_name=instructor_name,
-        instructor_avatar="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150",
-        instructor_bio="Giảng viên Python với 10 năm kinh nghiệm, chuyên gia về Machine Learning và Backend Development. Đã đào tạo hơn 5000 học viên thành công.",
+        instructor_id=instr_id_0,
+        instructor_name=instr_name_0,
+        instructor_avatar=instr_avatar_0 or "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150",
+        instructor_bio=instr_bio_0 or "Giảng viên Python với 10 năm kinh nghiệm, chuyên gia về Machine Learning và Backend Development.",
         learning_outcomes=[
-            {
-                "id": str(uuid.uuid4()),
-                "description": "Nắm vững cú pháp Python cơ bản: biến, vòng lặp, hàm, exception handling",
-                "skill_tag": "python-basics"
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "description": "Lập trình hướng đối tượng: class, inheritance, polymorphism",
-                "skill_tag": "python-oop"
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "description": "Xử lý dữ liệu với Pandas: đọc CSV, cleaning, analysis, visualization",
-                "skill_tag": "python-pandas"
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "description": "Phát triển REST API với FastAPI: endpoints, validation, database",
-                "skill_tag": "python-fastapi"
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "description": "Machine Learning cơ bản với scikit-learn: regression, classification",
-                "skill_tag": "python-ml"
-            }
+            # FIX: course.py LearningOutcome chỉ có {description, skill_tag} — KHÔNG có "id"
+            {"description": "Nắm vững cú pháp Python cơ bản: biến, vòng lặp, hàm, exception handling", "skill_tag": "python-basics"},
+            {"description": "Lập trình hướng đối tượng: class, inheritance, polymorphism", "skill_tag": "python-oop"},
+            {"description": "Xử lý dữ liệu với Pandas: đọc CSV, cleaning, analysis, visualization", "skill_tag": "python-pandas"},
+            {"description": "Phát triển REST API với FastAPI: endpoints, validation, database", "skill_tag": "python-fastapi"},
+            {"description": "Machine Learning cơ bản với scikit-learn: regression, classification", "skill_tag": "python-ml"}
         ],
         prerequisites=[
             "Kiến thức máy tính cơ bản",
             "Không cần kinh nghiệm lập trình trước đó",
             "Máy tính cài đặt Python 3.8+ và VS Code"
         ],
+        course_type="public",   # FIX: field mới trong Course model
         modules=[],
         total_duration_minutes=0,
         total_modules=0,
         total_lessons=0,
         enrollment_count=0,
         avg_rating=4.8,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
     )
     await course.insert()
     course_ids_map[course.title] = course_id
@@ -307,11 +298,13 @@ Phù hợp cho: Người mới bắt đầu lập trình, sinh viên IT, develop
     for idx, course_data in enumerate(additional_courses, start=2):
         course_id = str(uuid.uuid4())
         
-        # Tạo learning outcomes từ skill_tags
+        # BUG-10 FIX: Round-robin qua 3 instructors (idx=2,3,4,5,6,7 -> instructor 2,0,1,2,0,1)
+        instr_id, instr_name, instr_avatar, _, instr_bio = get_instructor(idx)
+
+        # FIX: course.py LearningOutcome chỉ có {description, skill_tag} — KHÔNG có "id"
         learning_outcomes = [
             {
-                "id": str(uuid.uuid4()),
-                "description": f"Nắm vững {tag.replace('-', ' ')}",
+                "description": f"Nắm vững {tag.replace('-', ' ')} ở mức chuyên nghiệp",
                 "skill_tag": tag
             }
             for tag in course_data["skill_tags"]
@@ -326,28 +319,29 @@ Phù hợp cho: Người mới bắt đầu lập trình, sinh viên IT, develop
             thumbnail_url=course_data["thumbnail_url"],
             preview_video_url="https://www.youtube.com/watch?v=rfscVS0vtbw",
             language="vi",
-            status="published",  # ✅ Tất cả đều published
+            status="published",
             owner_id=admin_id,
             owner_type="admin",
-            instructor_id=instructor_id,
-            instructor_name=instructor_name,
-            instructor_avatar="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150",
-            instructor_bio="Giảng viên chuyên nghiệp với nhiều năm kinh nghiệm giảng dạy và thực chiến.",
+            instructor_id=instr_id,
+            instructor_name=instr_name,
+            instructor_avatar=instr_avatar or "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150",
+            instructor_bio=instr_bio or "Giảng viên chuyên nghiệp với nhiều năm kinh nghiệm giảng dạy và thực chiến.",
             learning_outcomes=learning_outcomes,
             prerequisites=["Kiến thức cơ bản về máy tính", "Đam mê học hỏi"],
-            modules=[],  # Sẽ được fill sau nếu cần
+            course_type="public",   # FIX: field mới trong Course model
+            modules=[],
             total_duration_minutes=0,
             total_modules=0,
             total_lessons=0,
             enrollment_count=0,
-            avg_rating=4.5 + (idx * 0.1),  # 4.6, 4.7, 4.8...
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            avg_rating=round(4.5 + (idx % 5) * 0.07, 1),
+            created_at=datetime.now(timezone.utc) - timedelta(days=random.randint(10, 90)),
+            updated_at=datetime.now(timezone.utc)
         )
         
         await course.insert()
         course_ids_map[course.title] = course_id
-        print(f"✅ Đã tạo Course {idx}: {course.title}")
+        print(f"✅ Đã tạo Course {idx}: {course.title} (instructor: {instr_name})")
     
     print(f"\n🎉 Đã tạo tổng cộng {len(course_ids_map)} khóa học admin (tất cả published)")
     return course_ids_map
@@ -372,10 +366,11 @@ async def seed_modules_and_lessons(course_ids: Dict[str, str]) -> Dict[str, List
             "description": "Học cú pháp cơ bản của Python, cài đặt môi trường phát triển và làm quen với IDE",
             "difficulty": "Basic",
             "learning_outcomes": [
-                {"description": "Cài đặt và cấu hình Python, pip, virtual environment", "skill_tag": "python-setup"},
-                {"description": "Hiểu cú pháp cơ bản: biến, kiểu dữ liệu, operators", "skill_tag": "python-syntax"},
-                {"description": "Sử dụng thành thạo VS Code cho Python development", "skill_tag": "python-ide"},
-                {"description": "Debug code Python cơ bản và fix common errors", "skill_tag": "python-debugging"}
+                # BUG-2 FIX: Dùng key "outcome" (learning.py LearningOutcome schema), thêm id + is_mandatory
+                {"id": str(uuid.uuid4()), "outcome": "Cài đặt và cấu hình Python, pip, virtual environment", "skill_tag": "python-setup", "is_mandatory": True},
+                {"id": str(uuid.uuid4()), "outcome": "Hiểu cú pháp cơ bản: biến, kiểu dữ liệu, operators", "skill_tag": "python-syntax", "is_mandatory": True},
+                {"id": str(uuid.uuid4()), "outcome": "Sử dụng thành thạo VS Code cho Python development", "skill_tag": "python-ide", "is_mandatory": False},
+                {"id": str(uuid.uuid4()), "outcome": "Debug code Python cơ bản và fix common errors", "skill_tag": "python-debugging", "is_mandatory": False}
             ],
             "lessons": [
                 {
@@ -498,10 +493,11 @@ print(x != y) # True
             "description": "Học cách điều khiển luồng chương trình với if/else, for/while loops",
             "difficulty": "Basic",
             "learning_outcomes": [
-                {"description": "Sử dụng if/elif/else cho decision making", "skill_tag": "python-conditionals"},
-                {"description": "Viết for loops để iterate qua data structures", "skill_tag": "python-loops"},
-                {"description": "Sử dụng while loops và break/continue", "skill_tag": "python-while"},
-                {"description": "Nested loops và complex logic", "skill_tag": "python-nested"}
+                # BUG-2 FIX: Dùng key "outcome" đúng chuẩn
+                {"id": str(uuid.uuid4()), "outcome": "Sử dụng if/elif/else cho decision making", "skill_tag": "python-conditionals", "is_mandatory": True},
+                {"id": str(uuid.uuid4()), "outcome": "Viết for loops để iterate qua data structures", "skill_tag": "python-loops", "is_mandatory": True},
+                {"id": str(uuid.uuid4()), "outcome": "Sử dụng while loops và break/continue", "skill_tag": "python-while", "is_mandatory": False},
+                {"id": str(uuid.uuid4()), "outcome": "Nested loops và complex logic", "skill_tag": "python-nested", "is_mandatory": False}
             ],
             "lessons": [
                 {
@@ -679,7 +675,8 @@ for row in matrix:
                 ]
             }
             
-            # Tạo resources chi tiết (bao gồm audio)
+            # BUG-7 FIX: Resources đúng theo ResourceItem schema (learning.py):
+            # id, title, type (pdf|slide|code|video|link), url, size_mb (float), description (str)
             lesson_resources = [
                 {
                     "id": str(uuid.uuid4()),
@@ -687,8 +684,7 @@ for row in matrix:
                     "title": f"Slide - {lesson_info['title']}",
                     "description": f"PDF slides cho bài {lesson_info['title']}",
                     "url": f"https://docs.course.com/python/module_{module_order}/lesson_{lesson_order}.pdf",
-                    "file_size_bytes": random.randint(2000000, 8000000),
-                    "is_downloadable": True
+                    "size_mb": round(random.uniform(1.5, 8.0), 1)   # float MB đúng chuẩn
                 },
                 {
                     "id": str(uuid.uuid4()),
@@ -696,28 +692,23 @@ for row in matrix:
                     "title": f"Code Examples - {lesson_info['title']}",
                     "description": "File Python với code examples và exercises",
                     "url": f"https://github.com/python-course/module_{module_order}/lesson_{lesson_order}.py",
-                    "file_size_bytes": random.randint(5000, 50000),
-                    "is_downloadable": True
+                    "size_mb": round(random.uniform(0.01, 0.05), 3)
                 },
                 {
                     "id": str(uuid.uuid4()),
-                    "type": "audio",
-                    "title": f"Audio Lecture - {lesson_info['title']}",
-                    "description": "Bản ghi âm bài giảng dạng MP3",
-                    "url": f"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-{(lesson_order % 16) + 1}.mp3",  # Demo audio công khai
-                    "file_size_bytes": random.randint(5000000, 15000000),  # 5-15MB
-                    "audio_format": "mp3",
-                    "duration_seconds": lesson_info["duration_minutes"] * 60,
-                    "is_downloadable": True
+                    "type": "video",   # type là "video" (không phải "audio" trong ResourceItem)
+                    "title": f"Video Bài giảng - {lesson_info['title']}",
+                    "description": f"Video bài giảng {lesson_info['duration_minutes']} phút",
+                    "url": lesson_content["video_url"],
+                    "size_mb": 0.0   # streaming, không tính size
                 },
                 {
                     "id": str(uuid.uuid4()),
-                    "type": "external_link",
+                    "type": "link",   # BUG-7 FIX: "link" không phải "external_link"
                     "title": "Python Official Documentation",
                     "description": "Link tới tài liệu chính thức của Python",
                     "url": "https://docs.python.org/3/tutorial/",
-                    "file_size_bytes": None,
-                    "is_downloadable": False
+                    "size_mb": 0.0
                 }
             ]
             
@@ -786,11 +777,13 @@ for row in matrix:
             order=module_order,
             difficulty=module_data["difficulty"],
             estimated_hours=round(total_module_duration / 60, 1),
-            learning_outcomes=module_data["learning_outcomes"],
+            learning_outcomes=module_data["learning_outcomes"],  # List dùng key "outcome"
+            resources=[],         # Module-level resources (module.py field mới thêm)
+            prerequisites=[],     # Module IDs tiên quyết (module.py field mới thêm)
             total_lessons=len(module_lessons),
             total_duration_minutes=total_module_duration,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         )
         
         course_modules.append(embedded_module)  # Add to embedded list
@@ -852,11 +845,16 @@ async def seed_enrollments(user_ids: Dict[str, List[str]], course_ids: Dict[str,
     python_course_id = course_ids["Lập trình Python từ Cơ bản đến Nâng cao"]
 
     for student_id in student_ids:
-        # Mỗi student enroll vào khóa Python duy nhất
-        enrolled_courses = [python_course_id]
-        
+        # BUG-9 FIX: Mỗi student enroll vào 2-4 courses ngẫu nhiên (không chỉ Python)
+        all_course_ids = list(course_ids.values())
+        num_to_enroll = random.randint(2, min(4, len(all_course_ids)))
+        enrolled_courses = random.sample(all_course_ids, num_to_enroll)
+        # Đảm bảo luôn có Python course
+        if python_course_id not in enrolled_courses:
+            enrolled_courses[0] = python_course_id
+
         for course_id in enrolled_courses:
-            status = random.choice(["active", "completed", "cancelled"])
+            status = random.choice(["active", "active", "completed", "cancelled"])  # Nhiều active hơn
             progress = 0.0
             completed_at = None
             if status == "completed":
@@ -870,15 +868,16 @@ async def seed_enrollments(user_ids: Dict[str, List[str]], course_ids: Dict[str,
                 course_id=course_id,
                 status=status,
                 progress_percent=progress,
+                completion_rate=progress,       # BUG-3 FIX: đồng bộ với progress_percent
                 avg_quiz_score=round(random.uniform(65.0, 95.0), 2) if status != "cancelled" else None,
                 total_time_spent_minutes=random.randint(60, 1200),
                 enrolled_at=datetime.now(timezone.utc) - timedelta(days=random.randint(30, 180)),
-                last_accessed_at=datetime.now(timezone.utc) - timedelta(days=random.randint(1, 29)),
+                last_accessed_at=datetime.now(timezone.utc) - timedelta(days=random.randint(1, 29)) if status != "cancelled" else None,
                 completed_at=completed_at,
             )
             enrollments_to_create.append(enrollment)
             enrollment_ids.append(enrollment.id)
-            
+
     await Enrollment.insert_many(enrollments_to_create)
     print(f"✅ Đã tạo thành công {len(enrollments_to_create)} lượt đăng ký khóa học.")
     return enrollment_ids
@@ -904,29 +903,35 @@ async def seed_quizzes_and_attempts(user_ids: Dict[str, List[str]], lesson_ids: 
         lessons_for_quiz = random.sample(lessons, min(len(lessons), random.randint(2, 3)))
         
         for lesson_id in lessons_for_quiz:
-            question_count = random.randint(5, 10)
+            question_count = random.randint(5, 8)
             questions = []
             total_points = 0
             for i in range(question_count):
                 points = random.randint(1, 2)
+                q_type = random.choice(["multiple_choice", "multiple_choice", "true_false"])
+                options = [fake.sentence(nb_words=3) for _ in range(4)] if q_type == "multiple_choice" else ["Đúng", "Sai"]
+                correct_idx = random.randint(0, len(options)-1)
                 question = {
                     "id": str(uuid.uuid4()),
-                    "type": "multiple_choice",
-                    "question_text": f"Đây là câu hỏi {i+1} cho bài học? {fake.sentence(nb_words=8)}",
-                    "options": [fake.sentence(nb_words=3) for _ in range(4)],
-                    "correct_answer": "0", # Giả sử đáp án A luôn đúng
-                    "explanation": "Giải thích chi tiết cho đáp án đúng.",
+                    "type": q_type,
+                    "question_text": f"Câu hỏi {i+1}: {fake.sentence(nb_words=10)}",
+                    "options": options,
+                    "correct_answer": str(correct_idx),  # Index của đáp án đúng
+                    "explanation": f"Giải thích: Đáp án đúng là lựa chọn {correct_idx + 1} vì {fake.sentence(nb_words=8)}",
                     "points": points,
-                    "is_mandatory": random.choice([True, False]),
+                    "is_mandatory": (i < question_count // 3),  # 1/3 đầu là bắt buộc
                     "order": i + 1
                 }
                 questions.append(question)
                 total_points += points
 
+            # BUG-5 FIX: Tính đúng mandatory_question_count từ questions
+            mandatory_count = sum(1 for q in questions if q["is_mandatory"])
+
             quiz = Quiz(
                 lesson_id=lesson_id,
                 course_id=course_id,
-                title=f"Bài kiểm tra cuối bài học",
+                title=f"Kiểm tra kiến thức - Bài {lessons_for_quiz.index(lesson_id)+1}",
                 description="Kiểm tra kiến thức đã học trong bài.",
                 time_limit_minutes=random.randint(10, 20),
                 passing_score=70.0,
@@ -934,28 +939,73 @@ async def seed_quizzes_and_attempts(user_ids: Dict[str, List[str]], lesson_ids: 
                 questions=questions,
                 question_count=question_count,
                 total_points=total_points,
+                mandatory_question_count=mandatory_count,  # BUG-5 FIX
                 created_by=random.choice(instructor_ids),
             )
             quizzes_to_create.append(quiz)
-            print(f"    📝 Đã chuẩn bị Quiz cho Lesson ID: {lesson_id}")
+            print(f"    📝 Đã chuẩn bị Quiz cho Lesson ID: {lesson_id} ({mandatory_count} câu bắt buộc)")
 
-            # Tạo các lượt làm bài (QuizAttempt) cho quiz này
+            # BUG-4 + BUG-6 FIX: Tạo QuizAttempt với answers đầy đủ và mandatory stats đúng
             for student_id in random.sample(student_ids, random.randint(3, 7)):
-                score = round(random.uniform(50.0, 100.0), 2)
-                passed = score >= quiz.passing_score
+                # Simulate student answers
+                attempt_answers = []
+                correct_count = 0
+                mandatory_correct_count = 0
+                mandatory_total_count = 0
                 
+                for q in questions:
+                    # Student chọn random, tỷ lệ chọn đúng ~60-80%
+                    is_correct_q = random.random() < 0.70
+                    if is_correct_q:
+                        chosen = int(q["correct_answer"])
+                    else:
+                        opts = list(range(len(q["options"])))
+                        opts.remove(int(q["correct_answer"]))
+                        chosen = random.choice(opts)
+                    
+                    if is_correct_q:
+                        correct_count += 1
+                    if q["is_mandatory"]:
+                        mandatory_total_count += 1
+                        if is_correct_q:
+                            mandatory_correct_count += 1
+                    
+                    # QuestionResult structure (quiz.py schema)
+                    attempt_answers.append({
+                        "question_id": q["id"],
+                        "question_content": q["question_text"],
+                        "student_answer": str(chosen),
+                        "correct_answer": q["correct_answer"],
+                        "is_correct": is_correct_q,
+                        "is_mandatory": q["is_mandatory"],
+                        "score": float(q["points"]) if is_correct_q else 0.0,
+                        "explanation": q.get("explanation", ""),
+                        "related_lesson_link": None
+                    })
+                
+                score = round((correct_count / question_count) * 100, 2)
+                passed = score >= quiz.passing_score
+                mandatory_passed = (mandatory_correct_count >= mandatory_total_count) if mandatory_total_count > 0 else True
+                started_at = datetime.now(timezone.utc) - timedelta(minutes=random.randint(30, 120))
+                submitted_at = started_at + timedelta(seconds=random.randint(300, 1200))
+
                 attempt = QuizAttempt(
                     quiz_id=quiz.id,
                     user_id=student_id,
+                    answers=attempt_answers,                 # BUG-4 FIX: answers đầy đủ
                     score=score,
                     status="Pass" if passed else "Fail",
                     passed=passed,
                     attempt_number=random.randint(1, quiz.max_attempts),
-                    correct_answers=int(quiz.question_count * (score / 100)),
-                    total_questions=quiz.question_count,
-                    started_at=datetime.now(timezone.utc) - timedelta(minutes=30),
-                    submitted_at=datetime.now(timezone.utc) - timedelta(minutes=random.randint(5, 25)),
-                    time_spent_seconds=random.randint(300, 1200)
+                    correct_answers=correct_count,
+                    total_questions=question_count,
+                    mandatory_correct=mandatory_correct_count,   # BUG-6 FIX
+                    mandatory_total=mandatory_total_count,       # BUG-6 FIX
+                    mandatory_passed=mandatory_passed,           # BUG-6 FIX
+                    can_retake=not passed or not mandatory_passed,  # logic đúng
+                    started_at=started_at,
+                    submitted_at=submitted_at,
+                    time_spent_seconds=(submitted_at - started_at).seconds
                 )
                 attempts_to_create.append(attempt)
 
@@ -999,6 +1049,7 @@ async def seed_progress(enrollment_ids: List[str]):
             
             lessons_progress.append(LessonProgressItem(
                 lesson_id=str(lesson.id),
+                module_id=str(lesson.module_id),   # FIX: thêm module_id (field mới trong model)
                 lesson_title=lesson.title,
                 status=status,
                 completion_date=completion_date,
@@ -1082,12 +1133,15 @@ async def seed_assessment_sessions(user_ids: Dict[str, List[str]]):
 
         if status in ["submitted", "evaluated"]:
             session.submitted_at = session.created_at + timedelta(minutes=random.randint(10, time_limit))
+            # AssessmentAnswer schema: question_id, answer_content, selected_option, time_taken_seconds
             answers = []
             for q in questions:
+                time_taken = random.randint(15, 90)
                 answers.append({
                     "question_id": q["question_id"],
-                    "answer_content": "0",
-                    "time_taken_seconds": random.randint(20, 60)
+                    "answer_content": str(random.randint(0, 3)),  # Chọn ngẫu nhiên
+                    "selected_option": random.randint(0, 3),      # 0,1,2,3 cho multiple_choice
+                    "time_taken_seconds": time_taken
                 })
             session.answers = answers
 
@@ -1096,16 +1150,62 @@ async def seed_assessment_sessions(user_ids: Dict[str, List[str]]):
             session.evaluated_at = session.submitted_at + timedelta(seconds=random.randint(30, 90))
             session.overall_score = score
             session.proficiency_level = "Beginner" if score < 50 else ("Intermediate" if score < 80 else "Advanced")
-            session.skill_analysis = {
-                "skill_tag": "python-syntax", "questions_count": 5, "correct_count": 3,
-                "proficiency_percentage": 60.0, "strength_level": "Average",
-                "detailed_feedback": "Bạn cần cải thiện thêm về cú pháp Python."
+
+            # BUG-11 FIX: skill_analysis phải là LIST of SkillAnalysis (không phải 1 dict)
+            skill_tags = list(set(q.get("skill_tag", f"{subject.lower()}-skill") for q in questions))
+            skill_analyses = []
+            for tag in skill_tags:
+                tag_questions = [q for q in questions if q.get("skill_tag") == tag]
+                tag_count = len(tag_questions)
+                correct_count = max(1, int(tag_count * score / 100))
+                proficiency = round((correct_count / tag_count) * 100, 1) if tag_count > 0 else 0.0
+                skill_analyses.append({
+                    "skill_tag": tag,
+                    "questions_count": tag_count,
+                    "correct_count": correct_count,
+                    "proficiency_percentage": proficiency,
+                    "strength_level": "Strong" if proficiency >= 80 else ("Average" if proficiency >= 50 else "Weak"),
+                    "detailed_feedback": f"Bạn {'nắm vững' if proficiency >= 80 else ('cần cải thiện' if proficiency >= 50 else 'ưu tiên nh')} kiến thức về {tag.replace('-', ' ')}."
+                })
+            session.skill_analysis = skill_analyses  # BUG-11 FIX: list, không phải dict
+
+            session.knowledge_gaps = [
+                {
+                    "gap_area": f"{subject} - Advanced Concepts",
+                    "description": f"Cần cải thiện kiến thức nâng cao về {subject}.",
+                    "importance": "High",
+                    "suggested_action": f"Xách khóa học {subject} Intermediate trên hệ thống."
+                },
+                {
+                    "gap_area": f"{subject} - Practical Application",
+                    "description": "Tập trung vào việc áp dụng kiến thức vào thực tế.",
+                    "importance": "Medium",
+                    "suggested_action": "Làm các project thực hành sau mỗi module."
+                }
+            ]
+
+            # BUG-12 FIX: time_analysis đầy đủ theo TimeAnalysis schema
+            answer_times = [a["time_taken_seconds"] for a in session.answers]
+            total_time = sum(answer_times)
+            session.time_analysis = {
+                "total_time_seconds": total_time,
+                "average_time_per_question": round(total_time / len(answer_times), 1) if answer_times else 0,
+                "fastest_question_time": min(answer_times) if answer_times else 0,
+                "slowest_question_time": max(answer_times) if answer_times else 0
             }
-            session.knowledge_gaps = [{
-                "gap_area": "Decorators", "description": "Chưa hiểu rõ về decorators.",
-                "importance": "Medium", "suggested_action": "Xem lại bài học về Decorators."
-            }]
-        
+
+            # FIX: Thêm correct_answers count (field mới trong model)
+            session.correct_answers = max(1, int(len(answer_times) * score / 100))
+
+            # FIX: Thêm ai_feedback (field mới trong model - assessment.py AssessmentResultsResponse)
+            proficiency = session.proficiency_level
+            session.ai_feedback = (
+                f"Dựa trên kết quả đánh giá, bạn đang ở mức độ {proficiency} trong lĩnh vực {subject}. "
+                f"Bạn đã trả lời đúng {session.correct_answers}/{len(answer_times)} câu, "
+                f"cho thấy {'nắm vững kiến thức cơ bản' if score >= 70 else 'còn nhiều kiến thức cần củng cố'}. "
+                f"Hãy tập trung vào các khóa học được đề xuất bên dưới để nâng cao trình độ."
+            )
+
         sessions_to_create.append(session)
 
     if sessions_to_create:
@@ -1395,13 +1495,16 @@ async def seed_personal_courses(user_ids: Dict[str, List[str]]) -> List[str]:
             embedded_module = EmbeddedModule(
                 id=module_id,
                 title=f"Module {mod_idx + 1}: {fake.bs().title()}",
-                description=f"Mô tả chi tiết cho module {mod_idx + 1}",
+                description=f"Mô tả chi tiết cho module {mod_idx + 1} trong khóa học cá nhân",
                 order=mod_idx + 1,
                 difficulty=random.choice(["Basic", "Intermediate", "Advanced"]),
                 lessons=module_lessons,
-                is_published=random.choice([True, False]),
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
+                total_lessons=len(module_lessons),
+                total_duration_minutes=sum(l.duration_minutes for l in module_lessons),
+                estimated_hours=round(sum(l.duration_minutes for l in module_lessons) / 60, 1),
+                # BUG-1 FIX: EmbeddedModule không có field is_published → bỏ field này
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc)
             )
             personal_modules.append(embedded_module)
         
