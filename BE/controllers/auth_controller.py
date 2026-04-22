@@ -80,22 +80,24 @@ async def handle_login(request: LoginRequest) -> LoginResponse:
         HTTPException 401: Email hoặc password không đúng hoặc tài khoản inactive
     """
     # Authenticate user
-    user = await auth_service.authenticate_user(
-        email=request.email,
-        password=request.password
-    )
+    # authenticate_user raises ValueError cho tài khoản inactive/suspended/deleted
+    # Returns None cho sai email/password
+    try:
+        user = await auth_service.authenticate_user(
+            email=request.email,
+            password=request.password
+        )
+    except ValueError as e:
+        # Tài khoản bị khóa/vô hiệu hóa — FE cần hiển thị lý do cụ thể
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
     
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
-        )
-    
-    # Kiểm tra trạng thái tài khoản
-    if user.status != "active":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Account is inactive"
+            detail="Email hoặc mật khẩu không chính xác"
         )
     
     # Cập nhật last_login_at

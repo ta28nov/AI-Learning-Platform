@@ -4,7 +4,6 @@ Sử dụng: Beanie ODM
 Tuân thủ: CHUCNANG.md Section 4.1-4.3, API_SCHEMA.md
 """
 
-from ast import And, Or
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from fastapi import HTTPException, status
@@ -111,10 +110,11 @@ async def get_users_list_admin(
             "email": user.email,
             "role": user.role,
             "status": user.status,
-            "created_at": user.created_at.isoformat(),
-            "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
-            "enrollment_count": enrollment_count if user.role == "student" else None,
-            "course_count": course_count if user.role == "instructor" else None
+            "created_at": user.created_at,
+            "last_login_at": user.last_login_at if user.last_login_at else None,
+            # Field names match AdminUserListItem schema exactly
+            "courses_enrolled": enrollment_count if user.role == "student" else None,
+            "classes_created": course_count if user.role == "instructor" else None
         })
     
     # Calculate pagination - theo API_SCHEMA.md Section 9.1
@@ -299,7 +299,7 @@ async def create_user_admin(user_data: Dict) -> Dict:
         hashed_password=hashed_password,
         role=user_data.get("role", "student"),
         status="active",
-        phone=user_data.get("phone"),
+        contact_info=user_data.get("phone"),  # User model uses contact_info, not phone
         bio=user_data.get("bio"),
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
@@ -374,7 +374,7 @@ async def update_user_admin(user_id: str, update_data: Dict) -> Dict:
     
     # Hash new password if provided
     if "password" in update_data:
-        user.password = hash_password(update_data["password"])
+        user.hashed_password = hash_password(update_data["password"])
     
     user.updated_at = datetime.utcnow()
     
@@ -707,17 +707,19 @@ async def get_classes_list_admin(
     if status_filter:
         query_conditions.append(Class.status == status_filter)
     
-    # Apply search
+    # Apply search — Class model uses 'name' not 'class_name'
     if search:
         search_conditions = [
-            Class.class_name.contains(search, case_insensitive=True),
+            Class.name.contains(search, case_insensitive=True),
             Class.description.contains(search, case_insensitive=True)
         ]
-        query_conditions.append(Or(*search_conditions))
+        from beanie.operators import Or as BeanieOr
+        query_conditions.append(BeanieOr(*search_conditions))
     
     # Build final query
     if query_conditions:
-        query = Class.find(And(*query_conditions))
+        from beanie.operators import And as BeanieAnd
+        query = Class.find(BeanieAnd(*query_conditions))
     else:
         query = Class.find()
     
@@ -755,7 +757,7 @@ async def get_classes_list_admin(
         
         classes_data.append({
             "class_id": str(class_obj.id),
-            "class_name": getattr(class_obj, "class_name", "Unknown Class"),
+            "class_name": getattr(class_obj, "name", "Unknown Class"),  # Model field is 'name', schema wants 'class_name'
             "course_title": course_title,
             "instructor_name": instructor_name,
             "student_count": student_count,
@@ -806,7 +808,7 @@ async def get_class_detail_admin(class_id: str) -> Dict:
     # 6. Đóng gói dữ liệu KHỚP TUYỆT ĐỐI VỚI SCHEMA
     return {
         "class_id": str(class_obj.id),
-        "class_name": getattr(class_obj, "class_name", "Lớp học chưa đặt tên"),
+        "class_name": getattr(class_obj, "name", "Lớp học chưa đặt tên"),  # Model field is 'name'
         
         # Object Course lồng nhau
         "course": {

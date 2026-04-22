@@ -246,7 +246,11 @@ async def authenticate_user(email: str, password: str) -> Optional[User]:
         password: Plain text password
         
     Returns:
-        User document nếu authentication thành công, None nếu thất bại
+        User document nếu authentication thành công
+        
+    Raises:
+        ValueError: Nếu tài khoản bị khóa/inactive (FE cần hiển thị lý do cụ thể)
+        Returns None nếu sai email/password
     """
     user = await User.find_one(User.email == email)
     
@@ -256,9 +260,15 @@ async def authenticate_user(email: str, password: str) -> Optional[User]:
     if not verify_password(password, user.hashed_password):
         return None
     
-    # Kiểm tra status
+    # Phân biệt rõ lý do thất bại để FE hiển thị đúng message
+    if user.status == "inactive":
+        raise ValueError("Tài khoản đã bị vô hiệu hóa")
+    if user.status == "suspended":
+        raise ValueError("Tài khoản đã bị tạm khóa")
+    if user.status == "deleted":
+        raise ValueError("Tài khoản đã bị xóa")
     if user.status != "active":
-        return None
+        raise ValueError(f"Tài khoản không hoạt động (status: {user.status})")
     
     return user
 
