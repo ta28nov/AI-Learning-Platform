@@ -25,7 +25,8 @@
 }
 
 .dash-welcome__greeting {
-  font-size: 1.25rem;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
   font-weight: 700;
   margin: 0 0 4px;
   color: #fff;
@@ -37,12 +38,28 @@
 
 .dash-welcome__name {
   color: rgba(255, 255, 255, 0.9);
+  font-style: italic;
 }
 
 .dash-welcome__sub {
   color: rgba(255, 255, 255, 0.7);
   font-size: 0.85rem;
   margin: 0;
+  font-family: var(--font-body);
+}
+
+.dash-welcome__ornament {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+
+.dash-welcome__line {
+  width: 26px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .dash-action-btn {
@@ -51,6 +68,7 @@
   gap: 6px;
   padding: 10px 20px;
   background: rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 10px;
@@ -126,7 +144,12 @@
 }
 
 .dash-stat-card__icon {
-  font-size: 1.5rem;
+  color: var(--gold-600);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
   margin-bottom: 4px;
 }
 
@@ -185,11 +208,27 @@
   gap: 10px;
 }
 
+.dash-grid-asym {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+@media (min-width: 1080px) {
+  .dash-grid-asym {
+    grid-template-columns: 1.5fr 1fr;
+    align-items: start;
+  }
+}
+
 @media (min-width: 768px) {
   .dash-courses { grid-template-columns: repeat(2, 1fr); }
 }
 
 .dash-course-card {
+  border: 0;
+  width: 100%;
+  text-align: left;
   padding: 16px 18px;
   background: #fff;
   border: 1px solid #f1f5f9;
@@ -255,6 +294,9 @@
 }
 
 .dash-quiz-card {
+  border: 0;
+  width: 100%;
+  text-align: left;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -311,6 +353,9 @@
 }
 
 .dash-rec-card {
+  border: 0;
+  width: 100%;
+  text-align: left;
   padding: 16px;
   background: linear-gradient(135deg, #fafaff, #f5f3ff);
   border: 1px solid rgba(99, 102, 241, 0.1);
@@ -352,6 +397,9 @@
 
 /* ========== CLASS CARDS ========== */
 .dash-class-card {
+  border: 0;
+  width: 100%;
+  text-align: left;
   padding: 16px 18px;
   background: #fff;
   border: 1px solid #f1f5f9;
@@ -458,10 +506,12 @@
   padding: 8px 20px;
   background: #6366f1;
   color: #fff;
+  border: none;
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 600;
   text-decoration: none;
+  cursor: pointer;
   transition: all 0.2s;
 }
 

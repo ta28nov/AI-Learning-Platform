@@ -1,155 +1,54 @@
-import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import authService from '@services/authService'
+import { motion, useReducedMotion } from 'framer-motion'
 import Button from '@components/ui/Button'
-import Input from '@components/ui/Input'
-import Card, { CardHeader, CardBody, CardFooter } from '@components/ui/Card'
-import { toast } from 'react-hot-toast'
+import { fadeUp, staggerEditorial } from '@/styles/motion'
 import './AuthPages.css'
 
 /**
- * Component ForgotPasswordPage - Trang quen mat khau
+ * ForgotPasswordPage — Editorial empty-state stub
+ * BE endpoint không tồn tại; logic "throw" vẫn nằm trong authService.js (không sửa)
+ * Route: /auth/forgot-password
  */
 const ForgotPasswordPage = () => {
-  const [loading, setLoading] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
-
-  // React Hook Form
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm()
-
-  // Xu ly submit form
-  const onSubmit = async (data) => {
-    setLoading(true)
-    try {
-      // Goi API forgot password
-      await authService.forgotPassword(data.email)
-      
-      setEmailSent(true)
-      toast.success('Email khôi phục mật khẩu đã được gửi!')
-    } catch (error) {
-      toast.error(error.message || 'Có lỗi xảy ra, vui lòng thử lại!')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (emailSent) {
-    return (
-      <div className="auth-page">
-        <div className="auth-container">
-          <Card className="auth-card">
-            <CardHeader>
-              <div className="auth-header">
-                <div className="success-icon">
-                  <CheckIcon />
-                </div>
-                <h1>Email đã được gửi</h1>
-                <p>Chúng tôi đã gửi hướng dẫn khôi phục mật khẩu đến email của bạn</p>
-              </div>
-            </CardHeader>
-
-            <CardBody>
-              <div className="email-sent-content">
-                <p>
-                  Vui lòng kiểm tra hộp thư đến và làm theo hướng dẫn để đặt lại mật khẩu.
-                  Nếu không thấy email, hãy kiểm tra thư mục spam.
-                </p>
-                <div className="resend-info">
-                  <p>Chưa nhận được email?</p>
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => setEmailSent(false)}
-                  >
-                    Gửi lại
-                  </Button>
-                </div>
-              </div>
-            </CardBody>
-
-            <CardFooter>
-              <div className="auth-footer">
-                <Link to="/auth/login" className="auth-link">
-                  ← Quay lại đăng nhập
-                </Link>
-              </div>
-            </CardFooter>
-          </Card>
-        </div>
-      </div>
-    )
-  }
+  const shouldReduceMotion = useReducedMotion()
 
   return (
-    <div className="auth-page">
-      <div className="auth-container">
-        <Card className="auth-card">
-          <CardHeader>
-            <div className="auth-header">
-              <h1>Quên mật khẩu</h1>
-              <p>Nhập email của bạn để nhận hướng dẫn khôi phục mật khẩu</p>
-            </div>
-          </CardHeader>
+    <div className="auth-stub-page">
+      <motion.div
+        className="auth-stub-card"
+        variants={staggerEditorial}
+        initial={shouldReduceMotion ? false : 'hidden'}
+        animate="show"
+      >
+        {/* Icon */}
+        <motion.div className="auth-stub-icon" variants={fadeUp} aria-hidden="true">
+          <LockIcon />
+        </motion.div>
 
-          <CardBody>
-            <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
-              <Input
-                type="email"
-                label="Email"
-                placeholder="Nhập địa chỉ email của bạn"
-                error={errors.email?.message}
-                {...register('email', {
-                  required: 'Email là bắt buộc',
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Email không hợp lệ'
-                  }
-                })}
-              />
+        <motion.div variants={fadeUp} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <p className="auth-stub-eyebrow">Quên mật khẩu</p>
+          <h1 className="auth-stub-title">Tính năng chưa khả dụng</h1>
+          <p className="auth-stub-desc">
+            Chức năng quên mật khẩu hiện chưa được backend hỗ trợ.
+            Vui lòng đăng nhập bằng tài khoản demo hoặc liên hệ quản trị viên.
+          </p>
+        </motion.div>
 
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                loading={loading}
-                className="auth-submit-btn"
-              >
-                Gửi email khôi phục
-              </Button>
-            </form>
-          </CardBody>
-
-          <CardFooter>
-            <div className="auth-footer">
-              <p>
-                Nhớ lại mật khẩu?{' '}
-                <Link to="/auth/login" className="auth-link">
-                  Đăng nhập ngay
-                </Link>
-              </p>
-            </div>
-          </CardFooter>
-        </Card>
-
-        <div className="auth-back-home">
-          <Link to="/">
-            ← Quay về trang chủ
+        <motion.div className="auth-stub-actions" variants={fadeUp}>
+          <Link to="/auth/login">
+            <Button variant="primary">Quay lại đăng nhập</Button>
           </Link>
-        </div>
-      </div>
+          <Link to="/" className="auth-stub-back">← Trang chủ</Link>
+        </motion.div>
+      </motion.div>
     </div>
   )
 }
 
-// Success Icon
-const CheckIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="10" fill="var(--success)" stroke="var(--success)"></circle>
-    <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2"></path>
+const LockIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
   </svg>
 )
 

@@ -1,4 +1,4 @@
-import api, { handleApiResponse, handleApiError } from './api'
+import api, { buildQueryParams, handleApiResponse, handleApiError } from './api'
 
 /**
  * Service xu ly admin (17 endpoints)
@@ -22,7 +22,7 @@ export const adminService = {
         mappedParams.keyword = mappedParams.search
         delete mappedParams.search
       }
-      const response = await api.get('/admin/users', { params: mappedParams })
+      const response = await api.get('/admin/users', { params: buildQueryParams(mappedParams) })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)
@@ -133,7 +133,12 @@ export const adminService = {
    */
   async getCourses(params = {}) {
     try {
-      const response = await api.get('/admin/courses', { params })
+      const mappedParams = { ...params }
+      if (mappedParams.search) {
+        mappedParams.keyword = mappedParams.search
+        delete mappedParams.search
+      }
+      const response = await api.get('/admin/courses', { params: buildQueryParams(mappedParams) })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)
@@ -208,7 +213,12 @@ export const adminService = {
    */
   async getClasses(params = {}) {
     try {
-      const response = await api.get('/admin/classes', { params })
+      const mappedParams = { ...params }
+      if (mappedParams.status) {
+        mappedParams.status_filter = mappedParams.status
+        delete mappedParams.status
+      }
+      const response = await api.get('/admin/classes', { params: buildQueryParams(mappedParams) })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)

@@ -19,6 +19,15 @@ const api = axios.create({
 export const AI_TIMEOUT = 120000 // 2 phut
 
 /**
+ * Loai bo query params rong/deprecated truoc khi goi API
+ */
+export const buildQueryParams = (params = {}) => {
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== '')
+  )
+}
+
+/**
  * Request interceptor - Them token vao header
  */
 api.interceptors.request.use(
@@ -149,6 +158,8 @@ export const handleApiError = (error) => {
     let message
     if (Array.isArray(detail)) {
       message = detail.map(d => d.msg || d.message || JSON.stringify(d)).join('. ')
+    } else if (detail && typeof detail === 'object') {
+      message = detail.message || JSON.stringify(detail)
     } else {
       message = detail || error.response.data?.message || 'Co loi xay ra tu server'
     }

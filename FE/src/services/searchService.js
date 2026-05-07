@@ -1,4 +1,4 @@
-import api, { handleApiResponse, handleApiError } from './api'
+import api, { buildQueryParams, handleApiResponse, handleApiError } from './api'
 
 /**
  * Service xu ly tim kiem
@@ -12,7 +12,7 @@ export const searchService = {
    */
   async search(params = {}) {
     try {
-      const response = await api.get('/search', { params })
+      const response = await api.get('/search', { params: buildQueryParams(params) })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)

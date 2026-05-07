@@ -1,0 +1,78 @@
+/* =============================================================================
+   EDITORIAL CINEMATIC DESIGN TOKENS - DARK MODE
+   -----------------------------------------------------------------------------
+   Activated by `[data-theme="dark"]` (set on <html> by ThemeContext.jsx).
+   Only swaps surface / text / border / accent values; the underlying raw
+   editorial palette (cream/ink/gold/...) stays the same so any component
+   that references the raw palette renders consistently.
+   ============================================================================= */
+
+[data-theme="dark"] {
+  /* Surfaces flip to deep ink with a warm bias (NY Times Magazine vibe) */
+  --surface-canvas:   var(--ink-900);
+  --surface-paper:    #110F0B;
+  --surface-elevated: #1A1612;
+  --surface-sunken:   #07060A;
+  --surface-overlay:  rgba(0, 0, 0, 0.65);
+  --surface-grain:    rgba(255, 248, 232, 0.03);
+
+  --hairline:         rgba(245, 239, 230, 0.10);
+  --hairline-strong:  rgba(245, 239, 230, 0.22);
+
+  /* On dark canvas the accent takes over - gold becomes the primary signal */
+  --accent:           var(--gold-500);
+  --accent-soft:      var(--cream-100);
+  --accent-soft-tint: rgba(201, 163, 91, 0.16);
+  --accent-cta:       var(--vermilion-500);
+  --accent-cta-tint:  rgba(199, 51, 43, 0.20);
+
+  /* Focus ring on dark - warmer halo */
+  --ring: 0 0 0 3px rgba(201, 163, 91, 0.42);
+
+  /* Editorial shadows on dark are deeper but still warm */
+  --shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.30);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.40);
+  --shadow-md:
+    0 6px 18px -4px rgba(0, 0, 0, 0.55),
+    0 2px 6px -2px rgba(0, 0, 0, 0.40);
+  --shadow-lg:
+    0 24px 48px -12px rgba(0, 0, 0, 0.60),
+    0 12px 24px -8px rgba(0, 0, 0, 0.45);
+  --shadow-xl:
+    0 40px 80px -20px rgba(0, 0, 0, 0.70),
+    0 20px 40px -10px rgba(0, 0, 0, 0.50);
+  --shadow-cinematic:
+    0 60px 120px -30px rgba(0, 0, 0, 0.85);
+
+  /* =============================================================================
+     LEGACY ALIASES (DARK)
+     ============================================================================= */
+
+  --bg-primary:    var(--surface-canvas);
+  --bg-secondary:  var(--surface-paper);
+  --bg-card:       var(--surface-elevated);
+
+  --text-primary:   var(--cream-100);
+  --text-secondary: var(--cream-300);
+  --text-muted:     var(--ink-400);
+
+  --border-color: var(--hairline-strong);
+  --border-light: var(--hairline);
+
+  /* Primary action: on dark cream the editorial signature flips to gold */
+  --primary:       var(--gold-500);
+  --primary-hover: var(--gold-300);
+  --primary-light: var(--accent-soft-tint);
+
+  /* Semantic: brighten on dark for legibility */
+  --success:       #8BB0A2;
+  --success-light: rgba(92, 122, 111, 0.22);
+  --warning:       var(--sand-300);
+  --warning-light: rgba(201, 155, 87, 0.20);
+  --danger:        #E8584F;
+  --danger-light:  rgba(199, 51, 43, 0.22);
+
+  --surface-1: var(--surface-elevated);
+  --surface-2: var(--surface-paper);
+  --surface-3: var(--surface-sunken);
+}

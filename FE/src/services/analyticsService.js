@@ -1,4 +1,4 @@
-import api, { handleApiResponse, handleApiError } from './api'
+import api, { buildQueryParams, handleApiResponse, handleApiError } from './api'
 
 /**
  * Service xu ly analytics va thong ke
@@ -29,7 +29,7 @@ export const analyticsService = {
    */
   async getProgressChart(params = {}) {
     try {
-      const response = await api.get('/analytics/progress-chart', { params })
+      const response = await api.get('/analytics/progress-chart', { params: buildQueryParams(params) })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)
@@ -47,7 +47,7 @@ export const analyticsService = {
    */
   async getInstructorClassStats(params = {}) {
     try {
-      const response = await api.get('/analytics/instructor/classes', { params })
+      const response = await api.get('/analytics/instructor/classes', { params: buildQueryParams(params) })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)
@@ -61,7 +61,7 @@ export const analyticsService = {
    */
   async getInstructorProgressChart(params = {}) {
     try {
-      const response = await api.get('/analytics/instructor/progress-chart', { params })
+      const response = await api.get('/analytics/instructor/progress-chart', { params: buildQueryParams(params) })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)
@@ -92,7 +92,7 @@ export const analyticsService = {
    */
   async getUsersGrowth(params = {}) {
     try {
-      const response = await api.get('/admin/analytics/users-growth', { params })
+      const response = await api.get('/admin/analytics/users-growth', { params: buildQueryParams(params) })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)
@@ -103,9 +103,9 @@ export const analyticsService = {
    * Lay phan tich khoa hoc (admin)
    * @returns {Promise} AdminCourseAnalyticsResponse
    */
-  async getCourseAnalytics() {
+  async getCourseAnalytics(params = {}) {
     try {
-      const response = await api.get('/admin/analytics/courses')
+      const response = await api.get('/admin/analytics/courses', { params: buildQueryParams(params) })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)

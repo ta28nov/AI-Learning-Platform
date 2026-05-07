@@ -1,40 +1,62 @@
-/* Styles cho Card component */
+/* =============================================================================
+   CARD COMPONENT — Editorial Cinematic
+   All legacy class names preserved. Faux-3D tilt enabled via .card-tilt.
+   ============================================================================= */
 
 .card {
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
-  transition: all var(--transition-fast);
+  /* CSS transition as reduced-motion fallback */
+  transition:
+    box-shadow var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
   width: 100%;
   text-align: left;
 }
 
-/* Card shadows */
+/* Base shadow */
 .card-shadow {
   box-shadow: var(--shadow-sm);
 }
 
-/* Card hover effects */
+/* Hover lift */
 .card-hover:hover {
   box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-  border-color: var(--primary);
+  border-color: var(--border-color);
 }
 
-/* Card clickable */
+/* Faux-3D tilt — transforms applied via Framer Motion inline style */
+.card-tilt {
+  transform-style: preserve-3d;
+  cursor: default;
+}
+
+.card-tilt:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent-soft);
+}
+
+/* Clickable card */
 .card-clickable {
   cursor: pointer;
-  border: none;
+  /* Reset button defaults */
   background: none;
   font-family: inherit;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  text-align: left;
+  padding: 0;
 }
 
 .card-clickable:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--accent-soft);
   outline-offset: 2px;
 }
 
-/* Card padding variants */
+/* Padding variants */
 .card-padding-sm {
   padding: var(--spacing-sm);
 }
@@ -84,13 +106,13 @@
   border-top: none;
 }
 
-/* Card with header/body/footer structure */
+/* Card with structured sub-components */
 .card:has(.card-header, .card-body, .card-footer) {
   display: flex;
   flex-direction: column;
 }
 
-/* Card loading state */
+/* Loading overlay */
 .card-loading {
   position: relative;
   pointer-events: none;
@@ -99,10 +121,7 @@
 .card-loading::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background-color: var(--bg-primary);
   opacity: 0.7;
   border-radius: inherit;
@@ -124,20 +143,20 @@
   z-index: 2;
 }
 
-/* Responsive design */
+/* Responsive */
 @media (max-width: 640px) {
   .card-padding-md {
     padding: var(--spacing-sm);
   }
-  
+
   .card-padding-lg {
     padding: var(--spacing-md);
   }
-  
+
   .card-footer {
     flex-direction: column;
     align-items: stretch;
   }
 }
 
-/* @keyframes spin da co trong index.css — khong dinh nghia lai */
+/* @keyframes spin is defined in index.css — do not redefine here */

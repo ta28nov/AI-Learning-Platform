@@ -1,0 +1,256 @@
+/* =============================================================================
+   EDITORIAL CINEMATIC DESIGN TOKENS - LIGHT MODE (DEFAULT)
+   -----------------------------------------------------------------------------
+   Single source of truth for the design language.
+   - Editorial palette: ink, cream, gold, copper, vermilion, jade, sand.
+   - Legacy aliases (--primary, --bg-primary, ...) are mapped onto the
+     editorial palette so existing components keep rendering without changes.
+   - Additive editorial scales (--space-*, --text-*, --ease-*, ...) are
+     introduced for upcoming phases without overwriting legacy scales.
+   ============================================================================= */
+
+:root {
+  /* ---------------------------------------------------------------------------
+     Raw palette - Editorial
+     --------------------------------------------------------------------------- */
+
+  /* Cream (paper canvas) */
+  --cream-50:  #FBF8F1;
+  --cream-100: #F5EFE6;
+  --cream-200: #ECE3D2;
+  --cream-300: #DCCFB6;
+  --cream-400: #C8B996;
+
+  /* Ink (deep, warm-leaning blacks) */
+  --ink-900: #0B0A08;
+  --ink-800: #16130E;
+  --ink-700: #2A2418;
+  --ink-600: #423A2A;
+  --ink-500: #6B5E47;
+  --ink-400: #9C8E73;
+  --ink-300: #C8BCA1;
+
+  /* Gold (signature accent) */
+  --gold-50:  #FBF6E8;
+  --gold-100: #F2E5C0;
+  --gold-300: #E2C36F;
+  --gold-500: #C9A35B;
+  --gold-600: #A8843D;
+  --gold-700: #8B6A2C;
+
+  /* Copper (warm secondary accent) */
+  --copper-300: #D58A4B;
+  --copper-500: #B5651D;
+  --copper-600: #8E4D14;
+
+  /* Vermilion (editorial CTA red / danger) */
+  --vermilion-100: #F8DDD9;
+  --vermilion-500: #C7332B;
+  --vermilion-600: #9F261F;
+  --vermilion-700: #7A1C16;
+
+  /* Jade (success / positive) */
+  --jade-100: #DDEAE3;
+  --jade-500: #5C7A6F;
+  --jade-600: #3E5A52;
+  --jade-700: #2A413A;
+
+  /* Sand (warning / advisory) */
+  --sand-100: #F2E5C6;
+  --sand-300: #E2C885;
+  --sand-500: #C99B57;
+  --sand-700: #8B6628;
+
+  /* ---------------------------------------------------------------------------
+     Typography stacks (replace generic sans defaults; Inter is intentionally
+     NOT used per design rule).
+     --------------------------------------------------------------------------- */
+  --font-display: 'Fraunces', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --font-body:    'Newsreader', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --font-sans:    'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Default font for the application body / chrome */
+  --font-app: var(--font-sans);
+
+  /* ---------------------------------------------------------------------------
+     Editorial type scale (NEW, additive). Use these for new editorial
+     surfaces (hero, pull quotes, chapter titles).
+     --------------------------------------------------------------------------- */
+  --text-xs:        0.75rem;   /* 12px */
+  --text-sm:        0.875rem;  /* 14px */
+  --text-base:      1rem;      /* 16px */
+  --text-lg:        1.25rem;   /* 20px */
+  --text-xl:        1.5rem;    /* 24px */
+  --text-2xl:       1.75rem;   /* 28px */
+  --text-3xl:       2.5rem;    /* 40px */
+  --text-display-3: 4rem;      /* 64px */
+  --text-display-2: 6rem;      /* 96px */
+  --text-display-1: 8rem;      /* 128px */
+
+  /* Editorial line-heights */
+  --leading-tight:    1.05;
+  --leading-snug:     1.2;
+  --leading-normal:   1.5;
+  --leading-relaxed:  1.65;
+  --leading-prose:    1.75;
+
+  /* Editorial letter-spacing (display lines breathe wider on dark cream) */
+  --tracking-tight:   -0.02em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.04em;
+  --tracking-display: -0.015em;
+
+  /* ---------------------------------------------------------------------------
+     Editorial spacing scale (NEW, additive: 4/8/16/32/64/128 baseline).
+     --------------------------------------------------------------------------- */
+  --space-0:  0;
+  --space-1:  0.25rem;  /*   4px */
+  --space-2:  0.5rem;   /*   8px */
+  --space-3:  0.75rem;  /*  12px */
+  --space-4:  1rem;     /*  16px */
+  --space-5:  1.5rem;   /*  24px */
+  --space-6:  2rem;     /*  32px */
+  --space-8:  3rem;     /*  48px */
+  --space-10: 4rem;     /*  64px */
+  --space-12: 6rem;     /*  96px */
+  --space-16: 8rem;     /* 128px */
+  --space-20: 10rem;    /* 160px */
+  --space-24: 12rem;    /* 192px */
+
+  /* ---------------------------------------------------------------------------
+     Editorial radius
+     --------------------------------------------------------------------------- */
+  --radius-none: 0;
+  --radius-xs:   0.125rem;
+  --radius-sm:   0.25rem;
+  --radius-md:   0.375rem;
+  --radius-lg:   0.625rem;
+  --radius-xl:   1rem;
+  --radius-2xl:  1.5rem;
+  --radius-3xl:  2rem;
+  --radius-pill: 9999px;
+
+  /* ---------------------------------------------------------------------------
+     Editorial motion tokens (durations + easings)
+     --------------------------------------------------------------------------- */
+  --ease-standard:  cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-cinematic: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-stagger:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-page-turn: cubic-bezier(0.83, 0, 0.17, 1);
+  --ease-out-expo:  cubic-bezier(0.19, 1, 0.22, 1);
+
+  --duration-instant:    80ms;
+  --duration-fast:       180ms;
+  --duration-normal:     320ms;
+  --duration-slow:       600ms;
+  --duration-cinematic:  900ms;
+  --duration-marquee:    1400ms;
+
+  /* ---------------------------------------------------------------------------
+     Editorial shadow scale (warm ink tint instead of cool grey)
+     --------------------------------------------------------------------------- */
+  --shadow-xs: 0 1px 1px rgba(11, 10, 8, 0.04);
+  --shadow-sm: 0 1px 2px rgba(11, 10, 8, 0.06);
+  --shadow-md:
+    0 6px 16px -4px rgba(11, 10, 8, 0.10),
+    0 2px 4px -2px rgba(11, 10, 8, 0.06);
+  --shadow-lg:
+    0 24px 48px -12px rgba(11, 10, 8, 0.18),
+    0 12px 24px -8px rgba(11, 10, 8, 0.10);
+  --shadow-xl:
+    0 40px 80px -20px rgba(11, 10, 8, 0.26),
+    0 20px 40px -10px rgba(11, 10, 8, 0.14);
+  --shadow-cinematic:
+    0 60px 120px -30px rgba(11, 10, 8, 0.40);
+
+  /* Glow accents */
+  --glow-gold:      0 0 0 1px rgba(201, 163, 91, 0.45), 0 8px 24px -6px rgba(201, 163, 91, 0.40);
+  --glow-vermilion: 0 0 0 1px rgba(199, 51, 43, 0.40),  0 8px 24px -6px rgba(199, 51, 43, 0.32);
+
+  /* Focus ring (gold halo) */
+  --ring: 0 0 0 3px rgba(201, 163, 91, 0.32);
+
+  /* ---------------------------------------------------------------------------
+     Semantic surfaces (LIGHT)
+     --------------------------------------------------------------------------- */
+  --surface-canvas:    var(--cream-100);
+  --surface-paper:     var(--cream-50);
+  --surface-elevated:  #FFFDF7;
+  --surface-sunken:    var(--cream-200);
+  --surface-overlay:   rgba(11, 10, 8, 0.55);
+  --surface-grain:     rgba(11, 10, 8, 0.025);
+
+  --hairline:          rgba(11, 10, 8, 0.12);
+  --hairline-strong:   rgba(11, 10, 8, 0.22);
+
+  /* Editorial accents */
+  --accent:            var(--ink-900);
+  --accent-soft:       var(--gold-500);
+  --accent-soft-tint:  rgba(201, 163, 91, 0.18);
+  --accent-cta:        var(--vermilion-500);
+  --accent-cta-tint:   rgba(199, 51, 43, 0.10);
+
+  /* =============================================================================
+     LEGACY ALIASES
+     -----------------------------------------------------------------------------
+     The codebase already uses these names across many component CSS files.
+     They map onto the new editorial palette so existing components inherit
+     the editorial look automatically without source changes.
+     ============================================================================= */
+
+  /* Backgrounds */
+  --bg-primary:    var(--surface-canvas);
+  --bg-secondary:  var(--surface-paper);
+  --bg-card:       var(--surface-elevated);
+
+  /* Text */
+  --text-primary:   var(--ink-900);
+  --text-secondary: var(--ink-600);
+  --text-muted:     var(--ink-400);
+
+  /* Borders */
+  --border-color: var(--hairline-strong);
+  --border-light: var(--hairline);
+
+  /* Brand / primary action */
+  --primary:        var(--ink-900);
+  --primary-hover:  var(--vermilion-500);
+  --primary-light:  var(--accent-soft-tint);
+
+  /* Semantic */
+  --success:        var(--jade-600);
+  --success-light:  var(--jade-100);
+  --warning:        var(--sand-700);
+  --warning-light:  var(--sand-100);
+  --danger:         var(--vermilion-500);
+  --danger-light:   var(--vermilion-100);
+
+  /* Surface aliases used by .app-card and friends */
+  --surface-1: var(--surface-elevated);
+  --surface-2: var(--surface-canvas);
+  --surface-3: var(--surface-sunken);
+
+  /* Legacy spacing scale - preserved (do NOT remove or resize, used everywhere) */
+  --spacing-xs:  var(--space-1);
+  --spacing-sm:  var(--space-2);
+  --spacing-md:  var(--space-4);
+  --spacing-lg:  var(--space-5);
+  --spacing-xl:  var(--space-6);
+  --spacing-2xl: var(--space-8);
+
+  /* Legacy type scale - preserved (do NOT resize without auditing pages) */
+  --font-size-xs:   var(--text-xs);
+  --font-size-sm:   var(--text-sm);
+  --font-size-base: var(--text-base);
+  --font-size-lg:   1.125rem;   /* keep 18px to match prior baseline */
+  --font-size-xl:   1.25rem;    /* keep 20px to match prior baseline */
+  --font-size-2xl:  1.5rem;     /* keep 24px to match prior baseline */
+  --font-size-3xl:  1.875rem;   /* keep 30px to match prior baseline */
+  --font-size-4xl:  2.25rem;    /* keep 36px to match prior baseline */
+
+  /* Legacy transitions - preserved (component CSS uses them directly) */
+  --transition-fast:   var(--duration-fast)   var(--ease-standard);
+  --transition-normal: var(--duration-normal) var(--ease-standard);
+  --transition-slow:   var(--duration-slow)   var(--ease-standard);
+}

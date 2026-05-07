@@ -1,67 +1,71 @@
-/* Styles cho Modal component */
+/* =============================================================================
+   MODAL COMPONENT — Editorial Cinematic
+   All legacy class names preserved. Backdrop blur + warm overlay added.
+   AnimatePresence handles enter/exit — CSS animations removed from overlay/panel.
+   ============================================================================= */
 
+/* Overlay */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  /* Warm ink overlay + backdrop blur for depth */
+  background-color: var(--surface-overlay, rgba(11, 10, 8, 0.55));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: var(--spacing-md);
-  animation: fadeIn var(--transition-normal) ease-out;
 }
 
+/* Panel */
 .modal-content {
   background-color: var(--bg-card);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl, var(--shadow-lg));
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  animation: slideUp var(--transition-normal) ease-out;
   position: relative;
+  /* Scrollbar subtle */
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-300, var(--border-color)) transparent;
 }
 
 /* Modal sizes */
-.modal-sm {
-  max-width: 400px;
-}
+.modal-sm  { max-width: 400px; }
+.modal-md  { max-width: 600px; }
+.modal-lg  { max-width: 800px; }
+.modal-xl  { max-width: 1200px; }
 
-.modal-md {
-  max-width: 600px;
-}
-
-.modal-lg {
-  max-width: 800px;
-}
-
-.modal-xl {
-  max-width: 1200px;
-}
-
-/* Modal sections */
+/* Header */
 .modal-header {
   padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-light);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-md);
   min-height: 60px;
+  position: sticky;
+  top: 0;
+  background-color: var(--bg-card);
+  z-index: 1;
 }
 
 .modal-title {
   margin: 0;
+  font-family: var(--font-display);
   font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--text-primary);
+  letter-spacing: var(--tracking-display, -0.015em);
   flex: 1;
 }
 
+/* Close button */
 .modal-close-button {
   background: none;
   border: none;
@@ -69,7 +73,9 @@
   cursor: pointer;
   padding: var(--spacing-sm);
   border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -84,75 +90,75 @@
 }
 
 .modal-close-button:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--accent-soft);
   outline-offset: 2px;
 }
 
+/* Body */
 .modal-body {
   padding: var(--spacing-lg);
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: var(--leading-relaxed, 1.65);
 }
 
+/* Footer */
 .modal-footer {
   padding: var(--spacing-lg);
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-light);
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: var(--spacing-md);
   background-color: var(--bg-secondary);
-  border-bottom-left-radius: var(--radius-lg);
-  border-bottom-right-radius: var(--radius-lg);
+  border-bottom-left-radius: var(--radius-xl);
+  border-bottom-right-radius: var(--radius-xl);
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
 }
 
-/* Khong co header thi body co padding top lon hon */
+/* Extra padding adjustments */
 .modal-content:not(:has(.modal-header)) .modal-body {
   padding-top: var(--spacing-xl);
 }
 
-/* Khong co footer thi body co padding bottom lon hon */
 .modal-content:not(:has(.modal-footer)) .modal-body {
   padding-bottom: var(--spacing-xl);
 }
 
-/* Responsive design */
+/* Responsive — sheet from bottom on mobile */
 @media (max-width: 640px) {
   .modal-overlay {
-    padding: var(--spacing-sm);
+    padding: 0;
     align-items: flex-end;
   }
-  
+
   .modal-content {
-    max-height: 95vh;
-    animation: slideUp var(--transition-normal) ease-out;
+    max-height: 92vh;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: var(--radius-2xl);
+    border-top-right-radius: var(--radius-2xl);
   }
-  
+
   .modal-xl,
   .modal-lg,
   .modal-md {
     max-width: 100%;
   }
-  
+
   .modal-header,
   .modal-body,
   .modal-footer {
     padding: var(--spacing-md);
   }
-  
+
   .modal-footer {
     flex-direction: column-reverse;
     align-items: stretch;
   }
-  
+
   .modal-footer button {
     width: 100%;
   }
-}
-
-/* @keyframes slideUp va spin da co trong index.css — khong dinh nghia lai */
-
-/* Dark theme adjustments */
-[data-theme="dark"] .modal-overlay {
-  background-color: rgba(0, 0, 0, 0.7);
 }

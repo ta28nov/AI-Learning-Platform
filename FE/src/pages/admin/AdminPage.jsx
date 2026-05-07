@@ -6,6 +6,8 @@ import adminService from '@services/adminService'
 import analyticsService from '@services/analyticsService'
 import dashboardService from '@services/dashboardService'
 import Button from '@components/ui/Button'
+import StateView from '@components/ui/StateView'
+import appLogger from '@utils/logger'
 import './AdminPage.css'
 
 /**
@@ -76,15 +78,18 @@ const AdminOverview = () => {
   const navigate = useNavigate()
   const [dashboard, setDashboard] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
         setLoading(true)
+        setError('')
         const data = await dashboardService.getAdminDashboard()
         setDashboard(data)
       } catch (error) {
-        // Dashboard stats optional — dashboard vẫn hiển thị navigation cards
+        setError('Không thể tải dữ liệu tổng quan quản trị.')
+        appLogger.error(error, { feature: 'AdminOverview' })
       } finally {
         setLoading(false)
       }
@@ -101,6 +106,10 @@ const AdminOverview = () => {
 
   return (
     <motion.div className="admin-overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      {error && (
+        <StateView icon="⚠️" title="Lỗi tải tổng quan" message={error} />
+      )}
+
       {/* Dashboard stats from GET /dashboard/admin */}
       {dashboard && (
         <div className="admin-summary">
@@ -151,6 +160,7 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({ role: '', status: '', search: '' })
   const [pagination, setPagination] = useState({ skip: 0, limit: 20, total: 0 })
+  const [error, setError] = useState('')
 
   // Lấy danh sách users
   // BE AdminUserListResponse: { data: AdminUserListItem[], total: int, skip: int, limit: int }
@@ -158,6 +168,7 @@ const AdminUsers = () => {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true)
+      setError('')
       const params = { ...filters, skip: pagination.skip, limit: pagination.limit }
       // Xóa params rỗng
       Object.keys(params).forEach(k => { if (!params[k] && params[k] !== 0) delete params[k] })
@@ -165,6 +176,8 @@ const AdminUsers = () => {
       setUsers(data?.data || [])
       setPagination(prev => ({ ...prev, total: data?.total || 0 }))
     } catch (error) {
+      setError('Không thể tải danh sách người dùng.')
+      appLogger.error(error, { feature: 'AdminUsers' })
       toast.error('Không thể tải danh sách người dùng')
     } finally {
       setLoading(false)
@@ -266,6 +279,8 @@ const AdminUsers = () => {
       {/* Bảng users */}
       {loading ? (
         <div className="admin-table-skeleton">{[1,2,3,4,5].map(i => <div key={i} className="admin-skeleton-row" />)}</div>
+      ) : error ? (
+        <StateView icon="⚠️" title="Lỗi tải người dùng" message={error} actionLabel="Tải lại" onAction={fetchUsers} />
       ) : (
         <div className="admin-table-wrap">
           <table className="admin-table">
@@ -328,16 +343,20 @@ const AdminCourses = () => {
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [error, setError] = useState('')
 
   const fetchCourses = useCallback(async () => {
     try {
       setLoading(true)
+      setError('')
       const params = {}
       // BE admin_router.py dùng param name "keyword" (không phải "search")
       if (search) params.keyword = search
       const data = await adminService.getCourses(params)
       setCourses(data?.data || [])
     } catch (error) {
+      setError('Không thể tải danh sách khóa học.')
+      appLogger.error(error, { feature: 'AdminCourses' })
       toast.error('Không thể tải danh sách khóa học')
     } finally {
       setLoading(false)
@@ -374,6 +393,8 @@ const AdminCourses = () => {
 
       {loading ? (
         <div className="admin-table-skeleton">{[1,2,3,4].map(i => <div key={i} className="admin-skeleton-row" />)}</div>
+      ) : error ? (
+        <StateView icon="⚠️" title="Lỗi tải khóa học" message={error} actionLabel="Tải lại" onAction={fetchCourses} />
       ) : (
         <div className="admin-table-wrap">
           <table className="admin-table">
@@ -434,15 +455,19 @@ const AdminClasses = () => {
   const [classes, setClasses] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [error, setError] = useState('')
 
   const fetchClasses = useCallback(async () => {
     try {
       setLoading(true)
+      setError('')
       const params = {}
       if (search) params.search = search
       const data = await adminService.getClasses(params)
       setClasses(data?.data || [])
     } catch (error) {
+      setError('Không thể tải danh sách lớp học.')
+      appLogger.error(error, { feature: 'AdminClasses' })
       toast.error('Không thể tải danh sách lớp học')
     } finally {
       setLoading(false)
@@ -467,6 +492,8 @@ const AdminClasses = () => {
 
       {loading ? (
         <div className="admin-table-skeleton">{[1,2,3].map(i => <div key={i} className="admin-skeleton-row" />)}</div>
+      ) : error ? (
+        <StateView icon="⚠️" title="Lỗi tải lớp học" message={error} actionLabel="Tải lại" onAction={fetchClasses} />
       ) : (
         <div className="admin-table-wrap">
           <table className="admin-table">
@@ -483,7 +510,7 @@ const AdminClasses = () => {
             <tbody>
               {classes.length > 0 ? classes.map(cls => (
                 <tr key={cls.class_id}>
-                  <td className="admin-table__name">{cls.class_name}</td>
+                  <td className="admin-table__name">{cls.class_name || cls.name || '—'}</td>
                   <td>{cls.course_title || '—'}</td>
                   <td>{cls.instructor_name || '—'}</td>
                   <td>{cls.student_count || 0}</td>

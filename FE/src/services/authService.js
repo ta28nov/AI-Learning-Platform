@@ -88,12 +88,7 @@ export const authService = {
    * @deprecated [TODO] BE chua implement route POST /auth/forgot-password → se nhan 404
    */
   async forgotPassword(email) {
-    try {
-      const response = await api.post('/auth/forgot-password', { email })
-      return handleApiResponse(response)
-    } catch (error) {
-      handleApiError(error)
-    }
+    throw new Error('Chức năng quên mật khẩu chưa được backend hỗ trợ trong phiên bản hiện tại.')
   },
 
   /**
@@ -104,15 +99,7 @@ export const authService = {
    * @deprecated [TODO] BE chua implement route POST /auth/reset-password → se nhan 404
    */
   async resetPassword(token, password) {
-    try {
-      const response = await api.post('/auth/reset-password', {
-        token,
-        password
-      })
-      return handleApiResponse(response)
-    } catch (error) {
-      handleApiError(error)
-    }
+    throw new Error('Chức năng đặt lại mật khẩu chưa được backend hỗ trợ trong phiên bản hiện tại.')
   },
 
   /**
@@ -122,12 +109,7 @@ export const authService = {
    * @deprecated [TODO] BE chua implement route POST /auth/verify-email → se nhan 404
    */
   async verifyEmail(token) {
-    try {
-      const response = await api.post('/auth/verify-email', { token })
-      return handleApiResponse(response)
-    } catch (error) {
-      handleApiError(error)
-    }
+    throw new Error('Chức năng xác thực email chưa được backend hỗ trợ trong phiên bản hiện tại.')
   },
 
   /**
@@ -137,12 +119,7 @@ export const authService = {
    * @deprecated [TODO] BE chua implement route POST /auth/resend-verification → se nhan 404
    */
   async resendVerificationEmail(email) {
-    try {
-      const response = await api.post('/auth/resend-verification', { email })
-      return handleApiResponse(response)
-    } catch (error) {
-      handleApiError(error)
-    }
+    throw new Error('Chức năng gửi lại email xác thực chưa được backend hỗ trợ trong phiên bản hiện tại.')
   },
 
   /**

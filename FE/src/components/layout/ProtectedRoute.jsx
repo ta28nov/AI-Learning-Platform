@@ -29,6 +29,17 @@ const ProtectedRoute = ({
     )
   }
 
+  // Trang thai auth khong day du (co token nhung chua co profile)
+  if (!user) {
+    return (
+      <Navigate
+        to={redirectTo}
+        state={{ from: location.pathname }}
+        replace
+      />
+    )
+  }
+
   // Neu co gioi han vai tro va nguoi dung khong co quyen
   if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
     return (

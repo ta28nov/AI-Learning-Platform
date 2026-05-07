@@ -1,0 +1,78 @@
+/* =============================================================================
+   STATEVIEW COMPONENT — Editorial Cinematic
+   New file (previously StateView had no dedicated CSS; styles lived in
+   DashboardPage.css under .dash-empty). Proper token-based styles added here
+   so the component works everywhere, not just in Dashboard.
+   ============================================================================= */
+
+.state-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  min-height: 200px;
+  /* Keep backward compat: DashboardPage .dash-empty still works as before
+     because it targets a different selector */
+}
+
+/* Icon wrapper */
+.state-view__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  line-height: 1;
+  /* Emoji/SVG is rendered as a neutral ornament — opacity softened */
+  opacity: 0.7;
+}
+
+/* Fallback ornament (shown when no icon passed) */
+.state-view__ornament {
+  display: block;
+  width: 40px;
+  height: 2px;
+  background: var(--border-color);
+  border-radius: var(--radius-pill);
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Title */
+.state-view__title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: var(--tracking-display, -0.015em);
+  margin-bottom: 0;
+}
+
+/* Message */
+.state-view__message {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  max-width: 36ch;
+  line-height: var(--leading-relaxed, 1.65);
+  margin-bottom: 0;
+}
+
+/* Tone modifiers */
+.state-view--error .state-view__title {
+  color: var(--danger);
+}
+
+.state-view--error .state-view__ornament {
+  background: var(--danger-light);
+}
+
+.state-view--loading .state-view__ornament {
+  background: var(--primary);
+  animation: state-view-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes state-view-pulse {
+  0%, 100% { opacity: 0.3; transform: scaleX(0.6); }
+  50%       { opacity: 1;   transform: scaleX(1); }
+}

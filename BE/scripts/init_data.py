@@ -23,8 +23,8 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config import get_settings
-from database import init_db
+from config.config import get_settings
+from app.database import init_database
 from models.models import (
     User, Course, Module, Lesson,
     EmbeddedModule, EmbeddedLesson, LessonProgressItem,
@@ -2011,7 +2011,7 @@ async def main():
     print("=" * 60)
 
     settings = get_settings()
-    await init_db()
+    await init_database()
     print(f"Connected to MongoDB: {settings.mongodb_url[:40]}...")
 
     # 1. Clear
@@ -2059,6 +2059,11 @@ async def main():
     print(f"  Courses: {len(course_ids)} public courses (7 × 4 modules × 4 lessons = 112 lessons)")
     print("  + 5 personal courses")
     print("  Classes, Enrollments, Progress, Quizzes, Assessments, Conversations, Recommendations, RefreshTokens: done")
+    print("\nDemo accounts:")
+    print("  Admin: admin@ailearning.vn / Admin@123456")
+    print("  Instructor: tuan.pham@ailearning.vn / Instructor@123")
+    print("  Student: an.nguyen@gmail.com / Student@123")
+    print("  (Một số student có trạng thái inactive/banned để demo màn quản trị)")
     print("=" * 60)
 
 

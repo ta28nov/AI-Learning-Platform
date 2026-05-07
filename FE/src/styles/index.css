@@ -1,3 +1,15 @@
+/* =============================================================================
+   GLOBAL STYLESHEET - Editorial Cinematic baseline.
+   -----------------------------------------------------------------------------
+   - Imports the design-token layer (light + dark) FIRST so every rule below
+     and every component CSS can resolve `var(--*)` references.
+   - Keeps the existing utility-class API intact so no page or component
+     needs to change. Behaviour-preserving refactor.
+   ============================================================================= */
+
+@import './tokens.css';
+@import './tokens-dark.css';
+
 /* CSS Reset va base styles */
 *,
 *::before,
@@ -7,95 +19,73 @@
   padding: 0;
 }
 
-/* Bien CSS cho theme */
-:root {
-  /* Colors - Light theme */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-card: #ffffff;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
-  --border-color: #e2e8f0;
-  --border-light: #f1f5f9;
-  
-  /* Brand colors */
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --primary-light: #dbeafe;
-  --success: #10b981;
-  --success-light: #d1fae5;
-  --warning: #f59e0b;
-  --warning-light: #fef3c7;
-  --danger: #ef4444;
-  --danger-light: #fee2e2;
-  
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-  
-  /* Border radius */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 1rem;
-  
-  /* Typography */
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 1.875rem;
-  --font-size-4xl: 2.25rem;
-  
-  /* Transitions */
-  --transition-fast: 150ms ease-in-out;
-  --transition-normal: 250ms ease-in-out;
-  --transition-slow: 350ms ease-in-out;
-}
-
-/* Dark theme */
-[data-theme="dark"] {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-card: #1e293b;
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #64748b;
-  --border-color: #334155;
-  --border-light: #475569;
-}
-
 /* Base elements */
 html {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: var(--font-app);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "ss02", "kern";
+  /* Slightly tighter tracking on UI sans for editorial feel */
+  letter-spacing: -0.005em;
 }
 
 body {
+  /* Editorial paper canvas: cream base + warm vignette + gold/copper hints. */
   background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(circle at 12% -10%, rgba(201, 163, 91, 0.10), transparent 38%),
+    radial-gradient(circle at 88% 110%, rgba(181, 101, 29, 0.06), transparent 42%),
+    radial-gradient(circle at 50% 50%, var(--surface-grain), transparent 60%);
   color: var(--text-primary);
-  transition: background-color var(--transition-normal), color var(--transition-normal);
+  min-height: 100vh;
+  transition:
+    background-color var(--transition-normal),
+    color var(--transition-normal);
 }
 
-/* Typography */
+#root {
+  min-height: 100vh;
+}
+
+/* Selection */
+::selection {
+  background: var(--accent-soft-tint);
+  color: var(--text-primary);
+}
+
+/* Native scrollbar (subtle editorial brass) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-300) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--ink-300);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-400);
+  background-clip: padding-box;
+}
+
+/* Typography - keep existing scale + sizing so layouts don't reflow */
 h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
   font-weight: 600;
-  line-height: 1.2;
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-display);
   margin-bottom: var(--spacing-md);
+  color: var(--text-primary);
 }
 
 h1 { font-size: var(--font-size-4xl); }
@@ -118,6 +108,12 @@ a {
 
 a:hover {
   color: var(--primary-hover);
+}
+
+/* Mono code blocks */
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+  font-feature-settings: "calt" 1, "ss01" 1;
 }
 
 /* Container utilities */
@@ -225,6 +221,16 @@ a:hover {
 .text-secondary { color: var(--text-secondary); }
 .text-muted { color: var(--text-muted); }
 
+/* Editorial typography helpers (additive, opt-in) */
+.font-display { font-family: var(--font-display); }
+.font-body    { font-family: var(--font-body); }
+.font-sans    { font-family: var(--font-sans); }
+.font-mono    { font-family: var(--font-mono); }
+.tracking-display { letter-spacing: var(--tracking-display); }
+.tracking-wide    { letter-spacing: var(--tracking-wide); }
+.leading-prose    { line-height: var(--leading-prose); }
+.leading-tight    { line-height: var(--leading-tight); }
+
 /* Layout utilities */
 .w-full { width: 100%; }
 .h-full { height: 100%; }
@@ -287,22 +293,22 @@ a:hover {
 }
 
 @keyframes slideUp {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(20px);
   }
-  to { 
+  to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
 @keyframes slideDown {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(-20px);
   }
-  to { 
+  to {
     opacity: 1;
     transform: translateY(0);
   }
@@ -338,17 +344,23 @@ a:hover {
   .lg\:flex-row { flex-direction: row; }
 }
 
-/* Focus states cho accessibility */
+/* Focus states - editorial gold halo for keyboard users only.
+   `:focus-visible` removes the noisy mouse-click outline while keeping a
+   strong ring for keyboard navigation (Phase 1 a11y win). */
 *:focus {
-  outline: 2px solid var(--primary);
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--accent-soft);
   outline-offset: 2px;
 }
 
-button:focus,
-input:focus,
-textarea:focus,
-select:focus {
-  outline: 2px solid var(--primary);
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent-soft);
   outline-offset: 2px;
 }
 
@@ -385,6 +397,7 @@ select:focus {
   font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--text-primary);
+  letter-spacing: var(--tracking-wide);
 }
 
 /* Input/select/textarea dùng chung class form-select */
@@ -397,13 +410,13 @@ select:focus {
   color: var(--text-primary);
   background: var(--bg-primary);
   font-family: inherit;
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .form-select:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-light);
+  border-color: var(--accent-soft);
+  box-shadow: var(--ring);
 }
 
 /* Thông báo lỗi validation */
@@ -412,4 +425,34 @@ select:focus {
   color: var(--danger);
   font-weight: 500;
   margin-top: 2px;
-}
+}
+
+/* Shared card style */
+.app-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.app-card--hover:hover {
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   Anyone with `prefers-reduced-motion: reduce` gets near-instant transitions.
+   Component-level Framer Motion variants should additionally honour this
+   preference via `useReducedMotion()`.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

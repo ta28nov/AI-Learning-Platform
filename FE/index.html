@@ -4,13 +4,34 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0B0A08" />
     <meta name="description" content="AI Learning Platform - Nen tang hoc tap AI thong minh" />
+
+    <!--
+      Editorial Cinematic typography pipeline.
+      Loads variable font axes for: Fraunces (display serif),
+      Newsreader (long-form serif, with italic), Plus Jakarta Sans (UI sans),
+      JetBrains Mono (technical content). `display=swap` keeps fallbacks
+      visible until the variable fonts are ready.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Newsreader:ital,opsz,wght@0,6..72,200..700;1,6..72,200..700&family=Plus+Jakarta+Sans:wght@300..800&family=JetBrains+Mono:wght@400..600&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Newsreader:ital,opsz,wght@0,6..72,200..700;1,6..72,200..700&family=Plus+Jakarta+Sans:wght@300..800&family=JetBrains+Mono:wght@400..600&display=swap"
+    />
+
     <title>AI Learning Platform</title>
   </head>
   <body>
     <!-- Container chinh cho ung dung React -->
     <div id="root"></div>
-    
+
     <!-- Script entry point -->
     <script type="module" src="/src/main.jsx"></script>
   </body>

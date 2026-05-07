@@ -1,38 +1,42 @@
 import React from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { SPRING, magneticHover, magneticTap } from '@/styles/motion'
 import './Button.css'
 
 /**
- * Component Button co ban voi cac variant khac nhau
- * @param {Object} props - Cac thuoc tinh cua button
- * @param {string} props.variant - Kieu button: 'primary', 'secondary', 'outline', 'ghost', 'danger'
- * @param {string} props.size - Kich thuoc: 'sm', 'md', 'lg'
- * @param {boolean} props.loading - Trang thai dang tai
- * @param {boolean} props.disabled - Vo hieu hoa button
- * @param {string} props.className - CSS class bo sung
- * @param {React.ReactNode} props.children - Noi dung ben trong button
- * @param {Function} props.onClick - Ham xu ly su kien click
+ * Editorial Cinematic Button
+ *
+ * Props API fully preserved — all existing usages continue to work unchanged.
+ *
+ * @param {string}  props.variant   - 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
+ * @param {string}  props.size      - 'sm' | 'md' | 'lg'
+ * @param {boolean} props.loading   - Shows spinner, disables interaction
+ * @param {boolean} props.disabled  - Disables interaction
+ * @param {string}  props.className - Extra CSS classes
+ * @param {node}    props.children  - Button content
+ * @param {func}    props.onClick   - Click handler
  */
-const Button = ({ 
-  variant = 'primary', 
-  size = 'md', 
-  loading = false, 
-  disabled = false, 
-  className = '', 
-  children, 
+const Button = ({
+  variant = 'primary',
+  size = 'md',
+  loading = false,
+  disabled = false,
+  className = '',
+  children,
   onClick,
-  ...props 
+  ...props
 }) => {
-  // Tao cac class CSS dua tren props
+  const shouldReduceMotion = useReducedMotion()
+
   const buttonClasses = [
     'btn',
     `btn-${variant}`,
     `btn-${size}`,
     loading && 'btn-loading',
     disabled && 'btn-disabled',
-    className
+    className,
   ].filter(Boolean).join(' ')
 
-  // Xu ly su kien click
   const handleClick = (e) => {
     if (disabled || loading) {
       e.preventDefault()
@@ -41,16 +45,89 @@ const Button = ({
     onClick && onClick(e)
   }
 
+  // Reduced-motion: fall back to bare <button> with CSS transitions only
+  if (shouldReduceMotion) {
+    return (
+      <button
+        className={buttonClasses}
+        onClick={handleClick}
+        disabled={disabled || loading}
+        {...props}
+      >
+        {loading && <span className="btn-spinner" />}
+        {children}
+      </button>
+    )
+  }
+
+  const hoverAnim = disabled || loading ? {} : magneticHover
+  const tapAnim   = disabled || loading ? {} : magneticTap
+
   return (
-    <button
+    <motion.button
       className={buttonClasses}
       onClick={handleClick}
       disabled={disabled || loading}
+      whileHover={hoverAnim}
+      whileTap={tapAnim}
+      transition={SPRING.snappy}
       {...props}
     >
-      {loading && <span className="btn-spinner"></span>}
+      {loading && <span className="btn-spinner" />}
       {children}
-    </button>
+    </motion.button>
+  )
+}
+
+/* ---------------------------------------------------------------------------
+   Sub-variants (editorial additions — opt-in, do not break existing usage)
+   --------------------------------------------------------------------------- */
+
+/**
+ * Button.Magnetic — primary action with a strong pull-up and gold shadow on hover.
+ * Same props as Button. variant defaults to 'primary'.
+ */
+Button.Magnetic = function MagneticButton({ className = '', ...props }) {
+  return (
+    <Button
+      variant="primary"
+      className={`btn-magnetic ${className}`}
+      {...props}
+    />
+  )
+}
+
+/**
+ * Button.Ghost — invisible until hovered; ink text, no border.
+ * Same props as Button. variant locked to 'ghost'.
+ */
+Button.Ghost = function GhostButton({ className = '', ...props }) {
+  return (
+    <Button
+      variant="ghost"
+      className={`btn-ghost-editorial ${className}`}
+      {...props}
+    />
+  )
+}
+
+/**
+ * Button.Link — text-only with animated underline; use for inline editorial CTAs.
+ * Same props as Button minus size (ignored).
+ */
+Button.Link = function LinkButton({ className = '', children, ...props }) {
+  const shouldReduceMotion = useReducedMotion()
+  return (
+    <motion.button
+      className={`btn btn-link-editorial ${className}`}
+      whileHover={shouldReduceMotion ? {} : { x: 2 }}
+      whileTap={shouldReduceMotion ? {} : { x: 0 }}
+      transition={SPRING.snappy}
+      {...props}
+    >
+      {children}
+      <span className="btn-link-underline" aria-hidden="true" />
+    </motion.button>
   )
 }
 

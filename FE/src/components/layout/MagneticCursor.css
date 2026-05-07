@@ -1,0 +1,66 @@
+/* =============================================================================
+   MAGNETIC CURSOR — Editorial Cinematic
+   Only active on pointer:fine devices. Touch devices get no cursor overlay.
+   ============================================================================= */
+
+/* Hide the system cursor when custom cursor is active */
+body:has(.cursor-dot) {
+  cursor: none !important;
+}
+
+body:has(.cursor-dot) a,
+body:has(.cursor-dot) button,
+body:has(.cursor-dot) [role="button"],
+body:has(.cursor-dot) input,
+body:has(.cursor-dot) textarea,
+body:has(.cursor-dot) select {
+  cursor: none !important;
+}
+
+/* Dot — the precise position indicator */
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  background-color: var(--ink-900);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: multiply;
+}
+
+/* Ring — spring-lagged decorative ring */
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--gold-500);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  opacity: 0.6;
+}
+
+/* Dark mode: invert mix for legibility on dark surfaces */
+[data-theme="dark"] .cursor-dot {
+  background-color: var(--cream-100);
+  mix-blend-mode: screen;
+}
+
+[data-theme="dark"] .cursor-ring {
+  border-color: var(--gold-300);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cursor-dot,
+  .cursor-ring {
+    display: none;
+  }
+}

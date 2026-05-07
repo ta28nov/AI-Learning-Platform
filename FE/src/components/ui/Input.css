@@ -1,4 +1,7 @@
-/* Styles cho Input component */
+/* =============================================================================
+   INPUT COMPONENT — Editorial Cinematic
+   All legacy class names preserved. Focus ring upgraded to gold editorial halo.
+   ============================================================================= */
 
 .input-container {
   display: flex;
@@ -9,8 +12,9 @@
 
 .input-label {
   font-size: var(--font-size-sm);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
+  letter-spacing: var(--tracking-wide, 0.04em);
   margin-bottom: var(--spacing-xs);
 }
 
@@ -25,25 +29,31 @@
   align-items: center;
 }
 
+/* Base input element */
 .input {
   width: 100%;
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   border-radius: var(--radius-md);
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-size: var(--font-size-base);
-  transition: all var(--transition-fast);
   font-family: inherit;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background-color var(--transition-fast);
 }
 
+/* Focus: gold editorial halo */
 .input:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-light);
+  border-color: var(--accent-soft);
+  box-shadow: var(--ring);
 }
 
 .input::placeholder {
   color: var(--text-muted);
+  font-style: italic;
 }
 
 /* Input sizes */
@@ -95,9 +105,10 @@
   right: var(--spacing-md);
 }
 
-/* Input states */
+/* Validation states */
 .input-error {
   border-color: var(--danger);
+  background-color: var(--danger-light);
 }
 
 .input-error:focus {
@@ -110,22 +121,31 @@
   color: var(--text-muted);
   cursor: not-allowed;
   opacity: 0.6;
+  border-color: var(--border-light);
 }
 
 .input-disabled::placeholder {
   color: var(--text-muted);
 }
 
-/* Textarea specific styles */
+/* Focus-visible fallback for keyboard (CSS-only, Framer handles full-motion) */
+.input:focus-visible {
+  outline: 2px solid var(--accent-soft);
+  outline-offset: 2px;
+  border-color: var(--accent-soft);
+  box-shadow: var(--ring);
+}
+
+/* Textarea */
 .textarea {
   resize: vertical;
   min-height: 80px;
-  line-height: 1.5;
+  line-height: var(--leading-relaxed, 1.65);
   padding-top: var(--spacing-md);
   padding-bottom: var(--spacing-md);
 }
 
-/* Helper and error messages */
+/* Helper / error messages */
 .input-helper-text,
 .input-error-message {
   font-size: var(--font-size-xs);
@@ -139,18 +159,10 @@
 
 .input-error-message {
   color: var(--danger);
-  font-weight: 500;
+  font-weight: 600;
 }
 
-/* Focus-visible for better accessibility */
-.input:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-  border-color: var(--primary);
-  box-shadow: none;
-}
-
-/* Input group styles */
+/* Input group */
 .input-group {
   display: flex;
   gap: var(--spacing-sm);
@@ -160,14 +172,14 @@
   flex: 1;
 }
 
-/* Responsive design */
+/* Responsive */
 @media (max-width: 640px) {
   .input-lg {
     padding: var(--spacing-md) var(--spacing-md);
     font-size: var(--font-size-base);
     min-height: 44px;
   }
-  
+
   .input-group {
     flex-direction: column;
   }

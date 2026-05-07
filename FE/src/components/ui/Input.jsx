@@ -1,22 +1,25 @@
-import React, { forwardRef } from 'react'
+import React, { forwardRef, useId } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import './Input.css'
 
 /**
- * Component Input co ban voi cac tinh nang validation
- * @param {Object} props - Cac thuoc tinh cua input
- * @param {string} props.type - Kieu input: 'text', 'email', 'password', 'number', etc.
- * @param {string} props.label - Nhan cua input
- * @param {string} props.placeholder - Placeholder text
- * @param {boolean} props.required - Co bat buoc khong
- * @param {boolean} props.disabled - Vo hieu hoa input
- * @param {string} props.error - Thong bao loi
- * @param {string} props.helperText - Text huong dan
- * @param {string} props.size - Kich thuoc: 'sm', 'md', 'lg'
- * @param {string} props.className - CSS class bo sung
- * @param {React.ReactNode} props.startIcon - Icon o dau input
- * @param {React.ReactNode} props.endIcon - Icon o cuoi input
+ * Editorial Cinematic Input
+ *
+ * forwardRef API fully preserved — all existing usages continue to work unchanged.
+ *
+ * @param {string}  props.type        - Input type (text, email, password, ...)
+ * @param {string}  props.label       - Field label
+ * @param {string}  props.placeholder
+ * @param {boolean} props.required
+ * @param {boolean} props.disabled
+ * @param {string}  props.error       - Validation error message
+ * @param {string}  props.helperText  - Helper text (shown when no error)
+ * @param {string}  props.size        - 'sm' | 'md' | 'lg'
+ * @param {string}  props.className
+ * @param {node}    props.startIcon
+ * @param {node}    props.endIcon
  */
-const Input = forwardRef(({ 
+const Input = forwardRef(({
   type = 'text',
   label,
   placeholder,
@@ -28,13 +31,15 @@ const Input = forwardRef(({
   className = '',
   startIcon,
   endIcon,
-  ...props 
+  ...props
 }, ref) => {
-  // Tao cac class CSS dua tren props
-  const containerClasses = [
-    'input-container',
-    className
-  ].filter(Boolean).join(' ')
+  const shouldReduceMotion = useReducedMotion()
+
+  // useId gives stable SSR-safe IDs; fall back to props.id when caller provides one
+  const autoId = useId()
+  const inputId = props.id || `input-${autoId}`
+
+  const containerClasses = ['input-container', className].filter(Boolean).join(' ')
 
   const inputClasses = [
     'input',
@@ -42,27 +47,29 @@ const Input = forwardRef(({
     error && 'input-error',
     disabled && 'input-disabled',
     startIcon && 'input-with-start-icon',
-    endIcon && 'input-with-end-icon'
+    endIcon && 'input-with-end-icon',
   ].filter(Boolean).join(' ')
 
-  const inputId = props.id || `input-${Math.random().toString(36).substr(2, 9)}`
+  const errorMotion = shouldReduceMotion
+    ? {}
+    : { initial: { opacity: 0, y: -4 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.18 } }
 
   return (
     <div className={containerClasses}>
       {label && (
         <label htmlFor={inputId} className="input-label">
           {label}
-          {required && <span className="input-required">*</span>}
+          {required && <span className="input-required" aria-hidden="true">*</span>}
         </label>
       )}
-      
+
       <div className="input-wrapper">
         {startIcon && (
-          <div className="input-icon input-start-icon">
+          <div className="input-icon input-start-icon" aria-hidden="true">
             {startIcon}
           </div>
         )}
-        
+
         <input
           ref={ref}
           id={inputId}
@@ -71,24 +78,31 @@ const Input = forwardRef(({
           placeholder={placeholder}
           required={required}
           disabled={disabled}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
           {...props}
         />
-        
+
         {endIcon && (
-          <div className="input-icon input-end-icon">
+          <div className="input-icon input-end-icon" aria-hidden="true">
             {endIcon}
           </div>
         )}
       </div>
-      
+
       {error && (
-        <div className="input-error-message">
+        <motion.div
+          id={`${inputId}-error`}
+          className="input-error-message"
+          role="alert"
+          {...errorMotion}
+        >
           {error}
-        </div>
+        </motion.div>
       )}
-      
+
       {helperText && !error && (
-        <div className="input-helper-text">
+        <div id={`${inputId}-helper`} className="input-helper-text">
           {helperText}
         </div>
       )}
@@ -99,9 +113,9 @@ const Input = forwardRef(({
 Input.displayName = 'Input'
 
 /**
- * Component Textarea de nhap text nhieu dong
+ * Textarea — same editorial treatment, same prop API as before.
  */
-export const Textarea = forwardRef(({ 
+export const Textarea = forwardRef(({
   label,
   placeholder,
   required = false,
@@ -110,31 +124,34 @@ export const Textarea = forwardRef(({
   helperText,
   rows = 4,
   className = '',
-  ...props 
+  ...props
 }, ref) => {
-  const containerClasses = [
-    'input-container',
-    className
-  ].filter(Boolean).join(' ')
+  const shouldReduceMotion = useReducedMotion()
+  const autoId = useId()
+  const textareaId = props.id || `textarea-${autoId}`
+
+  const containerClasses = ['input-container', className].filter(Boolean).join(' ')
 
   const textareaClasses = [
     'input',
     'textarea',
     error && 'input-error',
-    disabled && 'input-disabled'
+    disabled && 'input-disabled',
   ].filter(Boolean).join(' ')
 
-  const textareaId = props.id || `textarea-${Math.random().toString(36).substr(2, 9)}`
+  const errorMotion = shouldReduceMotion
+    ? {}
+    : { initial: { opacity: 0, y: -4 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.18 } }
 
   return (
     <div className={containerClasses}>
       {label && (
         <label htmlFor={textareaId} className="input-label">
           {label}
-          {required && <span className="input-required">*</span>}
+          {required && <span className="input-required" aria-hidden="true">*</span>}
         </label>
       )}
-      
+
       <textarea
         ref={ref}
         id={textareaId}
@@ -143,17 +160,24 @@ export const Textarea = forwardRef(({
         required={required}
         disabled={disabled}
         rows={rows}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${textareaId}-error` : helperText ? `${textareaId}-helper` : undefined}
         {...props}
       />
-      
+
       {error && (
-        <div className="input-error-message">
+        <motion.div
+          id={`${textareaId}-error`}
+          className="input-error-message"
+          role="alert"
+          {...errorMotion}
+        >
           {error}
-        </div>
+        </motion.div>
       )}
-      
+
       {helperText && !error && (
-        <div className="input-helper-text">
+        <div id={`${textareaId}-helper`} className="input-helper-text">
           {helperText}
         </div>
       )}

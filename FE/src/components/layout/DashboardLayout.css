@@ -1,16 +1,25 @@
-/* Styles cho DashboardLayout component */
+/* =============================================================================
+   DASHBOARD LAYOUT — Editorial Cinematic
+   Phase 3 refactor: uiStore-driven sidebar, editorial sidebar design,
+   correct isActive states, 4 new nav items added.
+   All legacy class names preserved for backward compatibility.
+   ============================================================================= */
 
+/* Shell */
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
   background-color: var(--bg-primary);
 }
 
-/* Sidebar */
+/* =============================================================================
+   SIDEBAR
+   ============================================================================= */
+
 .dashboard-sidebar {
   width: 280px;
-  background-color: var(--bg-card);
-  border-right: 1px solid var(--border-color);
+  background-color: var(--surface-paper, var(--bg-card));
+  border-right: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -20,17 +29,44 @@
   z-index: 30;
   transform: translateX(0);
   transition: transform var(--transition-normal);
+  /* Subtle grain texture depth for editorial feel */
+  box-shadow: inset -1px 0 0 var(--border-light);
+  overflow: hidden;
 }
 
+/* Sidebar brand header */
 .sidebar-header {
   padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-light);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 80px;
+  min-height: 72px;
+  flex-shrink: 0;
 }
 
+.sidebar-logo-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  text-decoration: none;
+}
+
+.sidebar-logo-mark {
+  color: var(--gold-500);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.sidebar-logo-text {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
+}
+
+/* Legacy .sidebar-logo still works if referenced anywhere */
 .sidebar-logo {
   font-size: var(--font-size-xl);
   font-weight: 700;
@@ -47,6 +83,7 @@
   padding: var(--spacing-sm);
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .sidebar-close:hover {
@@ -54,23 +91,54 @@
   color: var(--text-primary);
 }
 
-/* Sidebar Navigation */
-.sidebar-nav {
-  flex: 1;
-  padding: var(--spacing-md);
-  overflow-y: auto;
+.sidebar-close:focus-visible {
+  outline: 2px solid var(--accent-soft);
+  outline-offset: 2px;
 }
 
+/* =============================================================================
+   SIDEBAR NAVIGATION
+   ============================================================================= */
+
+.sidebar-nav {
+  flex: 1;
+  padding: var(--spacing-md) var(--spacing-sm);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-light) transparent;
+}
+
+.sidebar-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-section-label {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin: 0 0 var(--spacing-xs);
+}
+
+/* Nav item */
 .sidebar-nav-item {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  padding: var(--spacing-md);
+  padding: 0.625rem var(--spacing-md);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
   text-decoration: none;
-  transition: all var(--transition-fast);
-  margin-bottom: var(--spacing-xs);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+  margin-bottom: 2px;
+  position: relative;
 }
 
 .sidebar-nav-item:hover {
@@ -78,10 +146,27 @@
   color: var(--text-primary);
 }
 
+.sidebar-nav-item:focus-visible {
+  outline: 2px solid var(--accent-soft);
+  outline-offset: 2px;
+}
+
+/* Active state — gold tint + ink text */
 .sidebar-nav-item.nav-item-active {
-  background-color: var(--primary-light);
-  color: var(--primary);
-  font-weight: 500;
+  background-color: var(--gold-50, var(--primary-light));
+  color: var(--ink-700, var(--primary));
+  font-weight: 600;
+}
+
+/* Active indicator bar on the right edge */
+.nav-item-active-bar {
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 3px;
+  background-color: var(--gold-500, var(--primary));
+  border-radius: var(--radius-pill) 0 0 var(--radius-pill);
 }
 
 .nav-item-icon {
@@ -91,23 +176,32 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  color: inherit;
 }
 
 .nav-item-label {
-  font-size: var(--font-size-base);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar-divider {
   height: 1px;
-  background-color: var(--border-color);
-  margin: var(--spacing-md) 0;
+  background-color: var(--border-light);
+  margin: var(--spacing-md) var(--spacing-md);
 }
 
-/* Sidebar Footer */
+/* =============================================================================
+   SIDEBAR FOOTER (user info + logout)
+   ============================================================================= */
+
 .sidebar-footer {
-  padding: var(--spacing-lg);
-  border-top: 1px solid var(--border-color);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: 1px solid var(--border-light);
   background-color: var(--bg-secondary);
+  flex-shrink: 0;
 }
 
 .user-info {
@@ -115,20 +209,37 @@
   align-items: center;
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-md);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.user-info:hover {
+  background-color: var(--bg-primary);
 }
 
 .user-avatar {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background-color: var(--primary);
-  color: white;
+  background-color: var(--ink-700, var(--primary));
+  color: var(--cream-50, white);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
+  font-family: var(--font-sans);
+  font-weight: 700;
   font-size: var(--font-size-sm);
   flex-shrink: 0;
+  border: 2px solid var(--gold-500);
+}
+
+.header-avatar {
+  width: 34px;
+  height: 34px;
+  font-size: var(--font-size-xs);
+  border-width: 1.5px;
 }
 
 .user-details {
@@ -137,8 +248,9 @@
 }
 
 .user-name {
+  font-family: var(--font-sans);
   font-size: var(--font-size-sm);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -148,9 +260,24 @@
 .user-role {
   font-size: var(--font-size-xs);
   color: var(--text-muted);
+  letter-spacing: 0.02em;
 }
 
-/* Main Content */
+.sidebar-logout-btn {
+  width: 100%;
+  justify-content: flex-start;
+  padding-left: var(--spacing-sm);
+  color: var(--text-muted) !important;
+}
+
+.sidebar-logout-btn:hover {
+  color: var(--danger) !important;
+}
+
+/* =============================================================================
+   MAIN CONTENT AREA
+   ============================================================================= */
+
 .dashboard-main {
   flex: 1;
   margin-left: 280px;
@@ -162,12 +289,12 @@
 /* Header */
 .dashboard-header {
   background-color: var(--bg-card);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-light);
   padding: 0 var(--spacing-lg);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 80px;
+  min-height: 72px;
   position: sticky;
   top: 0;
   z-index: 20;
@@ -181,23 +308,23 @@
   cursor: pointer;
   padding: var(--spacing-sm);
   border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .sidebar-toggle:hover {
   background-color: var(--bg-secondary);
 }
 
-.header-content {
-  flex: 1;
-  margin-left: var(--spacing-lg);
+.sidebar-toggle:focus-visible {
+  outline: 2px solid var(--accent-soft);
+  outline-offset: 2px;
 }
 
-.page-title {
-  font-size: var(--font-size-2xl);
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
+.header-content {
+  flex: 1;
+  margin: 0 var(--spacing-lg);
+  max-width: 560px;
 }
 
 .header-actions {
@@ -209,64 +336,75 @@
 .profile-link {
   text-decoration: none;
   border-radius: 50%;
-  transition: transform var(--transition-fast);
+  display: block;
 }
 
-.profile-link:hover {
-  transform: scale(1.05);
+.profile-link:focus-visible {
+  outline: 2px solid var(--accent-soft);
+  outline-offset: 3px;
+  border-radius: 50%;
 }
 
-.profile-link .user-avatar {
-  width: 36px;
-  height: 36px;
-  font-size: var(--font-size-xs);
-}
-
-/* Content */
+/* Content area */
 .dashboard-content {
   flex: 1;
   padding: var(--spacing-xl);
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Overlay cho mobile */
+/* Page transition wrapper needs to fill available space */
+.page-transition-wrapper {
+  flex: 1;
+}
+
+/* Mobile overlay */
 .sidebar-overlay {
-  display: none;
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background-color: var(--surface-overlay, rgba(11, 10, 8, 0.55));
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   z-index: 25;
+  display: block;
 }
 
-/* Responsive Design */
+/* Legacy selector still works */
+.page-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* =============================================================================
+   RESPONSIVE
+   ============================================================================= */
+
 @media (max-width: 1024px) {
   .dashboard-sidebar {
     transform: translateX(-100%);
   }
-  
+
+  /* uiStore sets .sidebar-open class on the aside via DashboardLayout re-render.
+     The sidebar gets the class when sidebarOpen === true. */
   .dashboard-sidebar.sidebar-open {
     transform: translateX(0);
   }
-  
+
   .sidebar-close {
     display: flex;
   }
-  
-  .sidebar-overlay {
-    display: block;
-  }
-  
+
   .dashboard-main {
     margin-left: 0;
   }
-  
+
   .sidebar-toggle {
     display: flex;
   }
-  
+
   .header-content {
     margin-left: var(--spacing-md);
   }
@@ -277,38 +415,17 @@
     width: 100%;
     max-width: 320px;
   }
-  
+
   .dashboard-header {
     padding: 0 var(--spacing-md);
   }
-  
+
   .dashboard-content {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-lg) var(--spacing-md);
   }
-  
-  .page-title {
-    font-size: var(--font-size-xl);
-  }
-  
+
   .sidebar-header,
   .sidebar-footer {
     padding: var(--spacing-md);
   }
-  
-  .header-actions {
-    gap: var(--spacing-sm);
-  }
-}
-
-/* Focus states */
-.sidebar-nav-item:focus-visible,
-.sidebar-toggle:focus-visible,
-.sidebar-close:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-
-/* Dark theme adjustments */
-[data-theme="dark"] .sidebar-overlay {
-  background-color: rgba(0, 0, 0, 0.7);
 }

@@ -4,6 +4,8 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { useCourseStore } from '@stores/courseStore'
 import Button from '@components/ui/Button'
+import StateView from '@components/ui/StateView'
+import appLogger from '@utils/logger'
 import './CoursesPage.css'
 
 /**
@@ -22,13 +24,23 @@ const CoursesPage = () => {
   } = useCourseStore()
 
   const [searchInput, setSearchInput] = useState(filters.keyword || '')
+  const [pageError, setPageError] = useState('')
 
   // Lấy dữ liệu lần đầu và khi filter thay đổi
   useEffect(() => {
     searchCourses().catch(() => {
+      setPageError('Không thể tải danh sách khóa học. Vui lòng thử lại.')
+      appLogger.error(new Error('Load courses failed'), { feature: 'CoursesPage' })
       toast.error('Không thể tải danh sách khóa học')
     })
   }, [filters.keyword, filters.category, filters.level, filters.sort_by, pagination.skip])
+  const retryLoad = () => {
+    setPageError('')
+    searchCourses().catch(() => {
+      setPageError('Không thể tải danh sách khóa học. Vui lòng thử lại.')
+    })
+  }
+
 
   // Xử lý tìm kiếm khi nhấn Enter hoặc click nút
   const handleSearch = useCallback(() => {
@@ -187,8 +199,18 @@ const CoursesPage = () => {
         </div>
       )}
 
+      {!isLoading && pageError && (
+        <StateView
+          icon="⚠️"
+          title="Lỗi tải dữ liệu"
+          message={pageError}
+          actionLabel="Thử lại"
+          onAction={retryLoad}
+        />
+      )}
+
       {/* Danh sách khóa học */}
-      {!isLoading && courses.length > 0 && (
+      {!isLoading && !pageError && courses.length > 0 && (
         <motion.div
           className="courses-grid"
           initial="hidden"
@@ -289,7 +311,7 @@ const CoursesPage = () => {
       )}
 
       {/* Trạng thái rỗng */}
-      {!isLoading && courses.length === 0 && (
+      {!isLoading && !pageError && courses.length === 0 && (
         <div className="courses-empty">
           <span className="courses-empty__icon">📚</span>
           <h3>Không tìm thấy khóa học</h3>
