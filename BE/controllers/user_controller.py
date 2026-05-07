@@ -97,10 +97,16 @@ async def handle_update_profile(
                 detail="User not found"
             )
         
-        # Cập nhật các trường được cung cấp (chỉ update trường không null)
+        # Cập nhật các trường được cung cấp
         update_dict = update_data.model_dump(exclude_unset=True)
         
         for field, value in update_dict.items():
+            # Prevent overwriting required List fields with None
+            if value is None and field == "learning_preferences":
+                continue
+            # Convert None learning_preferences to empty list
+            if field == "learning_preferences" and value is None:
+                value = []
             setattr(user, field, value)
         
         # Cập nhật thời gian updated_at

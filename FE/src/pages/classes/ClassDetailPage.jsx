@@ -1,15 +1,22 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import classService from '@services/classService'
 import Button from '@components/ui/Button'
-import Card, { CardHeader, CardBody } from '@components/ui/Card'
+import StateView from '@components/ui/StateView'
 import './ClassDetailPage.css'
 
+const CopyIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </svg>
+)
+
 /**
- * Trang chi tiết lớp học (Instructor)
- * Route: /dashboard/classes/:classId
- * API: GET /classes/{classId}, GET /classes/{classId}/students
+ * ClassDetailPage — Chi tiết lớp học (Instructor)
+ * Route: /dashboard/instructor/classes/:classId (InstructorRoute)
+ * API: GET /classes/{classId}, GET /classes/{classId}/students via classService — unchanged
  */
 const ClassDetailPage = () => {
   const { classId } = useParams()
@@ -25,11 +32,11 @@ const ClassDetailPage = () => {
         setLoading(true)
         const [detail, studentList] = await Promise.all([
           classService.getClassDetail(classId),
-          classService.getStudents(classId).catch(() => ({ data: [] }))
+          classService.getStudents(classId).catch(() => ({ data: [] })),
         ])
         setClassData(detail)
         setStudents(studentList.data || [])
-      } catch (error) {
+      } catch {
         toast.error('Không thể tải thông tin lớp học')
       } finally {
         setLoading(false)
@@ -38,27 +45,51 @@ const ClassDetailPage = () => {
     fetchData()
   }, [classId])
 
-  if (loading) return <div className="class-detail-state">Đang tải...</div>
-  if (!classData) return <div className="class-detail-state">Không tìm thấy lớp học</div>
+  const copyInviteCode = () => {
+    navigator.clipboard.writeText(classData?.invite_code || '')
+    toast.success('Đã sao chép mã mời')
+  }
+
+  if (loading) return <div className="cld-page"><StateView type="loading" message="Đang tải thông tin lớp học…" /></div>
+  if (!classData) return (
+    <div className="cld-page">
+      <StateView type="empty" message="Không tìm thấy lớp học" action={{ label: 'Quay lại', onClick: () => navigate('/dashboard/instructor/classes') }} />
+    </div>
+  )
 
   const tabs = [
     { id: 'info', label: 'Thông tin' },
-    { id: 'students', label: `Học viên (${students.length})` }
+    { id: 'students', label: `Học viên (${students.length})` },
   ]
 
+  const statusLabel = { active: 'Đang hoạt động', completed: 'Đã kết thúc', preparing: 'Chuẩn bị', cancelled: 'Đã hủy' }
+  const statusClass = { active: 'cld-status--active', completed: 'cld-status--completed', cancelled: 'cld-status--cancelled', preparing: 'cld-status--preparing' }
+
   return (
-    <div className="class-detail-page">
-      <div className="class-detail-header">
-        <Button variant="ghost" onClick={() => navigate('/dashboard/classes')}>← Quay lại</Button>
-        <h1 className="class-detail-header__title">{classData.name}</h1>
-      </div>
+    <div className="cld-page">
+      {/* Header */}
+      <motion.div className="cld-header" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.65, 0, 0.35, 1] }}>
+        <button className="cld-back" onClick={() => navigate('/dashboard/instructor/classes')}>
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M15 10H5m0 0 5-5M5 10l5 5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Danh sách lớp
+        </button>
+        <div className="cld-header__row">
+          <h1 className="cld-title">{classData.name}</h1>
+          <span className={`cld-status ${statusClass[classData.status] || ''}`}>
+            {statusLabel[classData.status] ?? classData.status}
+          </span>
+        </div>
+        {classData.course?.title && <p className="cld-subtitle">Khóa học: {classData.course.title}</p>}
+      </motion.div>
 
       {/* Tabs */}
-      <div className="class-detail-tabs">
-        {tabs.map((tab) => (
+      <div className="cld-tabs">
+        {tabs.map(tab => (
           <button
             key={tab.id}
-            className={`class-detail-tab ${activeTab === tab.id ? 'class-detail-tab--active' : ''}`}
+            className={`cld-tab ${activeTab === tab.id ? 'cld-tab--active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
           >
             {tab.label}
@@ -66,95 +97,98 @@ const ClassDetailPage = () => {
         ))}
       </div>
 
-      {/* Tab: Thông tin */}
-      {activeTab === 'info' && (
-        <div className="class-detail-info">
-          <Card>
-            <CardBody>
-              <div className="class-detail-info-grid">
-                <div className="class-detail-info-item">
-                  <strong>Mã mời:</strong>{' '}
-                  <code className="class-detail-invite-code">{classData.invite_code}</code>
+      <AnimatePresence mode="wait">
+        {activeTab === 'info' && (
+          <motion.div
+            key="info"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* Invite code */}
+            <div className="cld-invite">
+              <span className="cld-invite__label">Mã mời lớp</span>
+              <div className="cld-invite__row">
+                <code className="cld-invite__code">{classData.invite_code}</code>
+                <button className="cld-invite__copy" onClick={copyInviteCode} title="Sao chép">
+                  <CopyIcon />
+                </button>
+              </div>
+            </div>
+
+            {/* Info grid */}
+            <div className="cld-info-grid">
+              {[
+                { label: 'Học viên', value: classData.student_count ?? students.length },
+                { label: 'Bắt đầu', value: classData.start_date ? new Date(classData.start_date).toLocaleDateString('vi-VN') : '—' },
+                { label: 'Kết thúc', value: classData.end_date ? new Date(classData.end_date).toLocaleDateString('vi-VN') : '—' },
+              ].map(({ label, value }) => (
+                <div key={label} className="cld-info-card">
+                  <span className="cld-info-card__label">{label}</span>
+                  <span className="cld-info-card__value">{value}</span>
                 </div>
-                <div className="class-detail-info-item">
-                  <strong>Trạng thái:</strong> {classData.status}
-                </div>
-                <div className="class-detail-info-item">
-                  <strong>Khóa học:</strong> {classData.course?.title}
-                </div>
-                <div className="class-detail-info-item">
-                  {/* student_count la string "25/30" hoac int tuy endpoint */}
-                  <strong>Số học viên:</strong> {classData.student_count}
-                </div>
-                <div className="class-detail-info-item">
-                  <strong>Bắt đầu:</strong>{' '}
-                  {classData.start_date ? new Date(classData.start_date).toLocaleDateString('vi-VN') : '-'}
-                </div>
-                <div className="class-detail-info-item">
-                  <strong>Kết thúc:</strong>{' '}
-                  {classData.end_date ? new Date(classData.end_date).toLocaleDateString('vi-VN') : '-'}
+              ))}
+            </div>
+
+            {/* Stats */}
+            {classData.class_stats && (
+              <div className="cld-stats">
+                <h2 className="cld-section-title">Thống kê</h2>
+                <div className="cld-stats-grid">
+                  <div className="cld-stat"><span className="cld-stat__value">{classData.class_stats.total_students}</span><span className="cld-stat__label">Học viên</span></div>
+                  <div className="cld-stat"><span className="cld-stat__value">{classData.class_stats.lessons_completed || 0}</span><span className="cld-stat__label">Bài hoàn thành</span></div>
+                  <div className="cld-stat"><span className="cld-stat__value">{classData.class_stats.avg_quiz_score || 0}</span><span className="cld-stat__label">Điểm TB quiz</span></div>
                 </div>
               </div>
-            </CardBody>
-          </Card>
+            )}
+          </motion.div>
+        )}
 
-          {classData.class_stats && (
-            <Card>
-              <CardHeader><h3>Thống kê</h3></CardHeader>
-              <CardBody>
-                <div className="class-detail-stats">
-                  <div>
-                    <div className="class-detail-stat__value">{classData.class_stats.total_students}</div>
-                    <div className="class-detail-stat__label">Học viên</div>
-                  </div>
-                  <div>
-                    <div className="class-detail-stat__value">{classData.class_stats.lessons_completed || 0}</div>
-                    <div className="class-detail-stat__label">Bài hoàn thành</div>
-                  </div>
-                  <div>
-                    <div className="class-detail-stat__value">{classData.class_stats.avg_quiz_score || 0}</div>
-                    <div className="class-detail-stat__label">Điểm TB quiz</div>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          )}
-        </div>
-      )}
-
-      {/* Tab: Học viên */}
-      {activeTab === 'students' && (
-        <Card>
-          <CardBody>
+        {activeTab === 'students' && (
+          <motion.div
+            key="students"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+          >
             {students.length === 0 ? (
-              <p className="class-detail-empty">Chưa có học viên nào</p>
+              <StateView type="empty" message="Chưa có học viên nào trong lớp" />
             ) : (
-              <div className="class-detail-table-wrap">
-                <table className="class-detail-table">
+              <div className="cld-table-wrap">
+                <table className="cld-table">
                   <thead>
                     <tr>
                       <th>Học viên</th>
                       <th>Email</th>
                       <th>Tiến độ</th>
-                      <th>Điểm quiz TB</th>
+                      <th>Quiz TB</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {students.map((student) => (
-                      <tr key={student.student_id}>
-                        <td>{student.student_name}</td>
-                        <td>{student.email}</td>
-                        <td>{student.progress}%</td>
-                        <td>{student.quiz_average || '-'}</td>
+                    {students.map((s) => (
+                      <tr key={s.student_id}>
+                        <td className="cld-table__name">{s.student_name}</td>
+                        <td>{s.email}</td>
+                        <td>
+                          <div className="cld-progress-cell">
+                            <div className="cld-progress-bar">
+                              <div className="cld-progress-fill" style={{ width: `${s.progress || 0}%` }} />
+                            </div>
+                            <span>{s.progress || 0}%</span>
+                          </div>
+                        </td>
+                        <td>{s.quiz_average != null ? `${Math.round(s.quiz_average)}%` : '—'}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             )}
-          </CardBody>
-        </Card>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

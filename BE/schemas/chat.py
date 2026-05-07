@@ -47,6 +47,7 @@ class ChatMessageResponse(BaseModel):
     answer: str = Field(..., description="Câu trả lời từ AI, markdown format")
     sources: List[SourceInfo] = Field(default_factory=list, description="Nguồn trích dẫn")
     related_lessons: List[RelatedLesson] = Field(default_factory=list, description="Bài học liên quan")
+    follow_up_suggestions: List[str] = Field(default_factory=list, description="Gợi ý câu hỏi tiếp theo")
     timestamp: datetime = Field(..., description="Thời gian tạo message")
     tokens_used: Optional[int] = Field(None, description="Số tokens AI đã dùng (optional)")
 
@@ -91,8 +92,10 @@ class ChatHistoryListResponse(BaseModel):
 class MessageSource(BaseModel):
     """Nguồn trích dẫn trong message"""
     type: str = Field(..., description="lesson|module|resource")
+    id: Optional[str] = Field(None, description="UUID nguồn (optional)")
     title: str = Field(..., description="Tiêu đề nguồn")
-    url: str = Field(..., description="Link đến nguồn")
+    url: Optional[str] = Field(None, description="Link đến nguồn")
+    excerpt: Optional[str] = Field(None, description="Đoạn trích liên quan")
 
 
 class Message(BaseModel):
@@ -102,6 +105,8 @@ class Message(BaseModel):
     content: str = Field(..., description="Nội dung message, markdown format")
     timestamp: datetime = Field(..., description="Thời gian tạo message")
     sources: Optional[List[MessageSource]] = Field(None, description="Nguồn trích dẫn (optional)")
+    related_lessons: Optional[List[RelatedLesson]] = Field(None, description="Bài học liên quan (optional)")
+    follow_up_suggestions: Optional[List[str]] = Field(None, description="Gợi ý câu hỏi tiếp theo (optional)")
 
 
 class CourseInfo(BaseModel):

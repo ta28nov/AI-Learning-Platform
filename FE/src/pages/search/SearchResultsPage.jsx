@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import searchService from '@services/searchService'
 import Card, { CardBody } from '@components/ui/Card'
 import Button from '@components/ui/Button'
+import StateView from '@components/ui/StateView'
 import './SearchResultsPage.css'
 
 /**
@@ -140,12 +141,11 @@ const SearchResultsPage = () => {
   if (loading) {
     return (
       <div className="search-results">
-        <div className="search-results__loading">
-          <div className="search-results__loading-spinner" />
-          <span className="search-results__loading-text">
-            Đang tìm kiếm "{query}"...
-          </span>
-        </div>
+        <StateView
+          type="loading"
+          title="Đang tìm kiếm"
+          message={`Đang tìm kiếm "${query}"...`}
+        />
       </div>
     )
   }
@@ -154,12 +154,11 @@ const SearchResultsPage = () => {
   if (!query || query.length < 2) {
     return (
       <div className="search-results">
-        <div className="search-results__min-query">
-          <div className="search-results__min-query-icon">🔍</div>
-          <p className="search-results__min-query-text">
-            Nhập ít nhất 2 ký tự để tìm kiếm
-          </p>
-        </div>
+        <StateView
+          type="info"
+          title="Bắt đầu tìm kiếm"
+          message="Nhập ít nhất 2 ký tự để tìm kiếm"
+        />
       </div>
     )
   }
@@ -173,7 +172,14 @@ const SearchResultsPage = () => {
     >
       {/* Header: tieu de + so ket qua + thoi gian */}
       <div className="search-results__header">
-        <h1 className="search-results__title">Kết quả tìm kiếm</h1>
+        <div className="search-results__ornament" aria-hidden="true">
+          <svg viewBox="0 0 120 14" fill="none">
+            <path d="M2 7H48" stroke="currentColor" strokeWidth="1.5" />
+            <circle cx="60" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M72 7H118" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+        </div>
+        <h1 className="search-results__title">Bản đồ kết quả tìm kiếm</h1>
         <div className="search-results__meta">
           <span>
             {results?.total_results || 0} kết quả cho "
@@ -348,7 +354,7 @@ const SearchResultsPage = () => {
                                   </span>
                                 )}
                                 {item.metadata?.instructor_name && (
-                                  <span className="search-results__tag" style={{ color: 'var(--text-secondary)' }}>
+                                  <span className="search-results__tag search-results__tag--muted">
                                     Bởi: {item.metadata.instructor_name}
                                   </span>
                                 )}
@@ -364,18 +370,15 @@ const SearchResultsPage = () => {
             ) : (
               <motion.div
                 key="empty"
-                className="search-results__empty"
+                className="search-results__empty-wrap"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
               >
-                <div className="search-results__empty-icon">🔍</div>
-                <h3 className="search-results__empty-title">
-                  Không tìm thấy kết quả
-                </h3>
-                <p className="search-results__empty-desc">
-                  Không tìm thấy kết quả phù hợp cho "{query}".
-                  Thử dùng từ khóa khác hoặc bỏ bớt bộ lọc.
-                </p>
+                <StateView
+                  type="empty"
+                  title="Không tìm thấy kết quả"
+                  message={`Không tìm thấy kết quả phù hợp cho "${query}". Thử dùng từ khóa khác hoặc bỏ bớt bộ lọc.`}
+                />
               </motion.div>
             )}
           </AnimatePresence>

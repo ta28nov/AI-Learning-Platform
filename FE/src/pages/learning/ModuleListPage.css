@@ -8,30 +8,33 @@
 @media (min-width: 1024px) { .module-list-page { padding: 32px; max-width: 900px; margin: 0 auto; } }
 
 .module-list-page__header { margin-bottom: 20px; }
-.module-list-page__header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
-.module-list-page__header p { color: var(--text-secondary, #6b7280); font-size: 0.85rem; }
+.module-list-page__ornament { display: inline-flex; align-items: center; gap: 10px; color: var(--gold-500); margin-bottom: 8px; }
+.module-list-page__line { width: 22px; height: 1px; background: var(--gold-500); opacity: 0.7; }
+.module-list-page__header h1 { font-family: var(--font-display); font-size: 1.9rem; font-weight: 700; margin-bottom: 4px; }
+.module-list-page__header p { color: var(--text-secondary, #6b7280); font-size: 0.9rem; font-family: var(--font-body); }
 
 /* Danh sách module */
 .module-list { display: flex; flex-direction: column; gap: 12px; }
 
 /* Card module */
-.module-card { position: relative; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+.module-card { position: relative; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; border: 1px solid var(--border-light); border-radius: 14px; background: #fff; text-align: left; width: 100%; transform-style: preserve-3d; }
 .module-card:hover { transform: translateY(-1px); }
 .module-card--locked { opacity: 0.6; cursor: not-allowed; }
+.module-card__body { padding: 14px; }
 
 .module-card__header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
 
 .module-card__order {
   display: flex; align-items: center; justify-content: center;
   width: 32px; height: 32px; border-radius: 50%;
-  background: var(--primary, #6366f1); color: #fff;
+  background: var(--ink-900); color: #fff;
   font-weight: 700; font-size: 0.8rem; flex-shrink: 0;
 }
 
 .module-card__info { flex: 1; }
-.module-card__title { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+.module-card__title { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; font-family: var(--font-sans); }
 .module-card__desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; }
-.module-card__lock { font-size: 1.1rem; }
+.module-card__lock { display: inline-flex; color: var(--text-muted); }
 
 .module-card__meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
 .module-card__lessons,
@@ -59,7 +62,7 @@
 }
 .module-card__progress-fill {
   height: 100%;
-  background: var(--primary, #6366f1);
+  background: linear-gradient(90deg, var(--gold-500), var(--copper-500));
   border-radius: 3px;
   transition: width 0.4s;
 }

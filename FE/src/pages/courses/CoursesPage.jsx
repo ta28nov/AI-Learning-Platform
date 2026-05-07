@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { useCourseStore } from '@stores/courseStore'
 import Button from '@components/ui/Button'
 import StateView from '@components/ui/StateView'
 import appLogger from '@utils/logger'
+import { fadeUp, staggerEditorial, inView } from '@/styles/motion'
 import './CoursesPage.css'
 
 /**
@@ -16,7 +17,8 @@ import './CoursesPage.css'
  */
 const CoursesPage = () => {
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [, setSearchParams] = useSearchParams()
+  const shouldReduceMotion = useReducedMotion()
 
   const {
     courses, isLoading, pagination, filters,
@@ -69,20 +71,15 @@ const CoursesPage = () => {
     return `${mins} phút`
   }
 
-  // Animation
-  const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }
-  const stagger = { visible: { transition: { staggerChildren: 0.06 } } }
-
   return (
     <div className="courses-page">
       {/* Tiêu đề và thanh tìm kiếm */}
-      <motion.div
-        className="courses-header"
-        initial="hidden"
-        animate="visible"
-        variants={fadeUp}
-        transition={{ duration: 0.3 }}
-      >
+      <motion.div className="courses-header" variants={fadeUp} initial={shouldReduceMotion ? false : 'hidden'} animate="show">
+        <div className="courses-header__ornament" aria-hidden="true">
+          <span className="courses-header__line" />
+          <StarIcon />
+          <span className="courses-header__line" />
+        </div>
         <h1 className="courses-header__title">Khám phá khóa học</h1>
         <p className="courses-header__sub">
           Tìm kiếm và đăng ký các khóa học phù hợp với trình độ của bạn
@@ -105,13 +102,7 @@ const CoursesPage = () => {
       </motion.div>
 
       {/* Bộ lọc */}
-      <motion.div
-        className="courses-filters"
-        initial="hidden"
-        animate="visible"
-        variants={fadeUp}
-        transition={{ duration: 0.3, delay: 0.1 }}
-      >
+      <motion.div className="courses-filters" variants={fadeUp} initial={shouldReduceMotion ? false : 'hidden'} animate="show">
         <div className="courses-filters__group">
           <label className="courses-filters__label">Danh mục</label>
           <select
@@ -211,17 +202,15 @@ const CoursesPage = () => {
 
       {/* Danh sách khóa học */}
       {!isLoading && !pageError && courses.length > 0 && (
-        <motion.div
-          className="courses-grid"
-          initial="hidden"
-          animate="visible"
-          variants={stagger}
-        >
+        <motion.div className="courses-masonry" variants={staggerEditorial} initial={shouldReduceMotion ? false : 'hidden'} animate="show">
           {courses.map((course) => (
             <motion.div
               key={course.id}
               className="course-card"
               variants={fadeUp}
+              whileHover={shouldReduceMotion ? undefined : { y: -4, rotateX: 1.5, rotateY: -1.5 }}
+              transition={{ duration: 0.22 }}
+              {...(shouldReduceMotion ? {} : inView({ amount: 0.18 }))}
               onClick={() => navigate(`/dashboard/courses/${course.id}`)}
             >
               {/* Ảnh đại diện */}
@@ -230,7 +219,7 @@ const CoursesPage = () => {
                   <img src={course.thumbnail_url} alt={course.title} className="course-card__img" />
                 ) : (
                   <div className="course-card__img-placeholder">
-                    <span>{course.category === 'Programming' ? '💻' : course.category === 'Data Science' ? '🔬' : course.category === 'Math' ? '🔢' : course.category === 'Business' ? '💼' : course.category === 'Languages' ? '🌍' : '📚'}</span>
+                    <CategoryIcon category={course.category} />
                   </div>
                 )}
                 {course.is_enrolled && (
@@ -300,7 +289,7 @@ const CoursesPage = () => {
                   )}
                   {course.avg_rating != null && course.avg_rating > 0 && (
                     <span className="course-card__rating">
-                      ⭐ {course.avg_rating.toFixed(1)}
+                      <RatingIcon /> {course.avg_rating.toFixed(1)}
                     </span>
                   )}
                 </div>
@@ -312,20 +301,17 @@ const CoursesPage = () => {
 
       {/* Trạng thái rỗng */}
       {!isLoading && !pageError && courses.length === 0 && (
-        <div className="courses-empty">
-          <span className="courses-empty__icon">📚</span>
-          <h3>Không tìm thấy khóa học</h3>
-          <p>Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSearchInput('')
-              setFilters({ keyword: '', category: '', level: '', sort_by: '' })
-            }}
-          >
-            Xóa bộ lọc
-          </Button>
-        </div>
+        <StateView
+          type="empty"
+          title="Không tìm thấy khóa học"
+          message="Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm."
+          actionLabel="Xóa bộ lọc"
+          onAction={() => {
+            setSearchInput('')
+            setFilters({ keyword: '', category: '', level: '', sort_by: '' })
+            setSearchParams({})
+          }}
+        />
       )}
 
       {/* Phân trang */}
@@ -374,5 +360,17 @@ const CoursesPage = () => {
     </div>
   )
 }
+
+const CategoryIcon = ({ category }) => {
+  if (category === 'Programming') return <Icon><path d="M16 18 22 12 16 6" /><path d="m8 6-6 6 6 6" /></Icon>
+  if (category === 'Data Science') return <Icon><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5" /><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /></Icon>
+  if (category === 'Math') return <Icon><path d="M8 6h12" /><path d="M8 12h12" /><path d="M8 18h12" /><path d="m3 6 2 2 2-2" /><path d="m3 12 2 2 2-2" /><path d="m3 18 2 2 2-2" /></Icon>
+  if (category === 'Business') return <Icon><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></Icon>
+  if (category === 'Languages') return <Icon><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z" /></Icon>
+  return <Icon><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" /></Icon>
+}
+const StarIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m12 2 2.8 7.2L22 12l-7.2 2.8L12 22l-2.8-7.2L2 12l7.2-2.8L12 2Z" /></svg>
+const RatingIcon = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 2.83 6.63L22 9.27l-5.4 4.73L18.18 22 12 18.27 5.82 22l1.58-7.99L2 9.27l7.17-.64L12 2Z"/></svg>
+const Icon = ({ children }) => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
 
 export default CoursesPage

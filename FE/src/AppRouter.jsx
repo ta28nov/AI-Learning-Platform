@@ -1,7 +1,7 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import DashboardLayout from '@components/layout/DashboardLayout'
-import ProtectedRoute, { AdminRoute, InstructorRoute } from '@components/layout/ProtectedRoute'
+import ProtectedRoute, { AdminRoute, InstructorRoute, StudentRoute } from '@components/layout/ProtectedRoute'
 
 // Auth pages
 import LoginPage from '@pages/auth/LoginPage'
@@ -107,13 +107,23 @@ const AppRouter = () => {
         <Route path="/dashboard/courses/:courseId/lessons/:lessonId" element={<LessonPage />} />
         
         {/* My Courses (Enrollments) */}
-        <Route path="/dashboard/my-courses" element={<MyCoursesPage />} />
-        <Route path="/dashboard/enrollment/:enrollmentId" element={<StudentEnrollmentPage />} />
+        <Route path="/dashboard/my-courses" element={
+          <StudentRoute><MyCoursesPage /></StudentRoute>
+        } />
+        <Route path="/dashboard/enrollment/:enrollmentId" element={
+          <StudentRoute><StudentEnrollmentPage /></StudentRoute>
+        } />
 
         {/* Assessment - danh gia nang luc AI */}
-        <Route path="/dashboard/assessment" element={<AssessmentSetupPage />} />
-        <Route path="/dashboard/assessment/:sessionId" element={<AssessmentQuizPage />} />
-        <Route path="/dashboard/assessment/:sessionId/results" element={<AssessmentResultsPage />} />
+        <Route path="/dashboard/assessment" element={
+          <StudentRoute><AssessmentSetupPage /></StudentRoute>
+        } />
+        <Route path="/dashboard/assessment/:sessionId" element={
+          <StudentRoute><AssessmentQuizPage /></StudentRoute>
+        } />
+        <Route path="/dashboard/assessment/:sessionId/results" element={
+          <StudentRoute><AssessmentResultsPage /></StudentRoute>
+        } />
         
         {/* Quiz */}
         <Route path="/dashboard/quiz" element={<QuizPage />} />
@@ -125,14 +135,20 @@ const AppRouter = () => {
         <Route path="/dashboard/chat" element={<ChatPage />} />
 
         {/* Personal Courses - khoa hoc ca nhan */}
-        <Route path="/dashboard/personal-courses" element={<PersonalCoursesPage />} />
-        <Route path="/dashboard/personal-courses/:courseId/edit" element={<CourseEditorPage />} />
+        <Route path="/dashboard/personal-courses" element={
+          <StudentRoute><PersonalCoursesPage /></StudentRoute>
+        } />
+        <Route path="/dashboard/personal-courses/:courseId/edit" element={
+          <StudentRoute><CourseEditorPage /></StudentRoute>
+        } />
 
         {/* Search */}
         <Route path="/dashboard/search" element={<SearchResultsPage />} />
 
         {/* Recommendations */}
-        <Route path="/dashboard/recommendations" element={<RecommendationsPage />} />
+        <Route path="/dashboard/recommendations" element={
+          <StudentRoute><RecommendationsPage /></StudentRoute>
+        } />
         
         {/* Instructor routes */}
         <Route path="/dashboard/instructor" element={

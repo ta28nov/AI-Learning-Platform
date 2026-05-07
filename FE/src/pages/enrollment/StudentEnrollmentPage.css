@@ -1,0 +1,84 @@
+/* StudentEnrollmentPage — Editorial Cinematic */
+
+.se-page { max-width: 680px; margin: 0 auto; }
+
+/* Back */
+.se-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none;
+  font-size: 0.8rem; color: var(--ink-400);
+  cursor: pointer; font-family: var(--font-body);
+  padding: 0; margin-bottom: var(--space-5);
+  transition: color 0.15s;
+}
+.se-back:hover { color: var(--ink-900); }
+.se-back svg { width: 16px; height: 16px; }
+
+/* Header */
+.se-header { margin-bottom: var(--space-6); }
+.se-header__title-row { display: flex; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-2); flex-wrap: wrap; }
+.se-header__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 700; letter-spacing: -0.02em; line-height: 1.2;
+  color: var(--ink-900); margin: 0; flex: 1;
+}
+.se-header__instructor { font-size: 0.85rem; color: var(--ink-400); margin: 0; }
+
+/* Status */
+.se-status {
+  padding: 4px 12px; border-radius: 100px;
+  font-size: 0.68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  white-space: nowrap; flex-shrink: 0;
+}
+.se-status--in-progress { background: rgba(var(--gold-500-rgb, 212,175,55), 0.1); color: var(--gold-500); }
+.se-status--completed { background: rgba(16,185,129,0.1); color: var(--jade-500, #10b981); }
+.se-status--cancelled { background: rgba(239,68,68,0.08); color: var(--vermilion-500, #ef4444); }
+
+/* Stats */
+.se-stats {
+  display: flex; gap: var(--space-4);
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl); padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+.se-stat { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.se-stat__icon { width: 20px; height: 20px; color: var(--gold-500); }
+.se-stat__value {
+  font-family: var(--font-mono);
+  font-size: 1.3rem; font-weight: 700; color: var(--ink-900); line-height: 1;
+}
+.se-stat__label { font-size: 0.7rem; color: var(--ink-400); text-align: center; }
+
+/* Progress */
+.se-progress { margin-bottom: var(--space-5); }
+.se-progress__bar { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; margin-bottom: var(--space-2); }
+.se-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-500), var(--copper-600));
+  border-radius: 3px;
+}
+.se-progress__text { font-size: 0.75rem; color: var(--ink-400); font-family: var(--font-mono); }
+
+/* Next lesson */
+.se-next {
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--gold-500);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-6);
+}
+.se-next__label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gold-500); font-weight: 700; margin: 0 0 4px; }
+.se-next__lesson { font-size: 0.88rem; font-weight: 600; color: var(--ink-900); margin: 0; font-family: var(--font-body); }
+
+/* Actions */
+.se-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+.se-cancel-link {
+  background: none; border: none;
+  font-size: 0.78rem; color: var(--vermilion-500, #ef4444);
+  cursor: pointer; font-family: var(--font-body);
+  text-decoration: underline; text-underline-offset: 2px;
+}

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts'
 import toast from 'react-hot-toast'
 import assessmentService from '@services/assessmentService'
 import Button from '@components/ui/Button'
 import Card, { CardHeader, CardBody } from '@components/ui/Card'
+import StateView from '@components/ui/StateView'
 import './AssessmentResultsPage.css'
 
 /**
@@ -34,7 +36,7 @@ const AssessmentResultsPage = () => {
   }, [sessionId])
 
   if (loading) return <div className="loading-spinner">Đang tải kết quả...</div>
-  if (!results) return <div className="empty-state">Không tìm thấy kết quả</div>
+  if (!results) return <StateView type="empty" title="Không tìm thấy kết quả" message="Session kết quả không tồn tại hoặc chưa hoàn tất." actionLabel="Quay lại đánh giá" onAction={() => navigate('/dashboard/assessment')} />
 
   // Xac dinh mau theo diem
   const getScoreColor = (score) => {
@@ -43,10 +45,16 @@ const AssessmentResultsPage = () => {
     return 'var(--color-danger, #ef4444)'
   }
 
+  const radarData = (results.skill_analysis || []).map((s) => ({
+    skill: s.skill_tag,
+    value: Math.round(s.proficiency_percentage || 0),
+  }))
+
   return (
     <div className="assessment-results-page">
-      <div className="page-header">
+      <div className="page-header page-header--hero">
         <h1>Kết quả đánh giá</h1>
+        <p>Phân tích năng lực theo từng kỹ năng và định hướng học tập tiếp theo.</p>
       </div>
 
       {/* Section 1: Diem tong */}
@@ -87,6 +95,15 @@ const AssessmentResultsPage = () => {
             <h3>Phân tích kỹ năng</h3>
           </CardHeader>
           <CardBody>
+            <div className="skills-radar">
+              <ResponsiveContainer width="100%" height={280}>
+                <RadarChart data={radarData}>
+                  <PolarGrid stroke="rgba(107,107,107,0.2)" />
+                  <PolarAngleAxis dataKey="skill" tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} />
+                  <Radar dataKey="value" stroke="var(--gold-500)" fill="rgba(201,163,91,0.32)" />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
             <div className="skills-list">
               {results.skill_analysis.map((skill, idx) => (
                 <div key={idx} className="skill-item">

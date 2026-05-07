@@ -120,6 +120,20 @@ class CompletionStatusInLesson(BaseModel):
     video_progress_percent: Optional[float] = Field(None, description="0-100, tiến độ xem video (null nếu không có video)")
 
 
+class LessonCompleteResponse(BaseModel):
+    """
+    Response cho POST /api/v1/courses/{course_id}/lessons/{lesson_id}/complete
+    Đánh dấu bài học đã hoàn thành để mở khóa bài tiếp theo.
+    """
+    course_id: str
+    lesson_id: str
+    is_completed: bool = Field(True, description="Đã hoàn thành hay chưa")
+    progress_percent: float = Field(..., description="Tiến độ khóa học sau khi cập nhật")
+    enrollment_status: str = Field(..., description="active|completed")
+    next_lesson_id: Optional[str] = Field(None, description="Bài học tiếp theo nếu có")
+    message: str = Field(..., description="Thông báo thành công")
+
+
 class LessonContentResponse(BaseModel):
     """
     Response cho GET /api/v1/courses/{course_id}/lessons/{lesson_id}

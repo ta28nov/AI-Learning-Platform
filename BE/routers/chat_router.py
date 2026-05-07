@@ -32,7 +32,7 @@ router = APIRouter(prefix="/chat", tags=["Chat AI"])
     response_model=ChatMessageResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Gửi câu hỏi cho AI chatbot",
-    description="Chatbot trả lời dựa trên nội dung khóa học (RAG), kèm nguồn lesson liên quan"
+    description="Chatbot trả lời dựa trên prompt-context của khóa học, kèm nguồn và lesson liên quan"
 )
 async def send_chat_message(
     course_id: str,

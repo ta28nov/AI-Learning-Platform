@@ -1,19 +1,37 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import classService from '@services/classService'
 import { useAuthStore } from '@stores/authStore'
 import Button from '@components/ui/Button'
-import Card, { CardBody } from '@components/ui/Card'
+import StateView from '@components/ui/StateView'
 import JoinClassModal from '@components/classes/JoinClassModal'
 import './ClassListPage.css'
 
+const UsersIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+    <circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </svg>
+)
+const KeyIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+  </svg>
+)
+const PlusIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 5v14M5 12h14"/>
+  </svg>
+)
+
 /**
- * Trang danh sách lớp học
- * Instructor: xem danh sach, tao lop moi
- * Student: xem danh sach, tham gia lop bang ma moi (JoinClassModal)
- * API: GET /classes/my-classes
- * student_count tra ve dang string "25/30" (so hien tai/toi da)
+ * ClassListPage — Danh sách lớp học
+ * Route: /dashboard/instructor/classes (InstructorRoute)
+ * API: GET /classes/my-classes via classService.getMyClasses — unchanged
  */
 const ClassListPage = () => {
   const navigate = useNavigate()
@@ -22,96 +40,111 @@ const ClassListPage = () => {
   const [loading, setLoading] = useState(true)
   const [joinModalOpen, setJoinModalOpen] = useState(false)
 
-  // Lay danh sach lop khi mount
   const fetchClasses = useCallback(async () => {
     try {
       setLoading(true)
       const data = await classService.getMyClasses()
       setClasses(data.classes || data || [])
-    } catch (error) {
+    } catch {
       toast.error('Không thể tải danh sách lớp học')
     } finally {
       setLoading(false)
     }
   }, [])
 
-  useEffect(() => {
-    fetchClasses()
-  }, [fetchClasses])
+  useEffect(() => { fetchClasses() }, [fetchClasses])
 
-  if (loading) return <div className="class-list-loading">Đang tải...</div>
+  const statusLabel = { active: 'Đang hoạt động', completed: 'Đã kết thúc', preparing: 'Chuẩn bị', cancelled: 'Đã hủy' }
+  const statusClass = { active: 'cls-card__status--active', completed: 'cls-card__status--completed', cancelled: 'cls-card__status--cancelled', preparing: 'cls-card__status--preparing' }
 
   return (
-    <div className="class-list-page">
-      <div className="class-list-header">
-        <div>
-          <h1 className="class-list-header__title">Lớp học của tôi</h1>
-          <p className="class-list-header__count">{classes.length} lớp học</p>
+    <div className="cls-page">
+      {/* Hero */}
+      <motion.div className="cls-hero" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.65, 0, 0.35, 1] }}>
+        <svg className="cls-ornament" viewBox="0 0 48 12" fill="none">
+          <line x1="0" y1="6" x2="16" y2="6" stroke="var(--gold-500)" strokeWidth="1"/>
+          <circle cx="24" cy="6" r="4" stroke="var(--gold-500)" strokeWidth="1"/>
+          <line x1="32" y1="6" x2="48" y2="6" stroke="var(--gold-500)" strokeWidth="1"/>
+        </svg>
+        <div className="cls-hero__text">
+          <h1 className="cls-hero__title">Lớp học của tôi</h1>
+          <p className="cls-hero__count">{classes.length} lớp học</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {/* Student: tham gia lop bang ma moi */}
+        <div className="cls-hero__actions">
           {user?.role === 'student' && (
             <Button variant="outline" onClick={() => setJoinModalOpen(true)}>
-              🔑 Tham gia lớp
+              <KeyIcon /> Tham gia lớp
             </Button>
           )}
-          {/* Instructor: tao lop moi */}
           {(user?.role === 'instructor' || user?.role === 'admin') && (
-            <Button onClick={() => navigate('/dashboard/classes/create')}>
-              + Tạo lớp mới
+            <Button onClick={() => navigate('/dashboard/instructor/classes/create')}>
+              <PlusIcon /> Tạo lớp mới
             </Button>
           )}
         </div>
-      </div>
+      </motion.div>
 
-      <div className="class-list">
-        {classes.map((cls) => (
-          <Card
-            key={cls.id}
-            hover
-            className="class-card"
-            onClick={() => navigate(`/dashboard/classes/${cls.id}`)}
-          >
-            <CardBody>
-              <h3 className="class-card__name">{cls.name}</h3>
-              <p className="class-card__course">{cls.course_title}</p>
-              <div className="class-card__meta">
-                {/* student_count la string "25/30" theo BE schema */}
-                <span>👥 {cls.student_count} học viên</span>
-                <span className={`class-card__status ${cls.status === 'completed' ? 'class-card__status--completed' : cls.status === 'cancelled' ? 'class-card__status--cancelled' : ''}`}>
-                  {cls.status === 'active' ? 'Đang hoạt động'
-                    : cls.status === 'completed' ? 'Đã kết thúc'
-                    : cls.status === 'preparing' ? 'Chuẩn bị'
-                    : cls.status || 'Không rõ'}
+      {/* Loading */}
+      {loading && <StateView type="loading" message="Đang tải danh sách lớp học…" />}
+
+      {/* Grid */}
+      {!loading && classes.length > 0 && (
+        <motion.div
+          className="cls-grid"
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.07 } } }}
+        >
+          {classes.map((cls) => (
+            <motion.div
+              key={cls.id}
+              className="cls-card"
+              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.65, 0, 0.35, 1] } } }}
+              whileHover={{ y: -3 }}
+              onClick={() => navigate(`/dashboard/instructor/classes/${cls.id}`)}
+            >
+              <div className="cls-card__top">
+                <h3 className="cls-card__name">{cls.name}</h3>
+                <span className={`cls-card__status ${statusClass[cls.status] || ''}`}>
+                  {statusLabel[cls.status] || cls.status || 'Không rõ'}
+                </span>
+              </div>
+
+              {cls.course_title && <p className="cls-card__course">{cls.course_title}</p>}
+
+              <div className="cls-card__meta">
+                <span className="cls-card__meta-item">
+                  <UsersIcon /> {cls.student_count ?? 0} học viên
                 </span>
                 {cls.start_date && (
-                  <span>Bắt đầu: {new Date(cls.start_date).toLocaleDateString('vi-VN')}</span>
+                  <span className="cls-card__meta-item">
+                    Bắt đầu: {new Date(cls.start_date).toLocaleDateString('vi-VN')}
+                  </span>
                 )}
               </div>
-              {/* Thanh tiến độ nếu có progress */}
+
               {cls.progress != null && (
-                <div className="class-card__progress-wrap">
-                  <div className="class-card__progress-bar">
-                    <div
-                      className="class-card__progress-fill"
-                      style={{ width: `${cls.progress}%` }}
-                    />
+                <div className="cls-card__progress">
+                  <div className="cls-card__progress-bar">
+                    <div className="cls-card__progress-fill" style={{ width: `${cls.progress}%` }} />
                   </div>
+                  <span className="cls-card__progress-pct">{Math.round(cls.progress)}%</span>
                 </div>
               )}
-            </CardBody>
-          </Card>
-        ))}
-        {classes.length === 0 && (
-          <div className="class-list-empty">
-            {user?.role === 'student'
-              ? 'Bạn chưa tham gia lớp học nào. Hãy nhập mã mời để tham gia!'
-              : 'Bạn chưa có lớp học nào. Hãy tạo lớp mới!'}
-          </div>
-        )}
-      </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
 
-      {/* Modal tham gia lớp học bằng mã mời */}
+      {/* Empty */}
+      {!loading && classes.length === 0 && (
+        <StateView
+          type="empty"
+          message={user?.role === 'student' ? 'Bạn chưa tham gia lớp học nào' : 'Bạn chưa có lớp học nào'}
+          action={user?.role !== 'student' ? { label: 'Tạo lớp mới', onClick: () => navigate('/dashboard/instructor/classes/create') } : undefined}
+        />
+      )}
+
       <JoinClassModal
         isOpen={joinModalOpen}
         onClose={() => setJoinModalOpen(false)}

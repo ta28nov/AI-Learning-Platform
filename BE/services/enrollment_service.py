@@ -137,9 +137,13 @@ async def get_user_enrollments(
         List Enrollment documents
     """
     query = Enrollment.find(Enrollment.user_id == user_id)
-    
-    if status:
-        query = query.find(Enrollment.status == status)
+
+    normalized_status = status
+    if status == "in-progress":
+        normalized_status = "active"
+
+    if normalized_status:
+        query = query.find(Enrollment.status == normalized_status)
     
     enrollments = await query.skip(skip).limit(limit).to_list()
     return enrollments

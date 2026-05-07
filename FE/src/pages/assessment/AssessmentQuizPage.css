@@ -1,6 +1,7 @@
 .assessment-quiz-page {
   padding: 16px;
   max-width: 100%;
+  min-height: calc(100vh - 96px);
 }
 
 @media (min-width: 768px) {
@@ -81,6 +82,9 @@
 /* Question card */
 .question-card {
   margin-bottom: 20px;
+  min-height: 46vh;
+  display: flex;
+  align-items: center;
 }
 
 .question-meta {
@@ -109,10 +113,11 @@
 .points-badge { background: #f3f4f6; color: #6b7280; }
 
 .question-text {
-  font-size: 1rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
   font-weight: 600;
   color: var(--text-primary, #1a1a2e);
-  line-height: 1.6;
+  line-height: 1.4;
   margin-bottom: 16px;
 }
 
@@ -205,6 +210,13 @@
   display: flex;
   justify-content: space-between;
   gap: 12px;
+  position: sticky;
+  bottom: 10px;
+  background: rgba(255,255,255,0.86);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  padding: 10px;
+  border-radius: 12px;
 }
 
 /* Loading & empty */

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { motion, useReducedMotion, useScroll, useSpring } from 'framer-motion'
 import toast from 'react-hot-toast'
 import learningService from '@services/learningService'
 import Button from '@components/ui/Button'
 import Card, { CardHeader, CardBody } from '@components/ui/Card'
+import StateView from '@components/ui/StateView'
 import ChatWidget from '@components/chat/ChatWidget'
 import './LessonPage.css'
 
@@ -18,6 +20,10 @@ const LessonPage = () => {
   const navigate = useNavigate()
   const [lesson, setLesson] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [completing, setCompleting] = useState(false)
+  const shouldReduceMotion = useReducedMotion()
+  const { scrollYProgress } = useScroll()
+  const progress = useSpring(scrollYProgress, { stiffness: 100, damping: 25 })
 
   // Lấy nội dung bài học khi mount hoặc khi lessonId thay đổi
   useEffect(() => {
@@ -35,11 +41,32 @@ const LessonPage = () => {
     fetchLesson()
   }, [courseId, lessonId])
 
+  const refetchLesson = async () => {
+    const data = await learningService.getLessonContent(courseId, lessonId)
+    setLesson(data)
+  }
+
+  const handleCompleteLesson = async () => {
+    try {
+      setCompleting(true)
+      const result = await learningService.completeLesson(courseId, lessonId)
+      toast.success(result?.message || 'Đã đánh dấu hoàn thành bài học')
+      await refetchLesson()
+    } catch (error) {
+      toast.error(error?.message || 'Không thể cập nhật trạng thái bài học')
+    } finally {
+      setCompleting(false)
+    }
+  }
+
   if (loading) return <div className="loading-spinner">Đang tải bài học...</div>
-  if (!lesson) return <div className="empty-state">Không tìm thấy bài học</div>
+  if (!lesson) return <StateView type="empty" title="Không tìm thấy bài học" message="Bài học không tồn tại hoặc đã bị xóa." actionLabel="Quay lại modules" onAction={() => navigate(`/dashboard/courses/${courseId}/modules`)} />
 
   return (
     <div className="lesson-page">
+      {!shouldReduceMotion && (
+        <motion.div className="lesson-scroll-progress" style={{ scaleX: progress }} />
+      )}
       {/* Breadcrumb */}
       <div className="lesson-breadcrumb">
         <span
@@ -64,21 +91,19 @@ const LessonPage = () => {
       </div>
 
       {/* Header */}
-      <div className="lesson-header">
+      <motion.div className="lesson-header" initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         <h1>{lesson.title}</h1>
         <div className="lesson-meta">
           <span>Bài {lesson.order}</span>
           <span>{lesson.duration_minutes} phút</span>
           {lesson.content_type && (
-            <span>
-              {lesson.content_type === 'text' ? '📝' : lesson.content_type === 'video' ? '🎥' : '📝🎥'}
-            </span>
+            <span>{contentTypeLabel(lesson.content_type)}</span>
           )}
           {lesson.completion_status?.is_completed && (
             <span className="completed-badge">✓ Đã hoàn thành</span>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Video player */}
       {lesson.video_info && lesson.video_info.url && (
@@ -139,7 +164,7 @@ const LessonPage = () => {
                   className="attachment-item"
                 >
                   <span className="attachment-icon">
-                    {file.file_type === 'pdf' ? '📄' : file.file_type === 'code' ? '💻' : '📎'}
+                    {attachmentTypeLabel(file.file_type)}
                   </span>
                   <span className="attachment-name">{file.filename}</span>
                   {file.size_mb && <span className="attachment-size">{file.size_mb} MB</span>}
@@ -194,15 +219,50 @@ const LessonPage = () => {
             )}
           >
             {lesson.navigation.next_lesson.title} →
-            {lesson.navigation.next_lesson.is_locked && ' 🔒'}
+            {lesson.navigation.next_lesson.is_locked && ' (Khóa)'}
           </Button>
         )}
       </div>
 
+      {!lesson.completion_status?.is_completed && (
+        <div className="lesson-navigation">
+          <Button
+            variant="primary"
+            loading={completing}
+            disabled={completing}
+            onClick={handleCompleteLesson}
+          >
+            Đánh dấu đã học xong
+          </Button>
+        </div>
+      )}
+
       {/* AI Chat Widget (Vị trí 2 Dual-UI) */}
-      <ChatWidget />
+      <ChatWidget
+        contextMeta={{
+          lessonId: lesson?.id,
+          lessonTitle: lesson?.title,
+          moduleTitle: lesson?.module_title,
+          suggestions: [
+            `Tóm tắt nhanh bài "${lesson?.title || 'này'}"`,
+            `Cho ví dụ thực tế cho kiến thức trong "${lesson?.title || 'bài này'}"`,
+            'Tạo 3 câu hỏi ôn tập ngắn cho tôi',
+          ],
+        }}
+      />
     </div>
   )
+}
+
+const contentTypeLabel = (type) => {
+  if (type === 'text') return 'Văn bản'
+  if (type === 'video') return 'Video'
+  return 'Mixed'
+}
+const attachmentTypeLabel = (type) => {
+  if (type === 'pdf') return 'PDF'
+  if (type === 'code') return 'Code'
+  return 'File'
 }
 
 export default LessonPage

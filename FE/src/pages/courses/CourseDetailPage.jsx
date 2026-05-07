@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import courseService from '@services/courseService'
 import enrollmentService from '@services/enrollmentService'
 import Button from '@components/ui/Button'
+import StateView from '@components/ui/StateView'
+import { fadeUp, staggerEditorial, inView } from '@/styles/motion'
 import './CourseDetailPage.css'
 
 /**
@@ -23,6 +25,7 @@ const CourseDetailPage = () => {
   const [enrolling, setEnrolling] = useState(false)
   // Theo dõi module nào đang mở trong accordion
   const [expandedModules, setExpandedModules] = useState({})
+  const shouldReduceMotion = useReducedMotion()
 
   // Lấy chi tiết khóa học khi mount
   useEffect(() => {
@@ -87,8 +90,6 @@ const CourseDetailPage = () => {
     return map[type] || type
   }
 
-  const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }
-
   // Loading skeleton
   if (loading) {
     return (
@@ -106,12 +107,13 @@ const CourseDetailPage = () => {
     return (
       <div className="cd-page">
         <div className="courses-empty">
-          <span className="courses-empty__icon">📭</span>
-          <h3>Không tìm thấy khóa học</h3>
-          <p>Khóa học này không tồn tại hoặc đã bị xóa</p>
-          <Button variant="outline" onClick={() => navigate('/dashboard/courses')}>
-            Quay lại danh sách
-          </Button>
+          <StateView
+            type="empty"
+            title="Không tìm thấy khóa học"
+            message="Khóa học này không tồn tại hoặc đã bị xóa."
+            actionLabel="Quay lại danh sách"
+            onAction={() => navigate('/dashboard/courses')}
+          />
         </div>
       </div>
     )
@@ -123,13 +125,7 @@ const CourseDetailPage = () => {
   return (
     <div className="cd-page">
       {/* Hero section - thông tin chính */}
-      <motion.div
-        className="cd-hero"
-        initial="hidden"
-        animate="visible"
-        variants={fadeUp}
-        transition={{ duration: 0.4 }}
-      >
+      <motion.div className="cd-hero" variants={fadeUp} initial={shouldReduceMotion ? false : 'hidden'} animate="show">
         {course.thumbnail_url && (
           <img src={course.thumbnail_url} alt={course.title} className="cd-hero__bg-img" />
         )}
@@ -142,7 +138,7 @@ const CourseDetailPage = () => {
                 {course.level === 'Beginner' ? 'Cơ bản' : course.level === 'Intermediate' ? 'Trung cấp' : course.level === 'Advanced' ? 'Nâng cao' : course.level}
               </span>
             )}
-            {course.language && <span className="cd-badge">{course.language === 'vi' ? '🇻🇳 Tiếng Việt' : '🇬🇧 English'}</span>}
+            {course.language && <span className="cd-badge">{course.language === 'vi' ? 'Tiếng Việt' : 'English'}</span>}
           </div>
           <h1 className="cd-hero__title">{course.title}</h1>
           {course.description && <p className="cd-hero__desc">{course.description}</p>}
@@ -176,15 +172,7 @@ const CourseDetailPage = () => {
                 Đăng ký khóa học
               </Button>
             )}
-            {course.preview_video_url && (
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => window.open(course.preview_video_url, '_blank')}
-              >
-                🎥 Xem video giới thiệu
-              </Button>
-            )}
+            {course.preview_video_url && <Button variant="outline" size="lg" onClick={() => window.open(course.preview_video_url, '_blank')}>Xem video giới thiệu</Button>}
           </div>
 
           {/* Thanh tiến độ nếu đã đăng ký */}
@@ -208,12 +196,12 @@ const CourseDetailPage = () => {
         <div className="cd-main">
           {/* Mục tiêu học tập */}
           {course.learning_outcomes?.length > 0 && (
-            <motion.div className="cd-section" initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.1 }}>
+            <motion.div className="cd-section" variants={fadeUp} {...(shouldReduceMotion ? {} : inView())}>
               <h2 className="cd-section__title">Bạn sẽ học được gì</h2>
               <div className="cd-outcomes">
                 {course.learning_outcomes.map((outcome, i) => (
                   <div key={i} className="cd-outcome">
-                    <span className="cd-outcome__check">✓</span>
+                    <span className="cd-outcome__check"><CheckIcon /></span>
                     <div>
                       <span className="cd-outcome__text">{outcome.description}</span>
                       {outcome.skill_tag && (
@@ -228,7 +216,7 @@ const CourseDetailPage = () => {
 
           {/* Yêu cầu tiên quyết */}
           {course.prerequisites?.length > 0 && (
-            <motion.div className="cd-section" initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.15 }}>
+            <motion.div className="cd-section" variants={fadeUp} {...(shouldReduceMotion ? {} : inView({ amount: 0.25 }))}>
               <h2 className="cd-section__title">Yêu cầu tiên quyết</h2>
               <ul className="cd-prereqs">
                 {course.prerequisites.map((prereq, i) => (
@@ -240,7 +228,7 @@ const CourseDetailPage = () => {
 
           {/* Chương trình học - Modules Accordion */}
           {course.modules?.length > 0 && (
-            <motion.div className="cd-section" initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.2 }}>
+            <motion.div className="cd-section" variants={fadeUp} {...(shouldReduceMotion ? {} : inView({ amount: 0.2 }))}>
               <h2 className="cd-section__title">
                 Chương trình học
                 <span className="cd-section__count">{course.modules.length} modules</span>
@@ -249,7 +237,7 @@ const CourseDetailPage = () => {
                 {course.modules.map((mod) => (
                   <div key={mod.id} className={`cd-module ${expandedModules[mod.id] ? 'cd-module--open' : ''}`}>
                     {/* Header module - click để toggle */}
-                    <div className="cd-module__header" onClick={() => toggleModule(mod.id)}>
+                    <button className="cd-module__header" onClick={() => toggleModule(mod.id)}>
                       <div className="cd-module__info">
                         <h3 className="cd-module__title">{mod.title}</h3>
                         <div className="cd-module__meta">
@@ -263,11 +251,18 @@ const CourseDetailPage = () => {
                         </div>
                       </div>
                       <span className="cd-module__arrow">{expandedModules[mod.id] ? '▲' : '▼'}</span>
-                    </div>
+                    </button>
 
                     {/* Danh sách bài học bên trong (chỉ hiện khi mở) */}
+                    <AnimatePresence initial={false}>
                     {expandedModules[mod.id] && (
-                      <div className="cd-module__lessons">
+                      <motion.div
+                        className="cd-module__lessons"
+                        initial={shouldReduceMotion ? false : { height: 0, opacity: 0 }}
+                        animate={shouldReduceMotion ? {} : { height: 'auto', opacity: 1 }}
+                        exit={shouldReduceMotion ? {} : { height: 0, opacity: 0 }}
+                        transition={{ duration: 0.24 }}
+                      >
                         {mod.description && (
                           <p className="cd-module__desc">{mod.description}</p>
                         )}
@@ -277,7 +272,7 @@ const CourseDetailPage = () => {
                             className={`cd-lesson ${lesson.is_completed ? 'cd-lesson--done' : ''}`}
                           >
                             <span className="cd-lesson__status">
-                              {lesson.is_completed ? '✅' : '⬜'}
+                              {lesson.is_completed ? <DoneIcon /> : <TodoIcon />}
                             </span>
                             <div className="cd-lesson__info">
                               <span className="cd-lesson__title">{lesson.title}</span>
@@ -288,8 +283,9 @@ const CourseDetailPage = () => {
                             </div>
                           </div>
                         ))}
-                      </div>
+                      </motion.div>
                     )}
+                    </AnimatePresence>
                   </div>
                 ))}
               </div>
@@ -299,6 +295,19 @@ const CourseDetailPage = () => {
 
         {/* Sidebar - thông tin giảng viên */}
         <div className="cd-sidebar">
+          <motion.div className="cd-sticky-enroll" variants={fadeUp} initial={shouldReduceMotion ? false : 'hidden'} animate="show">
+            <h3 className="cd-sticky-enroll__title">{enrolled ? 'Bạn đã đăng ký khóa học này' : 'Sẵn sàng bắt đầu?'}</h3>
+            <p className="cd-sticky-enroll__meta">{stats?.total_lessons || 0} bài học · {formatDuration(stats?.total_duration_minutes || 0)}</p>
+            {enrolled ? (
+              <Button variant="primary" className="cd-sticky-enroll__btn" onClick={() => navigate(`/dashboard/courses/${courseId}/modules`)}>
+                Tiếp tục học
+              </Button>
+            ) : (
+              <Button variant="primary" className="cd-sticky-enroll__btn" loading={enrolling} disabled={enrolling} onClick={handleEnroll}>
+                Đăng ký khóa học
+              </Button>
+            )}
+          </motion.div>
           {course.owner_info && (
             <div className="cd-instructor-card">
               <h3 className="cd-instructor-card__label">Giảng viên</h3>
@@ -329,5 +338,9 @@ const CourseDetailPage = () => {
     </div>
   )
 }
+
+const CheckIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m20 6-11 11-5-5"/></svg>
+const DoneIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+const TodoIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/></svg>
 
 export default CourseDetailPage

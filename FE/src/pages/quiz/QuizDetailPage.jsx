@@ -4,13 +4,13 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import quizService from '@services/quizService'
 import Button from '@components/ui/Button'
+import StateView from '@components/ui/StateView'
 import './QuizDetailPage.css'
 
 /**
- * QuizDetailPage - Trang chi tiết quiz trước khi làm bài
+ * QuizDetailPage — Chi tiết quiz trước khi làm bài
  * Route: /dashboard/quiz/:quizId
- * API: GET /quizzes/{quizId} -> QuizDetailResponse
- * Hiển thị thông tin quiz, lịch sử làm bài, nút bắt đầu/xem kết quả
+ * API: GET /quizzes/{quizId} via quizService.getQuizDetail — unchanged
  */
 const QuizDetailPage = () => {
   const { quizId } = useParams()
@@ -18,14 +18,13 @@ const QuizDetailPage = () => {
   const [quiz, setQuiz] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // Lấy chi tiết quiz khi mount
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
         setLoading(true)
         const data = await quizService.getQuizDetail(quizId)
         setQuiz(data)
-      } catch (error) {
+      } catch {
         toast.error('Không thể tải thông tin quiz')
       } finally {
         setLoading(false)
@@ -34,131 +33,87 @@ const QuizDetailPage = () => {
     if (quizId) fetchQuiz()
   }, [quizId])
 
+  if (loading) return <div className="qd-page"><StateView type="loading" message="Đang tải quiz…" /></div>
+  if (!quiz) return (
+    <div className="qd-page">
+      <StateView
+        type="empty"
+        message="Không tìm thấy quiz"
+        action={{ label: 'Quay lại', onClick: () => navigate(-1) }}
+      />
+    </div>
+  )
+
   const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }
-
-  // Loading skeleton
-  if (loading) {
-    return (
-      <div className="qd-page">
-        <div className="qd-skeleton__header" />
-        <div className="qd-skeleton__body" />
-      </div>
-    )
-  }
-
-  if (!quiz) {
-    return (
-      <div className="qd-page">
-        <div className="quiz-empty">
-          <span className="quiz-empty__icon">📝</span>
-          <h3>Không tìm thấy quiz</h3>
-          <p>Quiz này không tồn tại hoặc đã bị xóa</p>
-          <Button variant="outline" onClick={() => navigate(-1)}>Quay lại</Button>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="qd-page">
-      {/* Header */}
-      <motion.div
-        className="qd-header"
-        initial="hidden"
-        animate="visible"
-        variants={fadeUp}
-        transition={{ duration: 0.4 }}
-      >
-        <button className="qd-back" onClick={() => navigate(-1)}>← Quay lại</button>
-        <h1 className="qd-header__title">{quiz.title}</h1>
-        {quiz.description && <p className="qd-header__desc">{quiz.description}</p>}
+      {/* Back + Header */}
+      <motion.div className="qd-header" initial="hidden" animate="visible" variants={fadeUp} transition={{ duration: 0.4 }}>
+        <button className="qd-back" onClick={() => navigate(-1)}>
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M15 10H5m0 0 5-5M5 10l5 5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Quay lại
+        </button>
+        <svg className="qd-ornament" viewBox="0 0 48 12" fill="none">
+          <line x1="0" y1="6" x2="16" y2="6" stroke="var(--gold-500)" strokeWidth="1" />
+          <circle cx="24" cy="6" r="4" stroke="var(--gold-500)" strokeWidth="1" />
+          <line x1="32" y1="6" x2="48" y2="6" stroke="var(--gold-500)" strokeWidth="1" />
+        </svg>
+        <h1 className="qd-title">{quiz.title}</h1>
+        {quiz.description && <p className="qd-desc">{quiz.description}</p>}
       </motion.div>
 
-      {/* Thông tin quiz */}
-      <motion.div
-        className="qd-info"
-        initial="hidden"
-        animate="visible"
-        variants={fadeUp}
-        transition={{ duration: 0.4, delay: 0.1 }}
-      >
-        <div className="qd-info__grid">
-          <div className="qd-info__card">
-            <span className="qd-info__card-label">Số câu hỏi</span>
-            <span className="qd-info__card-value">{quiz.question_count || 0}</span>
+      {/* Info grid */}
+      <motion.div className="qd-info-grid" initial="hidden" animate="visible" variants={fadeUp} transition={{ duration: 0.4, delay: 0.1 }}>
+        {[
+          { label: 'Số câu hỏi', value: quiz.question_count || 0, unit: 'câu' },
+          { label: 'Thời gian', value: quiz.time_limit || '—', unit: 'phút' },
+          { label: 'Điểm đạt', value: `${quiz.pass_threshold || 70}%`, unit: '' },
+          { label: 'Câu bắt buộc', value: quiz.mandatory_question_count || 0, unit: 'câu' },
+          ...(quiz.max_attempts != null ? [{ label: 'Số lần tối đa', value: quiz.max_attempts || '∞', unit: '' }] : []),
+          ...(quiz.is_retakeable != null ? [{ label: 'Làm lại', value: quiz.is_retakeable ? 'Được phép' : 'Không', unit: '' }] : []),
+        ].map(({ label, value, unit }) => (
+          <div key={label} className="qd-stat-card">
+            <span className="qd-stat-card__label">{label}</span>
+            <span className="qd-stat-card__value">{value}</span>
+            {unit && <span className="qd-stat-card__unit">{unit}</span>}
           </div>
-          <div className="qd-info__card">
-            <span className="qd-info__card-label">Thời gian</span>
-            <span className="qd-info__card-value">{quiz.time_limit || '—'} phút</span>
-          </div>
-          <div className="qd-info__card">
-            <span className="qd-info__card-label">Điểm đạt</span>
-            <span className="qd-info__card-value">{quiz.pass_threshold || 70}%</span>
-          </div>
-          <div className="qd-info__card">
-            <span className="qd-info__card-label">Câu bắt buộc</span>
-            <span className="qd-info__card-value">{quiz.mandatory_question_count || 0}</span>
-          </div>
-          {quiz.max_attempts != null && (
-            <div className="qd-info__card">
-              <span className="qd-info__card-label">Số lần làm tối đa</span>
-              <span className="qd-info__card-value">{quiz.max_attempts || '∞'}</span>
-            </div>
-          )}
-          {quiz.is_retakeable != null && (
-            <div className="qd-info__card">
-              <span className="qd-info__card-label">Làm lại</span>
-              <span className="qd-info__card-value">{quiz.is_retakeable ? 'Được phép' : 'Không'}</span>
-            </div>
-          )}
-        </div>
+        ))}
       </motion.div>
 
-      {/* Lịch sử làm bài (nếu có) */}
+      {/* History */}
       {quiz.user_attempts != null && quiz.user_attempts > 0 && (
-        <motion.div
-          className="qd-history"
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          transition={{ duration: 0.4, delay: 0.15 }}
-        >
+        <motion.div className="qd-history" initial="hidden" animate="visible" variants={fadeUp} transition={{ duration: 0.4, delay: 0.15 }}>
           <h2 className="qd-section-title">Lịch sử làm bài</h2>
-          <div className="qd-history__content">
-            <div className="qd-history__stats">
-              <div className="qd-history__stat">
-                <span className="qd-history__stat-label">Số lần đã làm</span>
-                <span className="qd-history__stat-value">{quiz.user_attempts}</span>
-              </div>
-              {quiz.best_score != null && (
-                <div className="qd-history__stat">
-                  <span className="qd-history__stat-label">Điểm cao nhất</span>
-                  <span className={`qd-history__stat-value ${quiz.best_score >= (quiz.pass_threshold || 70) ? 'qd-history__stat-value--pass' : 'qd-history__stat-value--fail'}`}>
-                    {Math.round(quiz.best_score)}%
-                  </span>
-                </div>
-              )}
-              {quiz.last_attempt_at && (
-                <div className="qd-history__stat">
-                  <span className="qd-history__stat-label">Lần cuối</span>
-                  <span className="qd-history__stat-value">
-                    {new Date(quiz.last_attempt_at).toLocaleDateString('vi-VN')}
-                  </span>
-                </div>
-              )}
+          <div className="qd-history__stats">
+            <div className="qd-history__stat">
+              <span className="qd-history__stat-label">Số lần đã làm</span>
+              <span className="qd-history__stat-value">{quiz.user_attempts}</span>
             </div>
+            {quiz.best_score != null && (
+              <div className="qd-history__stat">
+                <span className="qd-history__stat-label">Điểm cao nhất</span>
+                <span className={`qd-history__stat-value ${quiz.best_score >= (quiz.pass_threshold || 70) ? 'qd-history__stat-value--pass' : 'qd-history__stat-value--fail'}`}>
+                  {Math.round(quiz.best_score)}%
+                </span>
+              </div>
+            )}
+            {quiz.last_attempt_at && (
+              <div className="qd-history__stat">
+                <span className="qd-history__stat-label">Lần cuối</span>
+                <span className="qd-history__stat-value">
+                  {new Date(quiz.last_attempt_at).toLocaleDateString('vi-VN')}
+                </span>
+              </div>
+            )}
           </div>
         </motion.div>
       )}
 
-      {/* Hướng dẫn */}
-      <motion.div
-        className="qd-instructions"
-        initial="hidden"
-        animate="visible"
-        variants={fadeUp}
-        transition={{ duration: 0.4, delay: 0.2 }}
-      >
+      {/* Instructions */}
+      <motion.div className="qd-instructions" initial="hidden" animate="visible" variants={fadeUp} transition={{ duration: 0.4, delay: 0.2 }}>
         <h2 className="qd-section-title">Hướng dẫn</h2>
         <ul className="qd-instructions__list">
           <li>Đọc kỹ câu hỏi trước khi trả lời</li>
@@ -166,34 +121,18 @@ const QuizDetailPage = () => {
           <li>Có thể quay lại các câu hỏi trước đó</li>
           {quiz.time_limit && <li>Thời gian làm bài: {quiz.time_limit} phút</li>}
           <li>Điểm đạt tối thiểu: {quiz.pass_threshold || 70}%</li>
-          {quiz.mandatory_question_count > 0 && (
-            <li>Có {quiz.mandatory_question_count} câu hỏi bắt buộc phải trả lời đúng</li>
-          )}
+          {quiz.mandatory_question_count > 0 && <li>Có {quiz.mandatory_question_count} câu bắt buộc phải trả lời đúng</li>}
           <li>Nhấn "Nộp bài" khi hoàn thành</li>
         </ul>
       </motion.div>
 
-      {/* Nút hành động */}
-      <motion.div
-        className="qd-actions"
-        initial="hidden"
-        animate="visible"
-        variants={fadeUp}
-        transition={{ duration: 0.4, delay: 0.25 }}
-      >
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={() => navigate(`/dashboard/quiz/${quizId}/attempt`)}
-        >
+      {/* Actions */}
+      <motion.div className="qd-actions" initial="hidden" animate="visible" variants={fadeUp} transition={{ duration: 0.4, delay: 0.25 }}>
+        <Button variant="primary" size="lg" onClick={() => navigate(`/dashboard/quiz/${quizId}/attempt`)}>
           Bắt đầu làm bài
         </Button>
         {quiz.user_attempts > 0 && (
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => navigate(`/dashboard/quiz/${quizId}/results`)}
-          >
+          <Button variant="outline" size="lg" onClick={() => navigate(`/dashboard/quiz/${quizId}/results`)}>
             Xem kết quả lần trước
           </Button>
         )}

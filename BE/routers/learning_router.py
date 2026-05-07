@@ -10,6 +10,7 @@ from middleware.auth import get_current_user
 from controllers.learning_controller import (
     handle_get_module_detail,
     handle_get_lesson_content,
+    handle_complete_lesson,
     handle_get_course_modules,
     handle_get_module_outcomes,
     handle_get_module_resources,
@@ -18,6 +19,7 @@ from controllers.learning_controller import (
 from schemas.learning import (
     ModuleDetailResponse,
     LessonContentResponse,
+    LessonCompleteResponse,
     CourseModulesResponse,
     ModuleOutcomesResponse,
     ModuleResourcesResponse,
@@ -82,6 +84,21 @@ async def get_lesson_content(
 ):
     """Section 2.4.2 - Xem nội dung chi tiết lesson"""
     return await handle_get_lesson_content(course_id, lesson_id, current_user)
+
+
+@router.post(
+    "/courses/{course_id}/lessons/{lesson_id}/complete",
+    response_model=LessonCompleteResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Đánh dấu hoàn thành lesson",
+    description="Đánh dấu bài học đã hoàn thành và mở khóa bài tiếp theo nếu đủ điều kiện"
+)
+async def complete_lesson(
+    course_id: str,
+    lesson_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    return await handle_complete_lesson(course_id, lesson_id, current_user)
 
 
 # ============================================================================

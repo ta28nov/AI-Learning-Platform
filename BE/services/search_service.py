@@ -7,8 +7,6 @@ import time
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from beanie.operators import And, Or
-
 from models.models import Class, Course, Enrollment, Lesson, Module, User
 from utils.utils import calculate_relevance_score, normalize_search_query
 
@@ -24,15 +22,20 @@ async def universal_search(
     limit: int = 20,
 ) -> Dict:
     start_time = time.time()
+    user_ctx = current_user or {}
     normalized_query = normalize_search_query(query)
+    # Use compiled pattern for relevance scoring but pass pattern string to Beanie
     search_regex = re.compile(normalized_query, re.IGNORECASE)
+    # Beanie/PyMongo may not serialize compiled patterns correctly in all versions;
+    # pass the raw pattern string (case-insensitive flag applied via options dict separately)
+    regex_pattern = normalized_query if normalized_query else "(?!)"
 
     groups = [
-        await _search_courses(search_regex, current_user, category_filter, level_filter, instructor_filter, rating_filter),
-        await _search_users(search_regex, current_user),
-        await _search_classes(search_regex, current_user),
-        await _search_modules(search_regex, current_user),
-        await _search_lessons(search_regex, current_user),
+        await _search_courses(search_regex, regex_pattern, user_ctx, category_filter, level_filter, instructor_filter, rating_filter),
+        await _search_users(search_regex, regex_pattern, user_ctx),
+        await _search_classes(search_regex, regex_pattern, user_ctx),
+        await _search_modules(search_regex, regex_pattern, user_ctx),
+        await _search_lessons(search_regex, regex_pattern, user_ctx),
     ]
 
     non_empty_groups = [g for g in groups if g["items"]]
@@ -55,22 +58,26 @@ async def universal_search(
     }
 
 
-async def _search_courses(search_regex, current_user, category_filter, level_filter, instructor_filter, rating_filter) -> Dict:
-    conditions = [
-        Or(Course.title.regex(search_regex), Course.description.regex(search_regex), Course.instructor_name.regex(search_regex))
-    ]
+async def _search_courses(search_regex, regex_pattern: str, current_user, category_filter, level_filter, instructor_filter, rating_filter) -> Dict:
+    query = {
+        "$or": [
+            {"title": {"$regex": regex_pattern, "$options": "i"}},
+            {"description": {"$regex": regex_pattern, "$options": "i"}},
+            {"instructor_name": {"$regex": regex_pattern, "$options": "i"}},
+        ]
+    }
     if current_user.get("role") == "student":
-        conditions.append(Course.status == "published")
+        query["status"] = "published"
     if category_filter:
-        conditions.append(Course.category == category_filter)
+        query["category"] = category_filter
     if level_filter:
-        conditions.append(Course.level == level_filter)
+        query["level"] = level_filter
     if instructor_filter:
-        conditions.append(Course.instructor_id == instructor_filter)
+        query["instructor_id"] = instructor_filter
     if rating_filter is not None:
-        conditions.append(Course.avg_rating >= rating_filter)
+        query["avg_rating"] = {"$gte": rating_filter}
 
-    courses = await Course.find(And(*conditions)).to_list()
+    courses = await Course.find(query).to_list()
     items = []
     for course in courses:
         items.append({
@@ -93,14 +100,20 @@ async def _search_courses(search_regex, current_user, category_filter, level_fil
     return {"category": "courses", "count": len(items), "items": items}
 
 
-async def _search_users(search_regex, current_user: Dict) -> Dict:
+async def _search_users(search_regex, regex_pattern: str, current_user: Dict) -> Dict:
     role = current_user.get("role")
     if role not in ["admin", "instructor"]:
         return {"category": "users", "count": 0, "items": []}
-    conditions = [User.status == "active", Or(User.full_name.regex(search_regex), User.email.regex(search_regex))]
+    query = {
+        "status": "active",
+        "$or": [
+            {"full_name": {"$regex": regex_pattern, "$options": "i"}},
+            {"email": {"$regex": regex_pattern, "$options": "i"}},
+        ],
+    }
     if role == "instructor":
-        conditions.append(User.role == "student")
-    users = await User.find(And(*conditions)).to_list()
+        query["role"] = "student"
+    users = await User.find(query).to_list()
     items = [{
         "id": str(user.id),
         "type": "user",
@@ -114,18 +127,23 @@ async def _search_users(search_regex, current_user: Dict) -> Dict:
     return {"category": "users", "count": len(items), "items": items}
 
 
-async def _search_classes(search_regex, current_user: Dict) -> Dict:
+async def _search_classes(search_regex, regex_pattern: str, current_user: Dict) -> Dict:
     role = current_user.get("role")
     user_id = current_user.get("user_id")
-    conditions = [Or(Class.name.regex(search_regex), Class.description.regex(search_regex))]
+    query = {
+        "$or": [
+            {"name": {"$regex": regex_pattern, "$options": "i"}},
+            {"description": {"$regex": regex_pattern, "$options": "i"}},
+        ]
+    }
     if role == "student":
-        conditions.append(Class.student_ids.in_([user_id]))
+        query["student_ids"] = {"$in": [user_id]}
     elif role == "instructor":
-        conditions.append(Class.instructor_id == user_id)
-    classes = await Class.find(And(*conditions)).to_list()
+        query["instructor_id"] = user_id
+    classes = await Class.find(query).to_list()
     items = []
     for class_obj in classes:
-        instructor = await User.get(class_obj.instructor_id)
+        instructor = await User.get(class_obj.instructor_id) if class_obj.instructor_id else None
         items.append({
             "id": str(class_obj.id),
             "type": "class",
@@ -144,11 +162,17 @@ async def _search_classes(search_regex, current_user: Dict) -> Dict:
     return {"category": "classes", "count": len(items), "items": items}
 
 
-async def _search_modules(search_regex, current_user: Dict) -> Dict:
+async def _search_modules(search_regex, regex_pattern: str, current_user: Dict) -> Dict:
     accessible_course_ids = await _get_accessible_course_ids(current_user)
     if not accessible_course_ids:
         return {"category": "modules", "count": 0, "items": []}
-    modules = await Module.find(And(Module.course_id.in_(accessible_course_ids), Or(Module.title.regex(search_regex), Module.description.regex(search_regex)))).to_list()
+    modules = await Module.find({
+        "course_id": {"$in": accessible_course_ids},
+        "$or": [
+            {"title": {"$regex": regex_pattern, "$options": "i"}},
+            {"description": {"$regex": regex_pattern, "$options": "i"}},
+        ],
+    }).to_list()
     items = []
     for module in modules:
         course = await Course.get(module.course_id)
@@ -165,15 +189,21 @@ async def _search_modules(search_regex, current_user: Dict) -> Dict:
     return {"category": "modules", "count": len(items), "items": items}
 
 
-async def _search_lessons(search_regex, current_user: Dict) -> Dict:
+async def _search_lessons(search_regex, regex_pattern: str, current_user: Dict) -> Dict:
     accessible_course_ids = await _get_accessible_course_ids(current_user)
     if not accessible_course_ids:
         return {"category": "lessons", "count": 0, "items": []}
-    modules = await Module.find(Module.course_id.in_(accessible_course_ids)).to_list()
+    modules = await Module.find({"course_id": {"$in": accessible_course_ids}}).to_list()
     module_map = {str(m.id): m for m in modules}
     if not module_map:
         return {"category": "lessons", "count": 0, "items": []}
-    lessons = await Lesson.find(And(Lesson.module_id.in_(list(module_map.keys())), Or(Lesson.title.regex(search_regex), Lesson.content.regex(search_regex)))).to_list()
+    lessons = await Lesson.find({
+        "module_id": {"$in": list(module_map.keys())},
+        "$or": [
+            {"title": {"$regex": regex_pattern, "$options": "i"}},
+            {"content": {"$regex": regex_pattern, "$options": "i"}},
+        ],
+    }).to_list()
     items = []
     for lesson in lessons:
         module = module_map.get(lesson.module_id)
@@ -216,7 +246,10 @@ async def _get_accessible_course_ids(current_user: Dict) -> List[str]:
 
 async def _generate_suggestions(original_query: str, normalized_query: str) -> List[Dict]:
     suggestions: List[Dict] = []
-    autocomplete_courses = await Course.find(Course.title.regex(re.compile(f"^{re.escape(normalized_query)}", re.IGNORECASE))).limit(5).to_list()
+    escaped = re.escape(normalized_query) if normalized_query else "(?!)"
+    autocomplete_courses = await Course.find({
+        "title": {"$regex": f"^{escaped}", "$options": "i"}
+    }).limit(5).to_list()
     for course in autocomplete_courses:
         suggestions.append({"query": course.title, "type": "autocomplete", "score": 90.0})
     return suggestions[:5]

@@ -694,30 +694,42 @@ async def handle_list_quizzes_with_filters(
     """
     from schemas.quiz import QuizListResponse
     
-    instructor_id = current_user.get("user_id")
+    user_id = current_user.get("user_id")
     role = current_user.get("role")
     
-    # Check instructor role
-    if role != "instructor":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Chỉ instructor mới có quyền xem danh sách này"
-        )
-    
+    # Students see quizzes from their enrolled courses; instructors see their own quizzes
     try:
-        result = await quiz_service.list_quizzes_with_filters(
-            instructor_id=instructor_id,
-            course_id=course_id,
-            class_id=class_id,
-            search=search,
-            sort_by=sort_by,
-            sort_order=sort_order,
-            skip=skip,
-            limit=limit
-        )
+        if role == "student":
+            result = await quiz_service.list_quizzes_for_student(
+                student_id=user_id,
+                course_id=course_id,
+                search=search,
+                sort_by=sort_by,
+                sort_order=sort_order,
+                skip=skip,
+                limit=limit
+            )
+        elif role in ("instructor", "admin"):
+            result = await quiz_service.list_quizzes_with_filters(
+                instructor_id=user_id,
+                course_id=course_id,
+                class_id=class_id,
+                search=search,
+                sort_by=sort_by,
+                sort_order=sort_order,
+                skip=skip,
+                limit=limit
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Không có quyền truy cập"
+            )
         
         return QuizListResponse(**result)
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import assessmentService from '@services/assessmentService'
 import Button from '@components/ui/Button'
 import Card, { CardBody } from '@components/ui/Card'
+import StateView from '@components/ui/StateView'
+import { pageTurn, pageFade } from '@/styles/motion'
 import './AssessmentQuizPage.css'
 
 /**
@@ -22,6 +25,7 @@ const AssessmentQuizPage = () => {
   const [totalTime, setTotalTime] = useState(0)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const shouldReduceMotion = useReducedMotion()
 
   // Lay du lieu bai danh gia khi mount
   useEffect(() => {
@@ -113,7 +117,7 @@ const AssessmentQuizPage = () => {
   }
 
   if (loading) return <div className="loading-spinner">Đang tải...</div>
-  if (!questions.length) return <div className="empty-state">Không tìm thấy bài đánh giá</div>
+  if (!questions.length) return <StateView type="empty" title="Không tìm thấy bài đánh giá" message="Session đánh giá không có câu hỏi khả dụng." actionLabel="Quay lại đánh giá" onAction={() => navigate('/dashboard/assessment')} />
 
   const currentQuestion = questions[currentIndex]
   const answeredCount = Object.keys(answers).length
@@ -138,6 +142,14 @@ const AssessmentQuizPage = () => {
       </div>
 
       {/* Cau hoi hien tai */}
+      <AnimatePresence mode="wait">
+      <motion.div
+        key={currentQuestion.question_id}
+        variants={shouldReduceMotion ? pageFade : pageTurn}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
       <Card className="question-card">
         <CardBody>
           <div className="question-meta">
@@ -189,6 +201,18 @@ const AssessmentQuizPage = () => {
             </div>
           )}
 
+          {currentQuestion.question_type === 'drag_and_drop' && (
+            <div className="fill-input-wrapper">
+              <input
+                type="text"
+                className="fill-input"
+                placeholder="Nhập thứ tự/sắp xếp đáp án của bạn..."
+                value={answers[currentQuestion.question_id] || ''}
+                onChange={(e) => handleAnswer(currentQuestion.question_id, e.target.value)}
+              />
+            </div>
+          )}
+
           {currentQuestion.question_type === 'true_false' && (
             <div className="options-list">
               {['True', 'False'].map((option, idx) => (
@@ -207,8 +231,22 @@ const AssessmentQuizPage = () => {
               ))}
             </div>
           )}
+
+          {!['multiple_choice', 'fill_in_blank', 'drag_and_drop', 'true_false'].includes(currentQuestion.question_type) && (
+            <div className="fill-input-wrapper">
+              <input
+                type="text"
+                className="fill-input"
+                placeholder="Nhập câu trả lời..."
+                value={answers[currentQuestion.question_id] || ''}
+                onChange={(e) => handleAnswer(currentQuestion.question_id, e.target.value)}
+              />
+            </div>
+          )}
         </CardBody>
       </Card>
+      </motion.div>
+      </AnimatePresence>
 
       {/* Navigation */}
       <div className="quiz-navigation">

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { motion, useReducedMotion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import learningService from '@services/learningService'
 import Button from '@components/ui/Button'
 import Card, { CardHeader, CardBody } from '@components/ui/Card'
+import StateView from '@components/ui/StateView'
+import { fadeUp, staggerEditorial } from '@/styles/motion'
 import './ModuleDetailPage.css'
 
 /**
@@ -16,6 +19,7 @@ const ModuleDetailPage = () => {
   const navigate = useNavigate()
   const [module, setModule] = useState(null)
   const [loading, setLoading] = useState(true)
+  const shouldReduceMotion = useReducedMotion()
 
   useEffect(() => {
     const fetchModule = async () => {
@@ -33,7 +37,7 @@ const ModuleDetailPage = () => {
   }, [courseId, moduleId])
 
   if (loading) return <div className="module-detail-state">Đang tải...</div>
-  if (!module) return <div className="module-detail-state">Không tìm thấy module</div>
+  if (!module) return <StateView type="empty" title="Không tìm thấy module" message="Vui lòng quay lại danh sách modules." actionLabel="Danh sách modules" onAction={() => navigate(`/dashboard/courses/${courseId}/modules`)} />
 
   return (
     <div className="module-detail-page">
@@ -51,7 +55,7 @@ const ModuleDetailPage = () => {
       </div>
 
       {/* Header module */}
-      <div className="module-detail-header">
+      <motion.div className="module-detail-header" variants={fadeUp} initial={shouldReduceMotion ? false : 'hidden'} animate="show">
         <h1 className="module-detail-header__title">{module.title}</h1>
         {module.description && (
           <p className="module-detail-header__desc">{module.description}</p>
@@ -69,9 +73,10 @@ const ModuleDetailPage = () => {
             <span className="module-detail-header__meta">{module.total_lessons} bài học</span>
           )}
         </div>
-      </div>
+      </motion.div>
 
-      {/* Thanh tiến độ */}
+      <div className="module-detail-layout">
+      <div>
       {module.progress_percent !== undefined && (
         <Card>
           <CardBody>
@@ -91,6 +96,7 @@ const ModuleDetailPage = () => {
       )}
 
       {/* Danh sách bài học */}
+      <motion.div variants={staggerEditorial} initial={shouldReduceMotion ? false : 'hidden'} animate="show">
       <Card className="module-detail-section">
         <CardHeader><h3>Danh sách bài học</h3></CardHeader>
         <CardBody>
@@ -116,12 +122,12 @@ const ModuleDetailPage = () => {
                     <div className="module-detail-lesson__meta">
                       {lesson.duration_minutes && <span>{lesson.duration_minutes} phút</span>}
                       {lesson.content_type && (
-                        <span>{lesson.content_type === 'video' ? '🎥' : lesson.content_type === 'text' ? '📝' : '📝🎥'}</span>
+                        <span>{contentTypeLabel(lesson.content_type)}</span>
                       )}
-                      {lesson.has_quiz && <span>📋 Quiz</span>}
+                      {lesson.has_quiz && <span>Quiz</span>}
                     </div>
                   </div>
-                  {lesson.is_locked && <span className="module-detail-lesson__lock">🔒</span>}
+                  {lesson.is_locked && <span className="module-detail-lesson__lock"><LockIcon /></span>}
                 </div>
               ))}
             </div>
@@ -139,8 +145,8 @@ const ModuleDetailPage = () => {
             <ul className="module-detail-outcomes">
               {module.learning_outcomes.map((outcome, idx) => (
                 <li key={idx} className="module-detail-outcome">
-                  <span className="module-detail-outcome__check">✓</span>
-                  <span>{outcome.outcome || outcome}</span>
+                  <span className="module-detail-outcome__check"><CheckIcon /></span>
+                  <span>{getOutcomeText(outcome)}</span>
                   {outcome.is_mandatory && (
                     <span className="module-detail-outcome__mandatory">Bắt buộc</span>
                   )}
@@ -165,7 +171,7 @@ const ModuleDetailPage = () => {
                   rel="noopener noreferrer"
                   className="module-detail-resource"
                 >
-                  <span>{res.type === 'pdf' ? '📄' : res.type === 'video' ? '🎥' : res.type === 'code' ? '💻' : '📎'}</span>
+                  <span>{resourceTypeLabel(res.type)}</span>
                   <span className="module-detail-resource__title">{res.title}</span>
                   {res.size_mb && <span className="module-detail-resource__size">{res.size_mb} MB</span>}
                 </a>
@@ -181,7 +187,7 @@ const ModuleDetailPage = () => {
           <CardHeader><h3>Điều kiện tiên quyết</h3></CardHeader>
           <CardBody>
             <ul className="module-detail-prerequisites">
-              {module.prerequisites.map((pre, idx) => <li key={idx}>{pre}</li>)}
+              {module.prerequisites.map((pre, idx) => <li key={idx}>{getPrerequisiteText(pre)}</li>)}
             </ul>
           </CardBody>
         </Card>
@@ -193,8 +199,52 @@ const ModuleDetailPage = () => {
           ← Danh sách modules
         </Button>
       </div>
+      </motion.div>
+      </div>
+
+      <aside className="module-detail-side">
+        <Card className="module-detail-sidecard">
+          <CardHeader><h3>Tóm tắt module</h3></CardHeader>
+          <CardBody>
+            <ul className="module-detail-side__list">
+              <li><strong>{module.total_lessons || module.lessons?.length || 0}</strong> bài học</li>
+              <li><strong>{module.estimated_hours || 0}h</strong> ước lượng</li>
+              <li><strong>{Math.round(module.progress_percent || 0)}%</strong> hoàn thành</li>
+            </ul>
+          </CardBody>
+        </Card>
+      </aside>
+      </div>
     </div>
   )
 }
+
+const getOutcomeText = (outcome) => {
+  if (!outcome) return ''
+  if (typeof outcome === 'string') return outcome
+  if (typeof outcome === 'object') return outcome.outcome || outcome.description || outcome.skill_tag || ''
+  return String(outcome)
+}
+
+const getPrerequisiteText = (pre) => {
+  if (!pre) return ''
+  if (typeof pre === 'string') return pre
+  if (typeof pre === 'object') return pre.title || pre.name || pre.id || ''
+  return String(pre)
+}
+
+const contentTypeLabel = (type) => {
+  if (type === 'video') return 'Video'
+  if (type === 'text') return 'Văn bản'
+  return 'Mixed'
+}
+const resourceTypeLabel = (type) => {
+  if (type === 'pdf') return 'PDF'
+  if (type === 'video') return 'Video'
+  if (type === 'code') return 'Code'
+  return 'Tài liệu'
+}
+const CheckIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m20 6-11 11-5-5"/></svg>
+const LockIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3"/></svg>
 
 export default ModuleDetailPage

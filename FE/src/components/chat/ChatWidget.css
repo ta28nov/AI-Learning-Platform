@@ -134,6 +134,27 @@
   margin-top: 8px;
 }
 
+.chat-widget__suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.chat-widget__suggestions button {
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+
+.chat-widget__suggestions button:hover {
+  border-color: var(--primary);
+}
+
 /* Message row */
 .chat-widget__msg {
   display: flex;
@@ -207,6 +228,10 @@
 .chat-widget__related-link:hover {
   color: var(--primary-hover);
   text-decoration: underline;
+}
+
+.chat-widget__followup {
+  margin-top: 8px;
 }
 
 /* Typing indicator */

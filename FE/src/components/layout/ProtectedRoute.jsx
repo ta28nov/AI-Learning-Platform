@@ -66,22 +66,22 @@ export const AdminRoute = ({ children }) => {
 }
 
 /**
- * Component InstructorRoute - Danh cho giang vien va admin
+ * Component InstructorRoute - Danh cho giang vien
  */
 export const InstructorRoute = ({ children }) => {
   return (
-    <ProtectedRoute allowedRoles={['instructor', 'admin']}>
+    <ProtectedRoute allowedRoles={['instructor']}>
       {children}
     </ProtectedRoute>
   )
 }
 
 /**
- * Component StudentRoute - Danh cho hoc vien (tat ca cac vai tro)
+ * Component StudentRoute - Chi danh cho hoc vien
  */
 export const StudentRoute = ({ children }) => {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles={['student']}>
       {children}
     </ProtectedRoute>
   )

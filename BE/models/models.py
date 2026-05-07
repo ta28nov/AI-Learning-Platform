@@ -7,7 +7,7 @@ Naming: snake_case theo Python convention
 from datetime import datetime
 from typing import Optional, List
 from beanie import Document, Indexed
-from pydantic import Field, EmailStr, BaseModel
+from pydantic import Field, EmailStr, BaseModel, field_validator
 import uuid
 
 
@@ -104,6 +104,12 @@ class User(Document):
         default_factory=list, 
         description="Danh sách sở thích học tập: Programming, Math, Business, Languages..."
     )
+
+    @field_validator("learning_preferences", mode="before")
+    @classmethod
+    def coerce_none_to_empty_list(cls, v):
+        """Some legacy documents stored null; normalize to [] on read."""
+        return v if v is not None else []
     
     # Authentication tracking - theo API schema
     last_login_at: Optional[datetime] = Field(None, description="Lần đăng nhập cuối")

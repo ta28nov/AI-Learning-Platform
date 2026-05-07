@@ -1,6 +1,6 @@
 /* CourseDetailPage — Chi tiết khóa học */
 
-.cd-page { max-width: 960px; margin: 0 auto; }
+.cd-page { max-width: 1200px; margin: 0 auto; }
 
 /* Skeleton */
 .cd-skeleton__hero { height: 260px; background: linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 16px; margin-bottom: 20px; }
@@ -10,16 +10,16 @@
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 /* Hero */
-.cd-hero { position: relative; border-radius: 16px; overflow: hidden; margin-bottom: 24px; background: linear-gradient(135deg, #1a1a2e, #2d1b69); min-height: 220px; }
+.cd-hero { position: relative; border-radius: 20px; overflow: hidden; margin-bottom: 24px; background: linear-gradient(135deg, var(--ink-900), #2b2418); min-height: 300px; border: 1px solid rgba(201,163,91,0.2); }
 .cd-hero__bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.25; }
-.cd-hero__overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(26,26,46,0.85), rgba(45,27,105,0.85)); }
+.cd-hero__overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(11,10,8,0.86), rgba(43,36,24,0.82)); }
 .cd-hero__content { position: relative; z-index: 1; padding: 24px 20px; }
 @media (min-width: 768px) { .cd-hero__content { padding: 32px 28px; } }
 
 .cd-hero__badges { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
-.cd-hero__title { font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0 0 10px; line-height: 1.3; }
-@media (min-width: 768px) { .cd-hero__title { font-size: 1.75rem; } }
-.cd-hero__desc { font-size: 0.85rem; color: rgba(255,255,255,0.7); line-height: 1.6; margin: 0 0 16px; max-width: 600px; }
+.cd-hero__title { font-family: var(--font-display); font-size: 1.9rem; font-weight: 700; color: #fff; margin: 0 0 10px; line-height: 1.15; letter-spacing: -0.02em; }
+@media (min-width: 768px) { .cd-hero__title { font-size: 2.5rem; } }
+.cd-hero__desc { font-family: var(--font-body); font-size: 1rem; color: rgba(255,255,255,0.78); line-height: 1.7; margin: 0 0 16px; max-width: 700px; }
 .cd-hero__stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; font-size: 0.75rem; color: rgba(255,255,255,0.6); }
 .cd-hero__actions { margin-bottom: 12px; }
 .cd-hero__progress { display: flex; align-items: center; gap: 10px; }
@@ -37,10 +37,10 @@
 
 /* Body layout */
 .cd-body { display: grid; grid-template-columns: 1fr; gap: 20px; }
-@media (min-width: 768px) { .cd-body { grid-template-columns: 1fr 280px; } }
+@media (min-width: 980px) { .cd-body { grid-template-columns: 1fr 320px; } }
 
 /* Section */
-.cd-section { background: #fff; border: 1px solid #f1f5f9; border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+.cd-section { background: #fff; border: 1px solid var(--border-light); border-radius: 16px; padding: 22px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
 .cd-section__title { font-size: 1rem; font-weight: 700; color: #1a1a2e; margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
 .cd-section__count { font-size: 0.7rem; color: #94a3b8; font-weight: 500; }
 
@@ -48,7 +48,7 @@
 .cd-outcomes { display: grid; grid-template-columns: 1fr; gap: 8px; }
 @media (min-width: 640px) { .cd-outcomes { grid-template-columns: repeat(2, 1fr); } }
 .cd-outcome { display: flex; gap: 10px; align-items: flex-start; }
-.cd-outcome__check { color: #10b981; font-size: 0.85rem; flex-shrink: 0; margin-top: 2px; }
+.cd-outcome__check { color: var(--jade-600); font-size: 0.85rem; flex-shrink: 0; margin-top: 2px; display: inline-flex; }
 .cd-outcome__text { font-size: 0.8rem; color: #1a1a2e; }
 .cd-outcome__skill { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 600; background: rgba(99,102,241,0.08); color: #6366f1; margin-left: 6px; }
 
@@ -62,7 +62,7 @@
 .cd-modules { display: flex; flex-direction: column; gap: 8px; }
 .cd-module { border: 1px solid #f1f5f9; border-radius: 12px; overflow: hidden; transition: border-color 0.2s; }
 .cd-module--open { border-color: rgba(99,102,241,0.2); }
-.cd-module__header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; transition: background 0.15s; }
+.cd-module__header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; transition: background 0.15s; width: 100%; border: 0; background: transparent; text-align: left; }
 .cd-module__header:hover { background: #fafaff; }
 .cd-module__info { flex: 1; }
 .cd-module__title { font-size: 0.85rem; font-weight: 600; color: #1a1a2e; margin: 0 0 4px; }
@@ -81,6 +81,10 @@
 
 /* Sidebar */
 .cd-sidebar { position: sticky; top: 80px; }
+.cd-sticky-enroll { margin-bottom: 14px; background: var(--cream-100); border: 1px solid var(--gold-300); border-radius: 14px; padding: 16px; }
+.cd-sticky-enroll__title { margin: 0 0 8px; font-family: var(--font-display); font-size: 1.1rem; color: var(--ink-900); }
+.cd-sticky-enroll__meta { margin: 0 0 12px; font-size: 0.8rem; color: var(--text-muted); }
+.cd-sticky-enroll__btn { width: 100%; }
 .cd-instructor-card { background: #fff; border: 1px solid #f1f5f9; border-radius: 14px; padding: 20px; }
 .cd-instructor-card__label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #94a3b8; margin: 0 0 12px; }
 .cd-instructor-card__profile { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }

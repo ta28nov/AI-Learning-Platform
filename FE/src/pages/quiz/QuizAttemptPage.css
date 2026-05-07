@@ -2,8 +2,9 @@
 
 .quiz-attempt-page {
   padding: var(--spacing-md);
-  max-width: 900px;
+  max-width: 980px;
   margin: 0 auto;
+  min-height: calc(100vh - 96px);
 }
 
 /* Header sticky: timer + progress */
@@ -70,6 +71,9 @@
 /* Card câu hỏi */
 .quiz-attempt-question {
   margin-bottom: 20px;
+  min-height: 46vh;
+  display: flex;
+  align-items: center;
 }
 
 .quiz-attempt-question__meta {
@@ -97,9 +101,10 @@
 }
 
 .quiz-attempt-question__text {
-  font-size: 1rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
   font-weight: 600;
-  line-height: 1.6;
+  line-height: 1.4;
   margin-bottom: 16px;
   color: var(--text-primary);
 }
@@ -173,6 +178,13 @@
   display: flex;
   justify-content: space-between;
   gap: 10px;
+  position: sticky;
+  bottom: 10px;
+  background: rgba(255,255,255,0.86);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  padding: 10px;
+  border-radius: 12px;
 }
 
 /* Loading/error states */

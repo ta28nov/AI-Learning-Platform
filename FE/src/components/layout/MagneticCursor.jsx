@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { motion, useMotionValue, useSpring } from 'framer-motion'
+import { motion, useMotionValue, useSpring, useReducedMotion } from 'framer-motion'
 import './MagneticCursor.css'
 
 /**
@@ -18,6 +18,7 @@ const MagneticCursor = () => {
   const [isPointerFine, setIsPointerFine] = useState(false)
   const [isHoveringInteractive, setIsHoveringInteractive] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
+  const shouldReduceMotion = useReducedMotion()
 
   // Raw position (snaps immediately to cursor)
   const dotX = useMotionValue(-100)
@@ -29,15 +30,24 @@ const MagneticCursor = () => {
   const ringY = useSpring(dotY, springConfig)
 
   useEffect(() => {
+    if (shouldReduceMotion) {
+      document.body.classList.remove('cursor-overlay-active')
+      return
+    }
+
     // Only activate for mouse/trackpad users
     const mq = window.matchMedia('(pointer: fine)')
-    if (!mq.matches) return
+    if (!mq.matches) {
+      document.body.classList.remove('cursor-overlay-active')
+      return
+    }
     setIsPointerFine(true)
+    document.body.classList.add('cursor-overlay-active')
 
     const move = (e) => {
       dotX.set(e.clientX)
       dotY.set(e.clientY)
-      if (!isVisible) setIsVisible(true)
+      setIsVisible(true)
     }
 
     const enter = () => setIsVisible(true)
@@ -70,8 +80,9 @@ const MagneticCursor = () => {
       document.removeEventListener('mouseenter', enter)
       document.removeEventListener('mouseleave', leave)
       observer.disconnect()
+      document.body.classList.remove('cursor-overlay-active')
     }
-  }, [])
+  }, [dotX, dotY, shouldReduceMotion])
 
   if (!isPointerFine) return null
 

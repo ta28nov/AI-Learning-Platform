@@ -1,58 +1,32 @@
-/* ============================================
-   ERROR PAGES — Premium 404 / 403 Design
-   Glassmorphism, gradient orbs, premium feel
-   ============================================ */
+/* ErrorPages — Editorial Cinematic 404/403 */
 
 .error-page {
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
-  background: #fafaff;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; position: relative; overflow: hidden;
+  background: var(--surface-1, #fafaf8);
 }
 
-/* Gradient orbs */
-.error-page__bg {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
+/* Floating orbs */
+.error-page__bg { position: absolute; inset: 0; pointer-events: none; }
 .error-orb {
-  position: absolute;
-  border-radius: 50%;
+  position: absolute; border-radius: 50%;
   filter: blur(100px);
   animation: errorOrbFloat 10s ease-in-out infinite;
 }
-
 .error-orb--1 {
-  width: 500px;
-  height: 500px;
-  background: rgba(99, 102, 241, 0.15);
-  top: -10%;
-  right: -10%;
+  width: 500px; height: 500px;
+  background: rgba(var(--gold-500-rgb, 212,175,55), 0.1);
+  top: -10%; right: -10%;
 }
-
 .error-orb--2 {
-  width: 350px;
-  height: 350px;
-  background: rgba(139, 92, 246, 0.12);
-  bottom: -10%;
-  left: -5%;
+  width: 350px; height: 350px;
+  background: rgba(var(--copper-600-rgb, 180,83,9), 0.08);
+  bottom: -10%; left: -5%;
   animation-delay: -4s;
 }
-
-/* 403 variant — red orbs */
-.error-page--403 .error-orb--1 {
-  background: rgba(239, 68, 68, 0.12);
-}
-
-.error-page--403 .error-orb--2 {
-  background: rgba(245, 158, 11, 0.1);
-}
+.error-page--403 .error-orb--1 { background: rgba(239,68,68,0.08); }
+.error-page--403 .error-orb--2 { background: rgba(var(--gold-500-rgb, 212,175,55), 0.06); }
 
 @keyframes errorOrbFloat {
   0%, 100% { transform: translate(0, 0) scale(1); }
@@ -60,99 +34,60 @@
 }
 
 /* Content */
-.error-content {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  max-width: 480px;
-}
+.error-content { position: relative; z-index: 1; text-align: center; max-width: 480px; }
 
-/* Error code display */
+/* Code */
 .error-code {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 28px;
+  display: flex; align-items: center; justify-content: center;
+  gap: var(--space-3, 12px); margin-bottom: var(--space-7, 28px);
 }
-
 .error-code__digit {
-  font-size: 5rem;
-  font-weight: 900;
-  color: #1a1a2e;
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-@media (min-width: 768px) {
-  .error-code__digit { font-size: 7rem; }
+  font-family: var(--font-display, 'Fraunces', serif);
+  font-size: clamp(4rem, 10vw, 7rem);
+  font-weight: 900; color: var(--ink-900, #1a1a1a);
+  line-height: 1; letter-spacing: -0.04em;
 }
 
 .error-code__circle {
-  width: 64px;
-  height: 64px;
+  width: clamp(56px, 10vw, 80px);
+  height: clamp(56px, 10vw, 80px);
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
-  animation: errorPulse 2s ease-in-out infinite;
+  background: linear-gradient(135deg, var(--gold-500, #d4af37), var(--copper-600, #b45309));
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 24px rgba(212,175,55,0.25);
+  animation: errorPulse 2.5s ease-in-out infinite;
+  color: var(--cream-50, #fafaf8);
 }
-
-@media (min-width: 768px) {
-  .error-code__circle { width: 80px; height: 80px; }
-}
+.error-code__circle svg { width: 36%; height: 36%; }
 
 .error-code__circle--red {
-  background: linear-gradient(135deg, #ef4444, #f97316);
-  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, var(--vermilion-500, #ef4444), #f97316);
+  box-shadow: 0 8px 24px rgba(239,68,68,0.25);
 }
 
 @keyframes errorPulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-}
-
-.error-code__emoji {
-  font-size: 1.75rem;
-}
-
-@media (min-width: 768px) {
-  .error-code__emoji { font-size: 2rem; }
+  50% { transform: scale(1.06); }
 }
 
 /* Title & desc */
 .error-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #1a1a2e;
-  margin: 0 0 12px;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display, 'Fraunces', serif);
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+  font-weight: 700; color: var(--ink-900, #1a1a1a);
+  margin: 0 0 12px; letter-spacing: -0.02em;
 }
-
-@media (min-width: 768px) {
-  .error-title { font-size: 1.75rem; }
-}
-
 .error-desc {
-  font-size: 0.9rem;
-  color: #64748b;
-  line-height: 1.7;
-  margin: 0 0 32px;
+  font-size: 0.9rem; color: var(--ink-400, #6b7280);
+  line-height: 1.7; margin: 0 0 32px;
+  font-family: var(--font-body, 'Newsreader', serif);
 }
 
 /* Actions */
 .error-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: center;
+  display: flex; flex-direction: column;
+  gap: var(--space-3, 10px); align-items: center;
 }
-
 @media (min-width: 480px) {
-  .error-actions {
-    flex-direction: row;
-    justify-content: center;
-  }
+  .error-actions { flex-direction: row; justify-content: center; }
 }

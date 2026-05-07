@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useAuthStore } from '@stores/authStore'
@@ -38,13 +38,12 @@ const DashboardPage = () => {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const role = user?.role || 'student'
 
-  // Lấy dữ liệu dashboard theo role
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async (showToast = true) => {
     try {
       setLoading(true)
       setError(null)
-      const role = user?.role || 'student'
       let result
       if (role === 'admin') result = await dashboardService.getAdminDashboard()
       else if (role === 'instructor') result = await dashboardService.getInstructorDashboard()
@@ -52,17 +51,17 @@ const DashboardPage = () => {
       setData(result)
     } catch (err) {
       setError(err.message || 'Không thể tải dữ liệu dashboard')
-      toast.error('Không thể tải dữ liệu dashboard')
+      if (showToast) toast.error('Không thể tải dữ liệu dashboard')
     } finally {
       setLoading(false)
     }
-  }
+  }, [role])
 
   useEffect(() => {
-    fetchDashboard()
-  }, [user?.role])
+    fetchDashboard(false)
+  }, [fetchDashboard])
 
-  const role = user?.role || 'student'
+  const retryDashboard = () => fetchDashboard(true)
 
   return (
     <DashboardShell
@@ -84,7 +83,7 @@ const DashboardPage = () => {
           title="Không thể tải dữ liệu dashboard"
           message={error}
           actionLabel="Thử lại"
-          onAction={fetchDashboard}
+          onAction={retryDashboard}
         />
       )}
 

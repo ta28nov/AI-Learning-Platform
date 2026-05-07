@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import personalCourseService from '@services/personalCourseService'
 import Button from '@components/ui/Button'
 import Card, { CardBody } from '@components/ui/Card'
 import Modal from '@components/ui/Modal'
+import StateView from '@components/ui/StateView'
 import './PersonalCoursesPage.css'
 
 /**
@@ -59,18 +61,36 @@ const PersonalCoursesPage = () => {
     }
   }
 
-  if (loading) return <div className="personal-courses-loading">Đang tải...</div>
+  if (loading) {
+    return (
+      <div className="personal-courses-loading">
+        <StateView type="loading" title="Đang tải khóa học cá nhân" />
+      </div>
+    )
+  }
 
   return (
-    <div className="personal-courses-page">
+    <motion.div
+      className="personal-courses-page"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="personal-courses-header">
         <div>
+          <div className="personal-courses-header__ornament" aria-hidden="true">
+            <svg viewBox="0 0 120 14" fill="none">
+              <path d="M2 7H48" stroke="currentColor" strokeWidth="1.5" />
+              <circle cx="60" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M72 7H118" stroke="currentColor" strokeWidth="1.5" />
+            </svg>
+          </div>
           <h1 className="personal-courses-header__title">Khóa học cá nhân</h1>
           <p className="personal-courses-header__count">{courses.length} khóa học</p>
         </div>
         <div className="personal-courses-actions">
           <Button variant="outline" onClick={() => setShowPromptModal(true)}>
-            🤖 Tạo bằng AI
+            Tạo bằng AI
           </Button>
           <Button onClick={() => navigate('/dashboard/personal-courses/create')}>
             + Tạo thủ công
@@ -79,40 +99,48 @@ const PersonalCoursesPage = () => {
       </div>
 
       <div className="personal-courses-grid">
-        {courses.map((course) => (
-          <Card
+        {courses.map((course, index) => (
+          <motion.div
             key={course.id || course.course_id}
-            hover
-            className="personal-course-card"
-            onClick={() => navigate(`/dashboard/courses/${course.id || course.course_id}`)}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: Math.min(index * 0.04, 0.25) }}
           >
-            <CardBody>
-              <h3 className="personal-course-card__title">{course.title}</h3>
-              {course.description && (
-                <p className="personal-course-card__desc">
-                  {course.description.substring(0, 100)}
-                  {course.description.length > 100 && '...'}
-                </p>
-              )}
-              <div className="personal-course-card__badges">
-                <span className={`personal-course-card__badge personal-course-card__badge--status${course.status === 'published' ? '-published' : ''}`}>
-                  {course.status === 'published' ? 'Đã xuất bản' : 'Bản nháp'}
-                </span>
-                {course.level && (
-                  <span className="personal-course-card__badge personal-course-card__badge--level">
-                    {course.level}
-                  </span>
+            <Card
+              hover
+              className="personal-course-card"
+              onClick={() => navigate(`/dashboard/courses/${course.id || course.course_id}`)}
+            >
+              <CardBody>
+                <h3 className="personal-course-card__title">{course.title}</h3>
+                {course.description && (
+                  <p className="personal-course-card__desc">
+                    {course.description.substring(0, 100)}
+                    {course.description.length > 100 && '...'}
+                  </p>
                 )}
-              </div>
-            </CardBody>
-          </Card>
+                <div className="personal-course-card__badges">
+                  <span className={`personal-course-card__badge personal-course-card__badge--status${course.status === 'published' ? '-published' : ''}`}>
+                    {course.status === 'published' ? 'Đã xuất bản' : 'Bản nháp'}
+                  </span>
+                  {course.level && (
+                    <span className="personal-course-card__badge personal-course-card__badge--level">
+                      {course.level}
+                    </span>
+                  )}
+                </div>
+              </CardBody>
+            </Card>
+          </motion.div>
         ))}
       </div>
 
       {courses.length === 0 && (
-        <div className="personal-courses-empty">
-          Bạn chưa có khóa học cá nhân nào. Hãy tạo bằng AI hoặc thủ công!
-        </div>
+        <StateView
+          type="empty"
+          title="Bạn chưa có khóa học cá nhân"
+          message="Hãy tạo khóa học bằng AI hoặc thủ công để bắt đầu lộ trình riêng."
+        />
       )}
 
       {/* Modal tạo bằng AI */}
@@ -144,7 +172,7 @@ const PersonalCoursesPage = () => {
           </div>
         </div>
       </Modal>
-    </div>
+    </motion.div>
   )
 }
 

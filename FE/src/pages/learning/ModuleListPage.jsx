@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { motion, useReducedMotion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import learningService from '@services/learningService'
-import Card, { CardBody } from '@components/ui/Card'
+import StateView from '@components/ui/StateView'
+import { fadeUp, staggerEditorial } from '@/styles/motion'
 import './ModuleListPage.css'
 
 /**
@@ -15,6 +17,7 @@ const ModuleListPage = () => {
   const navigate = useNavigate()
   const [modules, setModules] = useState([])
   const [loading, setLoading] = useState(true)
+  const shouldReduceMotion = useReducedMotion()
 
   // Lấy danh sách modules khi mount
   useEffect(() => {
@@ -45,20 +48,27 @@ const ModuleListPage = () => {
 
   return (
     <div className="module-list-page">
-      <div className="module-list-page__header">
+      <motion.div className="module-list-page__header" variants={fadeUp} initial={shouldReduceMotion ? false : 'hidden'} animate="show">
+        <div className="module-list-page__ornament" aria-hidden="true">
+          <span className="module-list-page__line" />
+          <SparkIcon />
+          <span className="module-list-page__line" />
+        </div>
         <h1>Nội dung khóa học</h1>
         <p>{modules.length} module</p>
-      </div>
+      </motion.div>
 
-      <div className="module-list">
+      <motion.div className="module-list" variants={staggerEditorial} initial={shouldReduceMotion ? false : 'hidden'} animate="show">
         {modules.map((mod, idx) => (
-          <Card
+          <motion.button
             key={mod.id}
-            hover
             className={`module-card ${mod.is_locked ? 'module-card--locked' : ''}`}
             onClick={() => handleModuleClick(mod)}
+            variants={fadeUp}
+            whileHover={shouldReduceMotion || mod.is_locked ? undefined : { y: -3, rotateX: -1.3, rotateY: 1.3 }}
+            transition={{ duration: 0.2 }}
           >
-            <CardBody>
+            <div className="module-card__body">
               <div className="module-card__header">
                 <span className="module-card__order">{idx + 1}</span>
                 <div className="module-card__info">
@@ -67,7 +77,7 @@ const ModuleListPage = () => {
                     <p className="module-card__desc">{mod.description}</p>
                   )}
                 </div>
-                {mod.is_locked && <span className="module-card__lock">🔒</span>}
+                {mod.is_locked && <span className="module-card__lock"><LockIcon /></span>}
               </div>
 
               <div className="module-card__meta">
@@ -98,16 +108,34 @@ const ModuleListPage = () => {
 
               {/* Status dot — dùng module-card__status-dot thay .status-dot */}
               <div className={`module-card__status-dot module-card__status-dot--${mod.status || 'not-started'}`} />
-            </CardBody>
-          </Card>
+            </div>
+          </motion.button>
         ))}
-      </div>
+      </motion.div>
 
       {modules.length === 0 && !loading && (
-        <div className="module-list-page__empty">Khóa học chưa có module nào</div>
+        <StateView
+          type="empty"
+          title="Khóa học chưa có module nào"
+          message="Nội dung sẽ được cập nhật sớm."
+          actionLabel="Quay lại khóa học"
+          onAction={() => navigate(`/dashboard/courses/${courseId}`)}
+        />
       )}
     </div>
   )
 }
+
+const SparkIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="m12 2 2.8 7.2L22 12l-7.2 2.8L12 22l-2.8-7.2L2 12l7.2-2.8L12 2Z" />
+  </svg>
+)
+const LockIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+    <rect x="4" y="11" width="16" height="9" rx="2" />
+    <path d="M8 11V8a4 4 0 1 1 8 0v3" />
+  </svg>
+)
 
 export default ModuleListPage

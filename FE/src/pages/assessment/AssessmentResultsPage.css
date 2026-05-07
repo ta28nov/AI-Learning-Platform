@@ -4,6 +4,14 @@
   flex-direction: column;
   gap: 16px;
 }
+.page-header--hero {
+  padding: 18px;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--cream-100), var(--cream-50));
+}
+.page-header--hero h1 { margin: 0 0 8px; font-family: var(--font-display); font-size: 2rem; letter-spacing: -0.02em; }
+.page-header--hero p { margin: 0; color: var(--text-muted); font-family: var(--font-body); }
 
 @media (min-width: 768px) {
   .assessment-results-page { padding: 24px; gap: 20px; }
@@ -65,6 +73,7 @@
 
 /* Skills */
 .skills-list { display: flex; flex-direction: column; gap: 14px; }
+.skills-radar { margin-bottom: 14px; border: 1px solid var(--border-light); border-radius: 12px; padding: 8px 6px; background: #fff; }
 
 .skill-item { display: flex; flex-direction: column; gap: 4px; }
 .skill-item__header { display: flex; justify-content: space-between; align-items: center; }
@@ -103,6 +112,7 @@
   padding: 12px 14px;
   border-radius: 8px;
   border-left: 4px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 .gap-item--high { border-left-color: #ef4444; background: #fef2f2; }
 .gap-item--medium { border-left-color: #f59e0b; background: #fffbeb; }

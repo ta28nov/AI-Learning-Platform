@@ -126,15 +126,15 @@ async def handle_get_course_progress(
         module_progress_percent = (completed_lessons / total_lessons * 100) if total_lessons > 0 else 0.0
         if module_progress_percent == 100:
             completed_modules += 1
-        
-            modules_progress.append({
-                "module_id": module.id,
-                "module_title": module.title,
-                "progress_percent": module_progress_percent,
-                "completed_lessons": completed_lessons,
-                "total_lessons": total_lessons,
-                "lessons": lessons_progress
-            })
+
+        modules_progress.append({
+            "module_id": module.id,
+            "module_title": module.title,
+            "progress_percent": module_progress_percent,
+            "completed_lessons": completed_lessons,
+            "total_lessons": total_lessons,
+            "lessons": lessons_progress
+        })
     
     # Calculate overall progress
     overall_progress = (completed_modules / total_modules * 100) if total_modules > 0 else 0.0

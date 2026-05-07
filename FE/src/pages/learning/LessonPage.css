@@ -4,6 +4,16 @@
   flex-direction: column;
   gap: 16px;
 }
+.lesson-scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--gold-500), var(--copper-500));
+  z-index: 60;
+}
 
 @media (min-width: 768px) { .lesson-page { padding: 24px; gap: 20px; } }
 @media (min-width: 1024px) { .lesson-page { padding: 32px; max-width: 960px; margin: 0 auto; } }
@@ -29,7 +39,7 @@
 .breadcrumb-current { color: var(--text-primary, #1a1a2e); font-weight: 500; }
 
 /* Header */
-.lesson-header h1 { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.lesson-header h1 { font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; letter-spacing: -0.02em; }
 
 @media (min-width: 768px) {
   .lesson-header h1 { font-size: 1.5rem; }
@@ -56,17 +66,21 @@
 
 /* Text content */
 .lesson-text-content {
-  font-size: 0.9rem;
-  line-height: 1.8;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.95;
   color: var(--text-primary);
+  max-width: 72ch;
+  margin: 0 auto;
 }
+.lesson-text-content p:first-of-type::first-letter { float: left; font-family: var(--font-display); font-size: 3rem; line-height: 0.9; margin-right: 6px; color: var(--copper-500); }
 
 .lesson-text-content h2 { font-size: 1.2rem; margin: 20px 0 10px; }
 .lesson-text-content h3 { font-size: 1.05rem; margin: 16px 0 8px; }
 .lesson-text-content p { margin-bottom: 12px; }
 .lesson-text-content ul, .lesson-text-content ol { margin: 8px 0 12px 20px; }
 .lesson-text-content li { margin-bottom: 4px; }
-.lesson-text-content pre { background: #1e1e2e; color: #cdd6f4; padding: 14px; border-radius: 8px; overflow-x: auto; font-size: 0.8rem; margin: 10px 0; }
+.lesson-text-content pre { background: #1e1e2e; color: #cdd6f4; padding: 14px; border-radius: 8px; overflow-x: auto; font-size: 0.8rem; margin: 10px 0; font-family: var(--font-mono); }
 .lesson-text-content code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
 .lesson-text-content pre code { background: none; padding: 0; }
 .lesson-text-content img { max-width: 100%; border-radius: 8px; margin: 10px 0; }
@@ -143,6 +157,12 @@
   gap: 10px;
   padding-top: 8px;
   border-top: 1px solid var(--border-color, #e5e7eb);
+  position: sticky;
+  bottom: 8px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(8px);
+  padding: 10px;
+  border-radius: 12px;
 }
 
 .lesson-navigation .btn {

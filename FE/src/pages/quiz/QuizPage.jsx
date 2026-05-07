@@ -1,16 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import quizService from '@services/quizService'
 import Button from '@components/ui/Button'
+import StateView from '@components/ui/StateView'
 import './QuizPage.css'
 
+const SearchIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+  </svg>
+)
+
 /**
- * QuizPage - Trang danh sách quiz
+ * QuizPage — Danh sách bài quiz
  * Route: /dashboard/quiz
- * API: GET /quizzes (quizService.getQuizzes)
- * Hiển thị danh sách quiz với filter, search, pagination
+ * API: GET /quizzes via quizService.getQuizzes — unchanged
  */
 const QuizPage = () => {
   const navigate = useNavigate()
@@ -18,25 +24,18 @@ const QuizPage = () => {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [pagination, setPagination] = useState({ total: 0, skip: 0, limit: 12, has_next: false })
+  const searchRef = useRef(null)
 
-  // Lấy danh sách quiz
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
         setLoading(true)
-        const params = {
-          skip: pagination.skip,
-          limit: pagination.limit
-        }
+        const params = { skip: pagination.skip, limit: pagination.limit }
         if (searchTerm) params.search = searchTerm
         const data = await quizService.getQuizzes(params)
         setQuizzes(data?.data || [])
-        setPagination(prev => ({
-          ...prev,
-          total: data?.total || 0,
-          has_next: data?.has_next || false
-        }))
-      } catch (error) {
+        setPagination(prev => ({ ...prev, total: data?.total || 0, has_next: data?.has_next || false }))
+      } catch {
         toast.error('Không thể tải danh sách quiz')
       } finally {
         setLoading(false)
@@ -45,148 +44,135 @@ const QuizPage = () => {
     fetchQuizzes()
   }, [pagination.skip, searchTerm])
 
-  // Xử lý tìm kiếm
-  const handleSearch = () => {
-    setPagination(prev => ({ ...prev, skip: 0 }))
-  }
+  const handleSearch = () => setPagination(prev => ({ ...prev, skip: 0 }))
 
-  const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }
+  const totalPages = Math.ceil(pagination.total / pagination.limit)
+  const currentPage = Math.floor(pagination.skip / pagination.limit) + 1
 
   return (
-    <div className="quiz-page">
-      <motion.div initial="hidden" animate="visible" variants={fadeUp} transition={{ duration: 0.3 }}>
-        <h1 className="quiz-header__title">Bài Quiz</h1>
-        <p className="quiz-header__sub">Kiểm tra và củng cố kiến thức với các bài quiz</p>
+    <div className="qp-page">
+      {/* Hero */}
+      <motion.div
+        className="qp-hero"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.65, 0, 0.35, 1] }}
+      >
+        <svg className="qp-ornament" viewBox="0 0 48 12" fill="none">
+          <line x1="0" y1="6" x2="16" y2="6" stroke="var(--gold-500)" strokeWidth="1" />
+          <circle cx="24" cy="6" r="4" stroke="var(--gold-500)" strokeWidth="1" />
+          <line x1="32" y1="6" x2="48" y2="6" stroke="var(--gold-500)" strokeWidth="1" />
+        </svg>
+        <h1 className="qp-hero__title">Bài Quiz</h1>
+        <p className="qp-hero__sub">Kiểm tra và củng cố kiến thức với các bài quiz</p>
       </motion.div>
 
-      {/* Thanh tìm kiếm */}
-      <div className="quiz-search">
+      {/* Search */}
+      <div className="qp-search">
+        <span className="qp-search__icon"><SearchIcon /></span>
         <input
+          ref={searchRef}
           type="text"
-          className="quiz-search__input"
-          placeholder="Tìm kiếm quiz theo tên..."
+          className="qp-search__input"
+          placeholder="Tìm kiếm quiz theo tên…"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
         />
       </div>
 
-      {/* Đang tải */}
-      {loading && (
-        <div className="quiz-grid">
-          {[1, 2, 3, 4].map(i => <div key={i} className="quiz-skeleton" />)}
-        </div>
-      )}
+      {/* Loading */}
+      {loading && <StateView type="loading" message="Đang tải danh sách quiz…" />}
 
-      {/* Danh sách quiz */}
+      {/* Grid */}
       {!loading && quizzes.length > 0 && (
         <motion.div
-          className="quiz-grid"
+          className="qp-grid"
           initial="hidden"
           animate="visible"
-          variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
+          variants={{ visible: { transition: { staggerChildren: 0.07 } } }}
         >
           {quizzes.map((quiz) => (
             <motion.div
               key={quiz.quiz_id}
-              className="quiz-card"
-              variants={fadeUp}
+              className="qp-card"
+              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.65, 0, 0.35, 1] } } }}
+              whileHover={{ y: -3 }}
               onClick={() => navigate(`/dashboard/quiz/${quiz.quiz_id}`)}
             >
-              <div className="quiz-card__header">
-                <h3 className="quiz-card__title">{quiz.title}</h3>
-                <span className={`quiz-card__status quiz-card__status--${quiz.status || 'active'}`}>
-                  {quiz.status === 'draft' ? 'Bản nháp' : 'Đang hoạt động'}
+              <div className="qp-card__top">
+                <h3 className="qp-card__title">{quiz.title}</h3>
+                <span className={`qp-card__status qp-card__status--${quiz.status || 'active'}`}>
+                  {quiz.status === 'draft' ? 'Nháp' : 'Hoạt động'}
                 </span>
               </div>
 
-              {/* Thông tin khóa học/bài học liên quan */}
-              {quiz.course_title && (
-                <span className="quiz-card__course">{quiz.course_title}</span>
+              {(quiz.course_title || quiz.lesson_title || quiz.class_name) && (
+                <div className="qp-card__tags">
+                  {quiz.course_title && <span className="qp-tag">{quiz.course_title}</span>}
+                  {quiz.lesson_title && <span className="qp-tag qp-tag--muted">{quiz.lesson_title}</span>}
+                  {quiz.class_name && <span className="qp-tag qp-tag--muted">Lớp: {quiz.class_name}</span>}
+                </div>
               )}
-              {quiz.lesson_title && (
-                <span className="quiz-card__lesson">{quiz.lesson_title}</span>
-              )}
-              {quiz.class_name && (
-                <span className="quiz-card__class">Lớp: {quiz.class_name}</span>
-              )}
+
               {quiz.description && (
-                <p className="quiz-card__desc">
-                  {quiz.description.length > 80 ? quiz.description.substring(0, 80) + '...' : quiz.description}
+                <p className="qp-card__desc">
+                  {quiz.description.length > 80 ? quiz.description.substring(0, 80) + '…' : quiz.description}
                 </p>
               )}
 
-              {/* Thống kê quiz */}
-              <div className="quiz-card__stats">
-                <div className="quiz-card__stat">
-                  <span className="quiz-card__stat-value">{quiz.question_count || 0}</span>
-                  <span className="quiz-card__stat-label">câu hỏi</span>
+              {/* Stats */}
+              <div className="qp-card__stats">
+                <div className="qp-stat">
+                  <span className="qp-stat__value">{quiz.question_count || 0}</span>
+                  <span className="qp-stat__label">câu</span>
                 </div>
-                <div className="quiz-card__stat">
-                  <span className="quiz-card__stat-value">{quiz.time_limit || '—'}</span>
-                  <span className="quiz-card__stat-label">phút</span>
+                <span className="qp-stat__sep">·</span>
+                <div className="qp-stat">
+                  <span className="qp-stat__value">{quiz.time_limit || '—'}</span>
+                  <span className="qp-stat__label">phút</span>
                 </div>
-                <div className="quiz-card__stat">
-                  <span className="quiz-card__stat-value">{quiz.pass_threshold || 70}%</span>
-                  <span className="quiz-card__stat-label">điểm đạt</span>
+                <span className="qp-stat__sep">·</span>
+                <div className="qp-stat">
+                  <span className="qp-stat__value">{quiz.pass_threshold || 70}%</span>
+                  <span className="qp-stat__label">đạt</span>
                 </div>
               </div>
 
-              {/* Thông tin thêm cho instructor */}
               {quiz.total_students != null && (
-                <div className="quiz-card__meta">
+                <div className="qp-card__meta">
                   <span>{quiz.completed_count || 0}/{quiz.total_students} đã làm</span>
-                  {quiz.pass_count != null && <span>Đạt: {quiz.pass_count}</span>}
-                  {quiz.pass_rate != null && <span>Tỉ lệ đạt: {Math.round(quiz.pass_rate)}%</span>}
-                  {quiz.average_score != null && <span>Điểm TB: {Math.round(quiz.average_score)}</span>}
+                  {quiz.pass_rate != null && <span>Đạt: {Math.round(quiz.pass_rate)}%</span>}
                 </div>
               )}
-
-              <div className="quiz-card__footer">
-                <Button variant="primary" size="sm">Xem chi tiết</Button>
-              </div>
             </motion.div>
           ))}
         </motion.div>
       )}
 
-      {/* Trạng thái rỗng */}
+      {/* Empty */}
       {!loading && quizzes.length === 0 && (
-        <div className="quiz-empty">
-          <span className="quiz-empty__icon">📝</span>
-          <h3>Chưa có bài quiz nào</h3>
-          <p>Các bài quiz sẽ xuất hiện khi bạn đăng ký khóa học</p>
-          <Button
-            variant="primary"
-            onClick={() => navigate('/dashboard/courses')}
-          >
-            Khám phá khóa học
-          </Button>
-        </div>
+        <StateView
+          type="empty"
+          message={searchTerm ? `Không tìm thấy quiz cho "${searchTerm}"` : 'Chưa có bài quiz nào'}
+          action={!searchTerm ? { label: 'Khám phá khóa học', onClick: () => navigate('/dashboard/courses') } : undefined}
+        />
       )}
 
-      {/* Phân trang */}
+      {/* Pagination */}
       {!loading && pagination.total > pagination.limit && (
-        <div className="quiz-pagination">
+        <div className="qp-pagination">
           <Button
-            variant="outline"
-            size="sm"
+            variant="outline" size="sm"
             disabled={pagination.skip <= 0}
             onClick={() => setPagination(prev => ({ ...prev, skip: prev.skip - prev.limit }))}
-          >
-            Trang trước
-          </Button>
-          <span className="quiz-pagination__info">
-            Trang {Math.floor(pagination.skip / pagination.limit) + 1} / {Math.ceil(pagination.total / pagination.limit)}
-          </span>
+          >← Trước</Button>
+          <span className="qp-pagination__info">{currentPage} / {totalPages}</span>
           <Button
-            variant="outline"
-            size="sm"
+            variant="outline" size="sm"
             disabled={!pagination.has_next}
             onClick={() => setPagination(prev => ({ ...prev, skip: prev.skip + prev.limit }))}
-          >
-            Trang sau
-          </Button>
+          >Sau →</Button>
         </div>
       )}
     </div>

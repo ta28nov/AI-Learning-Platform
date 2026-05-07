@@ -4,7 +4,7 @@ Xử lý requests cho AI chatbot endpoints
 Section 2.6.1-2.6.5
 """
 
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from fastapi import HTTPException, status
 from datetime import datetime, timezone, timedelta
 
@@ -108,12 +108,22 @@ async def handle_send_chat_message(
         question=request.question,
         conversation_history=conversation.messages
     )
+
+    sources, related_lessons = _extract_context_references(course, request.question)
+    follow_up_suggestions = _build_follow_up_suggestions(
+        question=request.question,
+        context_type=request.context_type or "general",
+        related_lessons=related_lessons
+    )
     
     # Lưu AI response
     ai_message = {
         "id": generate_uuid(),
         "role": "assistant",
         "content": ai_response_text,
+        "sources": sources,
+        "related_lessons": related_lessons,
+        "follow_up_suggestions": follow_up_suggestions,
         "timestamp": datetime.utcnow()
     }
     conversation.messages.append(ai_message)
@@ -127,8 +137,9 @@ async def handle_send_chat_message(
         question=request.question,
         answer=ai_response_text,
         timestamp=ai_message["timestamp"],
-        sources=[],
-        related_lessons=[]
+        sources=sources,
+        related_lessons=related_lessons,
+        follow_up_suggestions=follow_up_suggestions
         # tokens_used is optional, will be added when AI service is integrated
     )
 
@@ -299,7 +310,10 @@ async def handle_get_conversation_detail(
             "message_id": msg.get("id", ""),
             "role": msg.get("role"),
             "content": msg.get("content"),
-            "timestamp": msg.get("timestamp")  # Theo API_SCHEMA.md Section 2.6.3
+            "timestamp": msg.get("timestamp"),  # Theo API_SCHEMA.md Section 2.6.3
+            "sources": msg.get("sources", []),
+            "related_lessons": msg.get("related_lessons", []),
+            "follow_up_suggestions": msg.get("follow_up_suggestions", []),
             # sources is optional, will be added when RAG/retrieval is integrated
         }
         for msg in conversation.messages
@@ -403,3 +417,72 @@ async def handle_delete_conversation(
         message="Conversation đã được xóa thành công",
         deleted_at=datetime.now(timezone.utc)
     )
+
+
+def _extract_context_references(course, question: str):
+    q = (question or "").lower()
+    sources: List[Dict] = []
+    related_lessons: List[Dict] = []
+
+    for module in (course.modules or [])[:10]:
+        module_title = getattr(module, "title", "")
+        if module_title and module_title.lower() in q:
+            sources.append({
+                "type": "module",
+                "id": str(getattr(module, "id", module_title)),
+                "title": module_title,
+                "excerpt": f"Nội dung từ module: {module_title}",
+            })
+
+        for lesson in (getattr(module, "lessons", []) or [])[:20]:
+            lesson_title = getattr(lesson, "title", "")
+            if lesson_title and (lesson_title.lower() in q or any(token in lesson_title.lower() for token in q.split() if len(token) > 3)):
+                lesson_id = str(getattr(lesson, "id", lesson_title))
+                related_lessons.append({
+                    "lesson_id": lesson_id,
+                    "title": lesson_title,
+                    "url": f"/dashboard/courses/{course.id}/lessons/{lesson_id}",
+                })
+                sources.append({
+                    "type": "lesson",
+                    "id": lesson_id,
+                    "title": lesson_title,
+                    "excerpt": f"Bài học liên quan: {lesson_title}",
+                })
+
+    if not related_lessons:
+        # fallback: suggest first 2 lessons to keep UI useful
+        for module in (course.modules or [])[:1]:
+            for lesson in (getattr(module, "lessons", []) or [])[:2]:
+                lesson_id = str(getattr(lesson, "id", ""))
+                if not lesson_id:
+                    continue
+                related_lessons.append({
+                    "lesson_id": lesson_id,
+                    "title": getattr(lesson, "title", "Bài học"),
+                    "url": f"/dashboard/courses/{course.id}/lessons/{lesson_id}",
+                })
+
+    return sources[:4], related_lessons[:3]
+
+
+def _build_follow_up_suggestions(question: str, context_type: str, related_lessons: List[Dict]) -> List[str]:
+    q = (question or "").lower()
+    lesson_title = related_lessons[0]["title"] if related_lessons else "bài học này"
+    if "vòng lặp" in q or "loop" in q:
+        return [
+            f"Tóm tắt nội dung chính của bài học {lesson_title}",
+            f"Cho 3 bài tập từ dễ đến khó cho {lesson_title}",
+            "Các lỗi thường mắc phải",
+        ]
+    if context_type == "lesson":
+        return [
+            f"Tóm tắt ý chính của {lesson_title}",
+            f"Cho ví dụ thực tế áp dụng phần kiến thức trong {lesson_title}",
+            "Tạo 5 câu hỏi tự kiểm tra nhanh cho nội dung này",
+        ]
+    return [
+        "Gợi ý lộ trình học tiếp theo phù hợp với nội dung vừa hỏi",
+        "Những lỗi phổ biến cần tránh khi áp dụng kiến thức này",
+        "Đề xuất bài tập thực hành để củng cố kiến thức",
+    ]

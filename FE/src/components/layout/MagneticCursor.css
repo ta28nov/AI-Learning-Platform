@@ -3,17 +3,17 @@
    Only active on pointer:fine devices. Touch devices get no cursor overlay.
    ============================================================================= */
 
-/* Hide the system cursor when custom cursor is active */
-body:has(.cursor-dot) {
+/* Hide system cursor only when explicitly enabled by JS. */
+body.cursor-overlay-active {
   cursor: none !important;
 }
 
-body:has(.cursor-dot) a,
-body:has(.cursor-dot) button,
-body:has(.cursor-dot) [role="button"],
-body:has(.cursor-dot) input,
-body:has(.cursor-dot) textarea,
-body:has(.cursor-dot) select {
+body.cursor-overlay-active a,
+body.cursor-overlay-active button,
+body.cursor-overlay-active [role="button"],
+body.cursor-overlay-active input,
+body.cursor-overlay-active textarea,
+body.cursor-overlay-active select {
   cursor: none !important;
 }
 

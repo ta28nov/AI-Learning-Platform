@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 from schemas.learning import (
     ModuleDetailResponse,
     LessonContentResponse,
+    LessonCompleteResponse,
     CourseModulesResponse,
     ModuleOutcomesResponse,
     ModuleResourcesResponse,
@@ -188,6 +189,71 @@ async def handle_get_lesson_content(
     
     # Return service data directly - đã match với LessonContentResponse schema
     return LessonContentResponse(**lesson_data)
+
+
+async def handle_complete_lesson(
+    course_id: str,
+    lesson_id: str,
+    current_user: Dict
+) -> LessonCompleteResponse:
+    """
+    Đánh dấu lesson đã hoàn thành để mở khóa lesson kế tiếp.
+
+    Endpoint: POST /api/v1/courses/{course_id}/lessons/{lesson_id}/complete
+    """
+    user_id = current_user.get("user_id")
+
+    course = await course_service.get_course_by_id(course_id)
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Khóa học không tồn tại"
+        )
+
+    enrollment = await enrollment_service.get_user_enrollment(user_id, course_id)
+    if not enrollment or enrollment.status == "cancelled":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bạn cần đăng ký khóa học để hoàn thành bài học"
+        )
+
+    lesson_data = await learning_service.get_lesson_content(
+        course_id=course_id,
+        lesson_id=lesson_id,
+        user_id=user_id
+    )
+    if not lesson_data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bài học không tồn tại"
+        )
+
+    updated_enrollment = await enrollment_service.mark_lesson_completed(
+        user_id=user_id,
+        course_id=course_id,
+        lesson_id=lesson_id
+    )
+    if not updated_enrollment:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Không thể cập nhật trạng thái hoàn thành bài học"
+        )
+
+    next_lesson_id = None
+    navigation = lesson_data.get("navigation", {})
+    next_lesson = navigation.get("next_lesson") or {}
+    if next_lesson and not next_lesson.get("is_locked"):
+        next_lesson_id = next_lesson.get("id")
+
+    return LessonCompleteResponse(
+        course_id=course_id,
+        lesson_id=lesson_id,
+        is_completed=True,
+        progress_percent=round(updated_enrollment.progress_percent or 0.0, 2),
+        enrollment_status=updated_enrollment.status,
+        next_lesson_id=next_lesson_id,
+        message="Đã đánh dấu hoàn thành bài học"
+    )
 
 
 # ============================================================================

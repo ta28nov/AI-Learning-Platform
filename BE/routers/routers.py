@@ -35,6 +35,10 @@ api_router.include_router(users_router)
 api_router.include_router(assessments_router)
 
 # Group 2.3: Course Discovery & Enrollment (8 endpoints)
+# NOTE: personal_courses_router MUST be before courses_router because both
+# use prefix "/courses". Routes like /courses/my-personal would otherwise
+# be swallowed by /courses/{course_id} (a catch-all param route).
+api_router.include_router(personal_courses_router)
 api_router.include_router(courses_router)
 api_router.include_router(enrollments_router)
 
@@ -42,9 +46,6 @@ api_router.include_router(enrollments_router)
 api_router.include_router(learning_router)
 api_router.include_router(quiz_router)
 api_router.include_router(progress_router)
-
-# Group 2.5: Personal Courses (5 endpoints)
-api_router.include_router(personal_courses_router)
 
 # Group 2.6: AI Chatbot (5 endpoints)
 api_router.include_router(chat_router)

@@ -832,6 +832,88 @@ async def list_quizzes_with_filters(
     }
 
 
+async def list_quizzes_for_student(
+    student_id: str,
+    course_id: Optional[str] = None,
+    search: Optional[str] = None,
+    sort_by: str = "created_at",
+    sort_order: str = "desc",
+    skip: int = 0,
+    limit: int = 20
+) -> Dict:
+    """
+    List quizzes cho student từ các khóa học đã đăng ký.
+    """
+    from beanie.operators import In as BeanieIn
+    # Lấy enrolled course IDs
+    enrollments = await Enrollment.find(
+        Enrollment.user_id == student_id,
+        Enrollment.status == "active"
+    ).to_list()
+    enrolled_course_ids = [e.course_id for e in enrollments]
+
+    if not enrolled_course_ids:
+        return {"data": [], "total": 0, "skip": skip, "limit": limit, "has_next": False}
+
+    conditions = [BeanieIn(Quiz.course_id, enrolled_course_ids), Quiz.is_draft == False]
+    if course_id:
+        conditions.append(Quiz.course_id == course_id)
+
+    query = Quiz.find(*conditions)
+    if sort_order == "desc":
+        query = query.sort(f"-{sort_by}")
+    else:
+        query = query.sort(f"+{sort_by}")
+
+    total = await query.count()
+    quizzes = await query.skip(skip).limit(limit).to_list()
+
+    if search:
+        search_lower = search.lower()
+        quizzes = [q for q in quizzes if search_lower in q.title.lower()]
+        total = len(quizzes)
+
+    quiz_items = []
+    for quiz in quizzes:
+        course = await Course.get(quiz.course_id) if quiz.course_id else None
+        lesson = await Lesson.get(quiz.lesson_id) if quiz.lesson_id else None
+        my_attempts = await QuizAttempt.find(
+            QuizAttempt.quiz_id == str(quiz.id),
+            QuizAttempt.user_id == student_id
+        ).to_list()
+        best_score = max((a.score for a in my_attempts), default=0.0)
+        quiz_items.append({
+            "quiz_id": str(quiz.id),
+            "title": quiz.title,
+            "description": quiz.description,
+            "lesson_id": quiz.lesson_id,
+            "lesson_title": lesson.title if lesson else "N/A",
+            "course_id": quiz.course_id,
+            "course_title": course.title if course else "N/A",
+            "class_id": None,
+            "class_name": None,
+            "status": "active",
+            "question_count": len(quiz.questions),
+            "time_limit": quiz.time_limit_minutes or 0,
+            "pass_threshold": int(quiz.passing_score),
+            "total_students": 0,
+            "completed_count": len(my_attempts),
+            "pass_count": sum(1 for a in my_attempts if a.passed),
+            "pass_rate": 0.0,
+            "average_score": round(best_score, 2),
+            "created_at": quiz.created_at,
+            "updated_at": quiz.updated_at,
+        })
+
+    return {
+        "data": quiz_items,
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+        "has_next": (skip + limit) < total,
+    }
+
+
 async def check_quiz_attempts_count(quiz_id: str) -> int:
     """
     Kiểm tra số lượng attempts cho quiz

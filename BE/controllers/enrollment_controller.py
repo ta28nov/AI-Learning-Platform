@@ -26,6 +26,11 @@ from services import enrollment_service, course_service
 from models.models import User, Course
 
 
+def _to_api_status(status: str) -> str:
+    """Chuẩn hóa status cho FE: active -> in-progress."""
+    return "in-progress" if status == "active" else status
+
+
 # ============================================================================
 # Section 2.3.4: ĐĂNG KÝ KHÓA HỌC
 # ============================================================================
@@ -183,7 +188,7 @@ async def handle_list_my_enrollments(
             course_thumbnail=course.thumbnail_url,
             course_level=course.level,
             instructor_name=course.instructor_name or "N/A",
-            status=enrollment.status,
+            status=_to_api_status(enrollment.status),
             progress_percent=enrollment.progress_percent,
             enrolled_at=enrollment.enrolled_at,
             last_accessed_at=enrollment.last_accessed_at,
@@ -318,7 +323,7 @@ async def handle_get_enrollment_detail(
         course_description=course.description or "",
         course_thumbnail=course.thumbnail_url,
         instructor_name=instructor_name,
-        status=enrollment.status,
+        status=_to_api_status(enrollment.status),
         progress_percent=enrollment.progress_percent,
         completed_lessons=len(enrollment.completed_lessons),
         total_lessons=total_lessons,

@@ -15,7 +15,7 @@ import './ChatWidget.css'
  *
  * Usage: <ChatWidget /> — tự lấy courseId từ URL params
  */
-const ChatWidget = () => {
+const ChatWidget = ({ contextMeta = {} }) => {
   const { courseId } = useParams()
   const [isOpen, setIsOpen] = useState(false)
   const [inputText, setInputText] = useState('')
@@ -23,6 +23,11 @@ const ChatWidget = () => {
 
   // Dung chung hook logic voi ChatPage
   const { messages, sending, sendMessage } = useChatLogic(courseId)
+  const suggestions = contextMeta.suggestions || [
+    'Tóm tắt nhanh phần này giúp tôi',
+    'Cho tôi ví dụ thực tế cho kiến thức trong bài này',
+    'Tạo 3 câu hỏi ôn tập nhanh',
+  ]
 
   // Auto scroll khi co tin moi
   useEffect(() => {
@@ -36,7 +41,10 @@ const ChatWidget = () => {
     if (!text || sending) return
     setInputText('')
     // context_type = 'lesson' vi widget dat trong LessonPage
-    await sendMessage(text, 'lesson')
+    await sendMessage(text, 'lesson', {
+      ...contextMeta,
+      courseId,
+    })
   }
 
   const handleKeyDown = (e) => {
@@ -89,6 +97,11 @@ const ChatWidget = () => {
             <div className="chat-widget__empty">
               <p>Xin chào! Tôi có thể giúp bạn giải đáp thắc mắc về bài học này.</p>
               <p className="chat-widget__example">Ví dụ: "Giải thích khái niệm này cho tôi" hoặc "Cho ví dụ thực tế"</p>
+              <div className="chat-widget__suggestions">
+                {suggestions.map((s) => (
+                  <button key={s} type="button" onClick={() => setInputText(s)}>{s}</button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -120,6 +133,16 @@ const ChatWidget = () => {
                           📝 {lesson.title}
                         </a>
                       ))}
+                    </div>
+                  )}
+                  {msg.follow_up_suggestions?.length > 0 && (
+                    <div className="chat-widget__followup">
+                      <span className="chat-widget__related-label">Gợi ý hỏi tiếp:</span>
+                      <div className="chat-widget__suggestions">
+                        {msg.follow_up_suggestions.slice(0, 3).map((s) => (
+                          <button key={s} type="button" onClick={() => setInputText(s)}>{s}</button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

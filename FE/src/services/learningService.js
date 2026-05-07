@@ -51,6 +51,21 @@ export const learningService = {
   },
 
   /**
+   * Đánh dấu bài học đã hoàn thành
+   * @param {string} courseId - UUID khóa học
+   * @param {string} lessonId - UUID bài học
+   * @returns {Promise} LessonCompleteResponse
+   */
+  async completeLesson(courseId, lessonId) {
+    try {
+      const response = await api.post(`/courses/${courseId}/lessons/${lessonId}/complete`)
+      return handleApiResponse(response)
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  /**
    * Lay learning outcomes cua module
    * @param {string} courseId - UUID khoa hoc
    * @param {string} moduleId - UUID module

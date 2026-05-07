@@ -24,8 +24,18 @@ const useChatLogic = (courseId) => {
 
   // Gui tin nhan, nhan phan hoi AI
   // question: string, context_type: 'lesson'|'module'|'general'
-  const sendMessage = useCallback(async (question, contextType = 'general') => {
-    if (!question?.trim() || !courseId || sending) return
+  const sendMessage = useCallback(async (question, contextType = 'general', contextMeta = {}) => {
+    if (!question?.trim() || sending) return
+
+    const effectiveCourseId = contextMeta.courseId || courseId
+    if (!effectiveCourseId) {
+      setMessages(prev => [...prev, {
+        role: 'error',
+        content: 'Thiếu ngữ cảnh khóa học để gửi câu hỏi.',
+        timestamp: new Date().toISOString(),
+      }])
+      return
+    }
 
     const userMsg = { role: 'user', content: question.trim(), timestamp: new Date().toISOString() }
     setMessages(prev => [...prev, userMsg])
@@ -39,7 +49,7 @@ const useChatLogic = (courseId) => {
         ...(currentConversationId ? { conversation_id: currentConversationId } : {})
       }
 
-      const data = await chatService.sendMessage(courseId, payload)
+      const data = await chatService.sendMessage(effectiveCourseId, payload)
 
       // Cap nhat conversation_id tu response dau tien
       if (data?.conversation_id && !currentConversationId) {
@@ -52,6 +62,7 @@ const useChatLogic = (courseId) => {
         content: data?.answer || '',          // Markdown text
         sources: data?.sources || [],          // [{ type, title, excerpt }]
         related_lessons: data?.related_lessons || [], // [{ lesson_id, title, url }]
+        follow_up_suggestions: data?.follow_up_suggestions || buildFollowUpSuggestions(question, contextMeta),
         message_id: data?.message_id,
         timestamp: new Date().toISOString()
       }
@@ -75,8 +86,18 @@ const useChatLogic = (courseId) => {
     setLoadingHistory(true)
     try {
       const data = await chatService.getHistory()
-      setConversations(data?.conversations || [])
-      setGroupedHistory(data?.grouped_by_date || { today: [], yesterday: [], this_week: [], older: [] })
+      const grouped = data?.grouped_by_date || { today: [], yesterday: [], this_week: [], older: [] }
+      let list = data?.conversations || []
+      if (!list.length && data?.grouped_by_date) {
+        list = [
+          ...grouped.today.map(c => ({ ...c, _group: 'Hôm nay' })),
+          ...grouped.yesterday.map(c => ({ ...c, _group: 'Hôm qua' })),
+          ...grouped.this_week.map(c => ({ ...c, _group: 'Tuần này' })),
+          ...grouped.older.map(c => ({ ...c, _group: 'Cũ hơn' })),
+        ]
+      }
+      setConversations(list)
+      setGroupedHistory(grouped)
     } catch {
       setConversations([])
     } finally {
@@ -95,6 +116,8 @@ const useChatLogic = (courseId) => {
         role: m.role,             // 'user' | 'assistant'
         content: m.content,       // markdown
         sources: m.sources || [],
+        related_lessons: m.related_lessons || [],
+        follow_up_suggestions: m.follow_up_suggestions || [],
         message_id: m.message_id,
         timestamp: m.timestamp
       }))
@@ -114,8 +137,9 @@ const useChatLogic = (courseId) => {
         setMessages([])
         setCurrentConversationId(null)
       }
+      return true
     } catch {
-      // Bo qua loi
+      return false
     }
   }, [currentConversationId])
 
@@ -127,8 +151,9 @@ const useChatLogic = (courseId) => {
       setGroupedHistory({ today: [], yesterday: [], this_week: [], older: [] })
       setMessages([])
       setCurrentConversationId(null)
+      return true
     } catch {
-      // Bo qua loi
+      return false
     }
   }, [])
 
@@ -154,6 +179,23 @@ const useChatLogic = (courseId) => {
     deleteAllConversations,
     startNewConversation
   }
+}
+
+const buildFollowUpSuggestions = (question, contextMeta = {}) => {
+  const lessonTag = contextMeta.lessonTitle || contextMeta.moduleTitle || 'nội dung này'
+  const q = (question || '').toLowerCase()
+  if (q.includes('vòng lặp') || q.includes('loop')) {
+    return [
+      `So sánh for và while trong ${lessonTag}`,
+      `Cho 3 bài tập vòng lặp tăng dần độ khó ở ${lessonTag}`,
+      `Các lỗi thường gặp khi dùng vòng lặp trong bài này`,
+    ]
+  }
+  return [
+    `Tóm tắt ý chính của ${lessonTag}`,
+    `Cho ví dụ thực tế áp dụng phần này`,
+    `Tạo 3 câu hỏi ôn tập nhanh cho ${lessonTag}`,
+  ]
 }
 
 export default useChatLogic

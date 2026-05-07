@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import quizService from '@services/quizService'
 import Button from '@components/ui/Button'
 import Card, { CardBody } from '@components/ui/Card'
+import StateView from '@components/ui/StateView'
+import { pageTurn, pageFade } from '@/styles/motion'
 import './QuizAttemptPage.css'
 
 /**
@@ -22,6 +25,7 @@ const QuizAttemptPage = () => {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const startTime = useState(() => Date.now())[0]
+  const shouldReduceMotion = useReducedMotion()
 
   // Lấy dữ liệu quiz khi mount
   useEffect(() => {
@@ -99,7 +103,7 @@ const QuizAttemptPage = () => {
   }
 
   if (loading) return <div className="quiz-attempt-state">Đang tải quiz...</div>
-  if (!quiz || !quiz.questions) return <div className="quiz-attempt-state">Không có câu hỏi</div>
+  if (!quiz || !quiz.questions) return <StateView type="empty" title="Không có câu hỏi" message="Quiz hiện không có dữ liệu hợp lệ." actionLabel="Quay lại Quiz" onAction={() => navigate('/dashboard/quiz')} />
 
   const currentQuestion = quiz.questions[currentIndex]
   const questionId = currentQuestion.question_id || currentQuestion.id
@@ -130,6 +134,14 @@ const QuizAttemptPage = () => {
       </div>
 
       {/* Câu hỏi */}
+      <AnimatePresence mode="wait">
+      <motion.div
+        key={questionId}
+        variants={shouldReduceMotion ? pageFade : pageTurn}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
       <Card className="quiz-attempt-question">
         <CardBody>
           {/* Metadata: bắt buộc + điểm */}
@@ -178,6 +190,8 @@ const QuizAttemptPage = () => {
           )}
         </CardBody>
       </Card>
+      </motion.div>
+      </AnimatePresence>
 
       {/* Điều hướng câu hỏi */}
       <div className="quiz-attempt-nav">
