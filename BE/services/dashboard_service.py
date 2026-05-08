@@ -11,6 +11,12 @@ from models.models import (
     Enrollment, Course, Progress, QuizAttempt, User, Quiz, Class
 )
 
+def _read_field(item, key: str, default=None):
+    """Support both dict and Pydantic model objects."""
+    if isinstance(item, dict):
+        return item.get(key, default)
+    return getattr(item, key, default)
+
 
 # ============================================================================
 # Section 2.7.1: DASHBOARD TỔNG QUAN HỌC VIÊN
@@ -160,7 +166,8 @@ async def get_student_dashboard(user_id: str) -> Dict:
         lessons_this_week = 0
         for progress in all_progress:
             for lesson_prog in progress.lessons_progress:
-                if lesson_prog.get("completion_date") and lesson_prog["completion_date"] >= seven_days_ago:
+                completion_date = _read_field(lesson_prog, "completion_date")
+                if completion_date and completion_date >= seven_days_ago:
                     lessons_this_week += 1
         
         # Get recommendations (simplified - get latest recommendation)
@@ -190,10 +197,10 @@ async def get_student_dashboard(user_id: str) -> Dict:
             next_lesson = {"lesson_id": "", "title": "Chưa có bài tiếp theo"}
             if progress and progress.lessons_progress:
                 for lesson_prog in progress.lessons_progress:
-                    if lesson_prog.get("status") != "completed":
+                    if _read_field(lesson_prog, "status") != "completed":
                         next_lesson = {
-                            "lesson_id": lesson_prog.get("lesson_id", ""),
-                            "title": lesson_prog.get("lesson_title", "Bài học tiếp theo")
+                            "lesson_id": _read_field(lesson_prog, "lesson_id", ""),
+                            "title": _read_field(lesson_prog, "lesson_title", "Bài học tiếp theo")
                         }
                         break
             
@@ -422,8 +429,8 @@ async def get_progress_chart(
     for progress in progress_list:
         # Phân tích lessons_progress để đếm lessons completed theo ngày
         for lesson_prog in progress.lessons_progress:
-            if lesson_prog.get("status") == "completed" and lesson_prog.get("completion_date"):
-                completion_date = lesson_prog["completion_date"]
+            if _read_field(lesson_prog, "status") == "completed" and _read_field(lesson_prog, "completion_date"):
+                completion_date = _read_field(lesson_prog, "completion_date")
                 if completion_date >= start_date:
                     date_key = completion_date.strftime(date_format)
                     
@@ -434,7 +441,7 @@ async def get_progress_chart(
                         }
                     
                     date_map[date_key]["lessons_completed"] += 1
-                    date_map[date_key]["hours_spent"] += lesson_prog.get("time_spent_minutes", 0) / 60.0
+                    date_map[date_key]["hours_spent"] += _read_field(lesson_prog, "time_spent_minutes", 0) / 60.0
     
     # Tạo chart data points
     chart_data = []
@@ -799,8 +806,8 @@ async def get_instructor_progress_chart(
     # Track lessons completed theo ngày (parse từ lessons_progress)
     for progress in progress_list:
         for lesson_prog in progress.lessons_progress:
-            if lesson_prog.get("status") == "completed" and lesson_prog.get("completion_date"):
-                completion_date = lesson_prog["completion_date"]
+            if _read_field(lesson_prog, "status") == "completed" and _read_field(lesson_prog, "completion_date"):
+                completion_date = _read_field(lesson_prog, "completion_date")
                 if completion_date >= start_date:
                     date_key = completion_date.strftime(date_format)
                     

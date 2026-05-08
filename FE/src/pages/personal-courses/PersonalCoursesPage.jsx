@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -7,6 +7,7 @@ import Button from '@components/ui/Button'
 import Card, { CardBody } from '@components/ui/Card'
 import Modal from '@components/ui/Modal'
 import StateView from '@components/ui/StateView'
+import AILoadingState from '@components/ui/AILoadingState'
 import './PersonalCoursesPage.css'
 
 /**
@@ -21,6 +22,16 @@ const PersonalCoursesPage = () => {
   const [showPromptModal, setShowPromptModal] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [generating, setGenerating] = useState(false)
+  const [aiLevel, setAiLevel] = useState('Beginner')
+  const [aiDurationWeeks, setAiDurationWeeks] = useState(4)
+  const [aiLanguage, setAiLanguage] = useState('vi')
+  const promptRef = useRef(null)
+
+  const promptTemplates = useMemo(() => ([
+    'Tôi muốn học Python từ cơ bản đến làm project thực tế: biến, hàm, OOP, xử lý file, và mini project quản lý dữ liệu.',
+    'Tôi muốn học ReactJS bài bản để tự xây dashboard: hooks, state management, gọi API, routing, và tối ưu hiệu năng.',
+    'Tôi muốn học Data Analysis thực chiến với SQL + Pandas + trực quan hóa để làm báo cáo phân tích cho doanh nghiệp.',
+  ]), [])
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -37,6 +48,12 @@ const PersonalCoursesPage = () => {
     fetchCourses()
   }, [])
 
+  useEffect(() => {
+    if (!showPromptModal) return
+    const timer = window.setTimeout(() => promptRef.current?.focus(), 80)
+    return () => window.clearTimeout(timer)
+  }, [showPromptModal])
+
   // Tạo khóa học bằng AI prompt
   const handleCreateFromPrompt = async () => {
     if (prompt.length < 20) {
@@ -47,12 +64,16 @@ const PersonalCoursesPage = () => {
     try {
       const response = await personalCourseService.createFromPrompt({
         prompt,
-        level: 'Beginner',
-        language: 'vi'
+        level: aiLevel,
+        estimated_duration_weeks: Number(aiDurationWeeks) || 4,
+        language: aiLanguage,
       })
       toast.success('AI đang tạo khóa học cho bạn!')
       setShowPromptModal(false)
       setPrompt('')
+      setAiLevel('Beginner')
+      setAiDurationWeeks(4)
+      setAiLanguage('vi')
       navigate(`/dashboard/personal-courses/${response.course_id || response.id}/edit`)
     } catch (error) {
       toast.error(error.message || 'Không thể tạo khóa học')
@@ -64,7 +85,15 @@ const PersonalCoursesPage = () => {
   if (loading) {
     return (
       <div className="personal-courses-loading">
-        <StateView type="loading" title="Đang tải khóa học cá nhân" />
+        <AILoadingState
+          title="AI đang tải khóa học cá nhân"
+          message="Đang đồng bộ danh sách khóa học do bạn tạo."
+          steps={[
+            'Đang tải dữ liệu khóa học cá nhân...',
+            'Đang kiểm tra trạng thái xuất bản...',
+            'Đang hoàn tất giao diện hiển thị...',
+          ]}
+        />
       </div>
     )
   }
@@ -146,21 +175,72 @@ const PersonalCoursesPage = () => {
       {/* Modal tạo bằng AI */}
       <Modal
         isOpen={showPromptModal}
-        onClose={() => setShowPromptModal(false)}
+        onClose={() => {
+          setShowPromptModal(false)
+          setPrompt('')
+        }}
         title="Tạo khóa học bằng AI"
       >
         <div className="personal-courses-prompt">
           <p className="personal-courses-prompt__desc">
             Mô tả những gì bạn muốn học, AI sẽ tạo khóa học phù hợp:
           </p>
+          <div className="personal-courses-prompt__templates">
+            {promptTemplates.map((template, idx) => (
+              <button
+                key={idx}
+                type="button"
+                className="personal-courses-prompt__template-btn"
+                onClick={() => {
+                  setPrompt(template)
+                  window.setTimeout(() => promptRef.current?.focus(), 0)
+                }}
+              >
+                Mẫu {idx + 1}
+              </button>
+            ))}
+          </div>
+
           <textarea
+            ref={promptRef}
             className="personal-courses-prompt__textarea"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="VD: Tôi muốn học lập trình Python cơ bản, từ các khái niệm biến, vòng lặp đến hàm và lớp..."
-            rows={4}
+            placeholder="Mô tả mục tiêu học tập, năng lực hiện tại, kết quả mong muốn... (>= 20 ký tự)"
+            rows={7}
             maxLength={1000}
+            autoFocus
           />
+
+          <div className="personal-courses-prompt__config">
+            <label className="personal-courses-prompt__config-item">
+              <span>Trình độ</span>
+              <select value={aiLevel} onChange={(e) => setAiLevel(e.target.value)}>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+            </label>
+
+            <label className="personal-courses-prompt__config-item">
+              <span>Thời lượng</span>
+              <select value={aiDurationWeeks} onChange={(e) => setAiDurationWeeks(Number(e.target.value))}>
+                <option value={2}>2 tuần</option>
+                <option value={4}>4 tuần</option>
+                <option value={6}>6 tuần</option>
+                <option value={8}>8 tuần</option>
+              </select>
+            </label>
+
+            <label className="personal-courses-prompt__config-item">
+              <span>Ngôn ngữ</span>
+              <select value={aiLanguage} onChange={(e) => setAiLanguage(e.target.value)}>
+                <option value="vi">Tiếng Việt</option>
+                <option value="en">English</option>
+              </select>
+            </label>
+          </div>
+
           <span className="personal-courses-prompt__counter">
             {prompt.length}/1000 ký tự (tối thiểu 20)
           </span>

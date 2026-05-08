@@ -7,6 +7,8 @@ import analyticsService from '@services/analyticsService'
 import dashboardService from '@services/dashboardService'
 import Button from '@components/ui/Button'
 import StateView from '@components/ui/StateView'
+import Modal, { ModalFooter } from '@components/ui/Modal'
+import AILoadingState from '@components/ui/AILoadingState'
 import appLogger from '@utils/logger'
 import './AdminPage.css'
 
@@ -254,6 +256,9 @@ const AdminUsers = () => {
   const [filters, setFilters]         = useState({ role: '', status: '', search: '' })
   const [pagination, setPagination]   = useState({ skip: 0, limit: 20, total: 0 })
   const [error, setError]             = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(null)
+  const [roleDialog, setRoleDialog] = useState({ isOpen: false, userId: '', currentRole: 'student', nextRole: 'student' })
+  const [passwordDialog, setPasswordDialog] = useState({ isOpen: false, userId: '', name: '', value: '' })
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -274,44 +279,56 @@ const AdminUsers = () => {
   }, [filters, pagination.skip, pagination.limit])
 
   useEffect(() => { fetchUsers() }, [fetchUsers])
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, skip: 0 }))
+  }, [filters.role, filters.status, filters.search])
 
-  const handleDelete = async (userId, name) => {
-    if (!window.confirm(`Xóa người dùng "${name}"?`)) return
+  const handleDelete = async () => {
+    if (!confirmDelete?.userId) return
     try {
-      await adminService.deleteUser(userId)
+      await adminService.deleteUser(confirmDelete.userId)
       toast.success('Đã xóa người dùng')
+      setConfirmDelete(null)
       fetchUsers()
     } catch (err) {
       toast.error(err?.message || 'Không thể xóa')
     }
   }
 
-  const handleChangeRole = async (userId, currentRole) => {
-    const newRole = window.prompt(`Nhập vai trò mới (student/instructor/admin).\nHiện tại: ${currentRole}`)
-    if (!newRole || !['student', 'instructor', 'admin'].includes(newRole)) return
+  const handleChangeRole = async () => {
+    if (!roleDialog.userId || !roleDialog.nextRole) return
     try {
-      const result = await adminService.changeUserRole(userId, newRole)
-      toast.success(`Đã đổi vai trò thành ${newRole}`)
+      const result = await adminService.changeUserRole(roleDialog.userId, roleDialog.nextRole)
+      toast.success(`Đã đổi vai trò thành ${roleDialog.nextRole}`)
       if (result?.impact?.description) toast(result.impact.description, { duration: 5000 })
+      setRoleDialog({ isOpen: false, userId: '', currentRole: 'student', nextRole: 'student' })
       fetchUsers()
     } catch (err) {
       toast.error(err?.message || 'Không thể đổi vai trò')
     }
   }
 
-  const handleResetPassword = async (userId, name) => {
-    const newPassword = window.prompt(`Nhập mật khẩu mới cho "${name}" (tối thiểu 8 ký tự):`)
-    if (!newPassword || newPassword.length < 8) {
-      if (newPassword) toast.error('Mật khẩu phải có ít nhất 8 ký tự')
+  const handleResetPassword = async () => {
+    const newPassword = passwordDialog.value.trim()
+    if (newPassword.length < 8) {
+      toast.error('Mật khẩu phải có ít nhất 8 ký tự')
       return
     }
     try {
-      const result = await adminService.resetUserPassword(userId, newPassword)
+      const result = await adminService.resetUserPassword(passwordDialog.userId, newPassword)
       toast.success('Đã reset mật khẩu')
       if (result?.note) toast(result.note, { duration: 4000 })
+      setPasswordDialog({ isOpen: false, userId: '', name: '', value: '' })
     } catch (err) {
       toast.error(err?.message || 'Không thể reset mật khẩu')
     }
+  }
+
+  const currentPage = Math.floor(pagination.skip / pagination.limit) + 1
+  const totalPages = Math.max(1, Math.ceil((pagination.total || 0) / pagination.limit))
+  const handlePageChange = (nextPage) => {
+    if (nextPage < 1 || nextPage > totalPages) return
+    setPagination(prev => ({ ...prev, skip: (nextPage - 1) * prev.limit }))
   }
 
   return (
@@ -377,13 +394,35 @@ const AdminUsers = () => {
                   <td><span className={`adm-badge adm-badge--${user.status || 'active'}`}>{user.status === 'inactive' ? 'Bị khóa' : 'Hoạt động'}</span></td>
                   <td>
                     <div className="adm-actions">
-                      <button className="adm-btn" title="Đổi vai trò" onClick={() => handleChangeRole(user.id || user.user_id, user.role)}>
+                      <button
+                        className="adm-btn"
+                        title="Đổi vai trò"
+                        onClick={() => setRoleDialog({
+                          isOpen: true,
+                          userId: user.id || user.user_id,
+                          currentRole: user.role,
+                          nextRole: user.role || 'student',
+                        })}
+                      >
                         <RoleIcon /> Vai trò
                       </button>
-                      <button className="adm-btn" title="Reset mật khẩu" onClick={() => handleResetPassword(user.id || user.user_id, user.full_name)}>
+                      <button
+                        className="adm-btn"
+                        title="Reset mật khẩu"
+                        onClick={() => setPasswordDialog({
+                          isOpen: true,
+                          userId: user.id || user.user_id,
+                          name: user.full_name,
+                          value: '',
+                        })}
+                      >
                         <KeyIcon /> Reset
                       </button>
-                      <button className="adm-btn adm-btn--danger" title="Xóa" onClick={() => handleDelete(user.id || user.user_id, user.full_name)}>
+                      <button
+                        className="adm-btn adm-btn--danger"
+                        title="Xóa"
+                        onClick={() => setConfirmDelete({ userId: user.id || user.user_id, name: user.full_name })}
+                      >
                         <DeleteIcon /> Xóa
                       </button>
                     </div>
@@ -396,6 +435,54 @@ const AdminUsers = () => {
           </table>
         </div>
       )}
+      <PaginationBar
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pagination.limit}
+        onPrev={() => handlePageChange(currentPage - 1)}
+        onNext={() => handlePageChange(currentPage + 1)}
+        onPageSizeChange={(nextSize) => setPagination({ skip: 0, limit: nextSize, total: pagination.total })}
+      />
+
+      <Modal isOpen={Boolean(confirmDelete)} onClose={() => setConfirmDelete(null)} title="Xác nhận xóa người dùng" size="sm">
+        <p className="adm-modal__text">Bạn có chắc muốn xóa người dùng "{confirmDelete?.name}"?</p>
+        <ModalFooter>
+          <Button variant="outline" onClick={() => setConfirmDelete(null)}>Hủy</Button>
+          <Button variant="danger" onClick={handleDelete}>Xóa</Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={roleDialog.isOpen} onClose={() => setRoleDialog({ isOpen: false, userId: '', currentRole: 'student', nextRole: 'student' })} title="Đổi vai trò người dùng" size="sm">
+        <p className="adm-modal__text">Vai trò hiện tại: <b>{roleDialog.currentRole}</b></p>
+        <select
+          className="adm-select adm-select--full"
+          value={roleDialog.nextRole}
+          onChange={(e) => setRoleDialog(prev => ({ ...prev, nextRole: e.target.value }))}
+        >
+          <option value="student">Học viên</option>
+          <option value="instructor">Giảng viên</option>
+          <option value="admin">Quản trị</option>
+        </select>
+        <ModalFooter>
+          <Button variant="outline" onClick={() => setRoleDialog({ isOpen: false, userId: '', currentRole: 'student', nextRole: 'student' })}>Hủy</Button>
+          <Button onClick={handleChangeRole}>Lưu thay đổi</Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={passwordDialog.isOpen} onClose={() => setPasswordDialog({ isOpen: false, userId: '', name: '', value: '' })} title="Reset mật khẩu" size="sm">
+        <p className="adm-modal__text">Nhập mật khẩu mới cho "{passwordDialog.name}"</p>
+        <input
+          type="password"
+          className="adm-input"
+          value={passwordDialog.value}
+          onChange={(e) => setPasswordDialog(prev => ({ ...prev, value: e.target.value }))}
+          placeholder="Tối thiểu 8 ký tự"
+        />
+        <ModalFooter>
+          <Button variant="outline" onClick={() => setPasswordDialog({ isOpen: false, userId: '', name: '', value: '' })}>Hủy</Button>
+          <Button onClick={handleResetPassword}>Xác nhận</Button>
+        </ModalFooter>
+      </Modal>
     </motion.div>
   )
 }
@@ -409,15 +496,18 @@ const AdminCourses = () => {
   const [loading, setLoading] = useState(true)
   const [search, setSearch]   = useState('')
   const [error, setError]     = useState('')
+  const [pagination, setPagination] = useState({ skip: 0, limit: 20, total: 0 })
+  const [confirmDelete, setConfirmDelete] = useState(null)
 
   const fetchCourses = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
-      const params = {}
+      const params = { skip: pagination.skip, limit: pagination.limit }
       if (search) params.keyword = search
       const data = await adminService.getCourses(params)
       setCourses(data?.data || [])
+      setPagination(prev => ({ ...prev, total: data?.total || 0 }))
     } catch (err) {
       setError('Không thể tải danh sách khóa học.')
       appLogger.error(err, { feature: 'AdminCourses' })
@@ -425,25 +515,39 @@ const AdminCourses = () => {
     } finally {
       setLoading(false)
     }
-  }, [search])
+  }, [search, pagination.skip, pagination.limit])
 
   useEffect(() => { fetchCourses() }, [fetchCourses])
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, skip: 0 }))
+  }, [search])
 
-  const handleDelete = async (courseId, title) => {
-    if (!window.confirm(`Xóa khóa học "${title}"? Hành động này không thể hoàn tác.`)) return
+  const handleDelete = async () => {
+    if (!confirmDelete?.courseId) return
     try {
-      const result = await adminService.deleteCourse(courseId)
+      const result = await adminService.deleteCourse(confirmDelete.courseId)
       toast.success('Đã xóa khóa học')
       if (result?.impact?.warning) toast(result.impact.warning, { duration: 5000 })
+      setConfirmDelete(null)
       fetchCourses()
     } catch (err) {
       toast.error(err?.message || 'Không thể xóa')
     }
   }
+  const currentPage = Math.floor(pagination.skip / pagination.limit) + 1
+  const totalPages = Math.max(1, Math.ceil((pagination.total || 0) / pagination.limit))
+  const handlePageChange = (nextPage) => {
+    if (nextPage < 1 || nextPage > totalPages) return
+    setPagination(prev => ({ ...prev, skip: (nextPage - 1) * prev.limit }))
+  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <div className="adm-filters">
+        <div className="adm-stat-item adm-stat-item--inline">
+          <span className="adm-stat-item__val">{pagination.total}</span>
+          <span className="adm-stat-item__lbl">Tổng khóa học</span>
+        </div>
         <div className="adm-filters__search-wrap">
           <span className="adm-filters__search-icon"><SearchIcon /></span>
           <input
@@ -477,7 +581,7 @@ const AdminCourses = () => {
                   <td><span className={`adm-badge adm-badge--${course.status}`}>{course.status === 'published' ? 'Xuất bản' : course.status === 'draft' ? 'Nháp' : course.status}</span></td>
                   <td>
                     <div className="adm-actions">
-                      <button className="adm-btn adm-btn--danger" onClick={() => handleDelete(course.course_id, course.title)}>
+                      <button className="adm-btn adm-btn--danger" onClick={() => setConfirmDelete({ courseId: course.course_id, title: course.title })}>
                         <DeleteIcon /> Xóa
                       </button>
                     </div>
@@ -490,6 +594,21 @@ const AdminCourses = () => {
           </table>
         </div>
       )}
+      <PaginationBar
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pagination.limit}
+        onPrev={() => handlePageChange(currentPage - 1)}
+        onNext={() => handlePageChange(currentPage + 1)}
+        onPageSizeChange={(nextSize) => setPagination({ skip: 0, limit: nextSize, total: pagination.total })}
+      />
+      <Modal isOpen={Boolean(confirmDelete)} onClose={() => setConfirmDelete(null)} title="Xác nhận xóa khóa học" size="sm">
+        <p className="adm-modal__text">Xóa khóa học "{confirmDelete?.title}"? Hành động này không thể hoàn tác.</p>
+        <ModalFooter>
+          <Button variant="outline" onClick={() => setConfirmDelete(null)}>Hủy</Button>
+          <Button variant="danger" onClick={handleDelete}>Xóa</Button>
+        </ModalFooter>
+      </Modal>
     </motion.div>
   )
 }
@@ -503,15 +622,17 @@ const AdminClasses = () => {
   const [loading, setLoading] = useState(true)
   const [search, setSearch]   = useState('')
   const [error, setError]     = useState('')
+  const [pagination, setPagination] = useState({ skip: 0, limit: 20, total: 0 })
 
   const fetchClasses = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
-      const params = {}
+      const params = { skip: pagination.skip, limit: pagination.limit }
       if (search) params.search = search
       const data = await adminService.getClasses(params)
       setClasses(data?.data || [])
+      setPagination(prev => ({ ...prev, total: data?.total || 0 }))
     } catch (err) {
       setError('Không thể tải danh sách lớp học.')
       appLogger.error(err, { feature: 'AdminClasses' })
@@ -519,13 +640,26 @@ const AdminClasses = () => {
     } finally {
       setLoading(false)
     }
-  }, [search])
+  }, [search, pagination.skip, pagination.limit])
 
   useEffect(() => { fetchClasses() }, [fetchClasses])
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, skip: 0 }))
+  }, [search])
+  const currentPage = Math.floor(pagination.skip / pagination.limit) + 1
+  const totalPages = Math.max(1, Math.ceil((pagination.total || 0) / pagination.limit))
+  const handlePageChange = (nextPage) => {
+    if (nextPage < 1 || nextPage > totalPages) return
+    setPagination(prev => ({ ...prev, skip: (nextPage - 1) * prev.limit }))
+  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <div className="adm-filters">
+        <div className="adm-stat-item adm-stat-item--inline">
+          <span className="adm-stat-item__val">{pagination.total}</span>
+          <span className="adm-stat-item__lbl">Tổng lớp học</span>
+        </div>
         <div className="adm-filters__search-wrap">
           <span className="adm-filters__search-icon"><SearchIcon /></span>
           <input
@@ -561,6 +695,14 @@ const AdminClasses = () => {
           </table>
         </div>
       )}
+      <PaginationBar
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pagination.limit}
+        onPrev={() => handlePageChange(currentPage - 1)}
+        onNext={() => handlePageChange(currentPage + 1)}
+        onPageSizeChange={(nextSize) => setPagination({ skip: 0, limit: nextSize, total: pagination.total })}
+      />
     </motion.div>
   )
 }
@@ -599,7 +741,19 @@ const AdminAnalytics = () => {
     fetchAll()
   }, [])
 
-  if (loading) return <Skeleton rows={4} tall />
+  if (loading) {
+    return (
+      <AILoadingState
+        title="AI đang tổng hợp Analytics"
+        message="Đang lấy dữ liệu tăng trưởng, sức khỏe hệ thống và hiệu suất khóa học."
+        steps={[
+          'Đang tải users growth...',
+          'Đang tải course analytics...',
+          'Đang tải system health...',
+        ]}
+      />
+    )
+  }
 
   const healthMeta = {
     healthy:  { Icon: CheckIcon, cls: 'adm-health--healthy', label: 'Hệ thống bình thường' },
@@ -701,6 +855,27 @@ const AdminAnalytics = () => {
 }
 
 /* ─── Shared sub-components ─────────────────── */
+const PaginationBar = ({ currentPage, totalPages, pageSize, onPrev, onNext, onPageSizeChange }) => (
+  <div className="adm-pagination">
+    <div className="adm-pagination__meta">
+      <span>Trang {currentPage}/{totalPages}</span>
+      <select
+        className="adm-select"
+        value={pageSize}
+        onChange={(e) => onPageSizeChange(Number(e.target.value))}
+      >
+        <option value={10}>10 / trang</option>
+        <option value={20}>20 / trang</option>
+        <option value={50}>50 / trang</option>
+      </select>
+    </div>
+    <div className="adm-pagination__actions">
+      <Button variant="outline" size="sm" onClick={onPrev} disabled={currentPage <= 1}>← Trước</Button>
+      <Button variant="outline" size="sm" onClick={onNext} disabled={currentPage >= totalPages}>Tiếp →</Button>
+    </div>
+  </div>
+)
+
 const MetricCard = ({ label, value }) => (
   <div className="adm-metric-card">
     <span className="adm-metric-card__val">{value}</span>

@@ -14,7 +14,7 @@ import uuid
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, TypedDict
 
 from faker import Faker
 from passlib.context import CryptContext
@@ -46,6 +46,346 @@ from models.models import (
 
 fake = Faker("vi_VN")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+# =============================================================================
+# DEMO DATA POOLS — ảnh & video thật, tài liệu công khai, câu quiz có nghĩa
+# =============================================================================
+
+REAL_AVATARS: List[str] = [
+    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop",
+    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+    "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop",
+    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
+    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop",
+    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop",
+    "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop",
+    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&h=400&fit=crop",
+    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
+]
+
+REAL_THUMBNAILS: List[str] = [
+    "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=1200&h=675&fit=crop",
+    "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&h=675&fit=crop",
+    "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=1200&h=675&fit=crop",
+    "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=1200&h=675&fit=crop",
+    "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=675&fit=crop",
+    "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&h=675&fit=crop",
+    "https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=1200&h=675&fit=crop",
+    "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&h=675&fit=crop",
+]
+
+# Mã video YouTube thật (tutorial / tech) — có thể embed trên frontend
+REAL_YOUTUBE_VIDEO_IDS: List[str] = [
+    "rfscVS0vtbw",
+    "YYXdXT2l-Gg",
+    "_uQrJ0TkZlc",
+    "W6NZfCO5SIk",
+    "Ke90Tje7VS0",
+    "hdI2bqOjy3c",
+    "lhWGzTFEcko",
+    "8aGhZQkoFbQ",
+    "eWRfhZUzrAc",
+    "SqcY0GlATPk",
+]
+
+
+class _ResourceSeed(TypedDict):
+    title: str
+    type: str
+    url: str
+    size_mb: float
+    description: str
+
+
+REAL_RESOURCE_POOL: List[_ResourceSeed] = [
+    {
+        "title": "W3C — Ghi chú trong PDF (WCAG mẫu)",
+        "type": "pdf",
+        "url": "https://www.w3.org/WAI/WCAG21/working-examples/pdf-note/note.pdf",
+        "size_mb": 0.05,
+        "description": "Tệp PDF ví dụ do W3C/WAI công bố, phù hợp test mở/tải trong demo.",
+    },
+    {
+        "title": "WHATWG — HTML Living Standard",
+        "type": "link",
+        "url": "https://html.spec.whatwg.org/multipage/",
+        "size_mb": 0.0,
+        "description": "Chuẩn HTML hiện đại, nguồn mở, truy cập công khai.",
+    },
+    {
+        "title": "Python Documentation — Tutorial",
+        "type": "link",
+        "url": "https://docs.python.org/3/tutorial/",
+        "size_mb": 0.0,
+        "description": "Hướng dẫn Python chính thống từ python.org.",
+    },
+    {
+        "title": "MDN — JavaScript học tập",
+        "type": "link",
+        "url": "https://developer.mozilla.org/en-US/docs/Learn/JavaScript",
+        "size_mb": 0.0,
+        "description": "Tài liệu học JavaScript từ Mozilla MDN.",
+    },
+    {
+        "title": "ECMA-262 (ECMAScript) — PDF chính thức",
+        "type": "pdf",
+        "url": "https://www.ecma-international.org/wp-content/uploads/ECMA-262_13th_edition_june_2022.pdf",
+        "size_mb": 8.0,
+        "description": "Đặc tả ngôn ngữ ECMAScript (bản công khai).",
+    },
+    {
+        "title": "React — Documentation",
+        "type": "link",
+        "url": "https://react.dev/learn",
+        "size_mb": 0.0,
+        "description": "Tài liệu học React chính thức (react.dev).",
+    },
+    {
+        "title": "FastAPI — User Guide",
+        "type": "link",
+        "url": "https://fastapi.tiangolo.com/tutorial/",
+        "size_mb": 0.0,
+        "description": "Tutorial FastAPI công khai.",
+    },
+    {
+        "title": "CPython — README (mã nguồn)",
+        "type": "code",
+        "url": "https://raw.githubusercontent.com/python/cpython/main/README.rst",
+        "size_mb": 0.02,
+        "description": "README CPython trên GitHub (raw), dùng làm tài nguyên dạng code/text.",
+    },
+    {
+        "title": "PostgreSQL — Documentation",
+        "type": "link",
+        "url": "https://www.postgresql.org/docs/current/tutorial.html",
+        "size_mb": 0.0,
+        "description": "Tutorial PostgreSQL chính thức.",
+    },
+    {
+        "title": "Git — Reference",
+        "type": "link",
+        "url": "https://git-scm.com/doc",
+        "size_mb": 0.0,
+        "description": "Tài liệu Git chính thức.",
+    },
+    {
+        "title": "Rust Book",
+        "type": "link",
+        "url": "https://doc.rust-lang.org/book/",
+        "size_mb": 0.0,
+        "description": "Sách học Rust công khai.",
+    },
+    {
+        "title": "IEEE 802.3 — Overview (IEEE)",
+        "type": "link",
+        "url": "https://standards.ieee.org/standard/802_3.html",
+        "size_mb": 0.0,
+        "description": "Trang tiêu chuẩn Ethernet IEEE (tham chiếu networking).",
+    },
+]
+
+
+class _McqPoolItem(TypedDict):
+    question_text: str
+    options: List[str]
+    correct_index: int
+    explanation: str
+
+
+QUIZ_MCQ_POOL: List[_McqPoolItem] = [
+    {
+        "question_text": "Trong Python 3, kiểu `str` lưu trữ chuỗi ký tự theo dạng nào?",
+        "options": ["Byte thuần không mã hóa", "Unicode (text)", "Chỉ ASCII 7-bit", "Cặp key-value"],
+        "correct_index": 1,
+        "explanation": "Kiểu `str` trong Python 3 là text Unicode; byte dùng kiểu `bytes`.",
+    },
+    {
+        "question_text": "Toán tử `is` trong Python so sánh điều gì?",
+        "options": ["Giá trị bằng nhau (==)", "Cùng đối tượng trong bộ nhớ (identity)", "Kiểu dữ liệu", "Độ dài chuỗi"],
+        "correct_index": 1,
+        "explanation": "`is` kiểm tra hai tham chiếu có trỏ cùng một object hay không.",
+    },
+    {
+        "question_text": "HTTP status code 404 nghĩa là gì?",
+        "options": ["Thành công", "Không tìm thấy tài nguyên", "Lỗi máy chủ", "Cần xác thực"],
+        "correct_index": 1,
+        "explanation": "404 Not Found: URL hoặc resource không tồn tại trên server.",
+    },
+    {
+        "question_text": "Phương thức HTTP nào thường dùng để tạo tài nguyên mới trong REST API?",
+        "options": ["GET", "POST", "DELETE", "HEAD"],
+        "correct_index": 1,
+        "explanation": "POST thường dùng để tạo mới (còn PUT/PATCH có thể cập nhật tuỳ thiết kế).",
+    },
+    {
+        "question_text": "Trong JavaScript, `const` khai báo biến có đặc điểm gì?",
+        "options": [
+            "Gán lại được và hosting như `var`",
+            "Không thể gán lại binding, phạm vi block",
+            "Chỉ dùng trong vòng lặp for",
+            "Luôn immutable sâu cho object",
+        ],
+        "correct_index": 1,
+        "explanation": "`const` không cho gán lại binding; object bên trong vẫn có thể mutate trừ khi freeze.",
+    },
+    {
+        "question_text": "`async/await` trong JavaScript chủ yếu dùng để làm gì?",
+        "options": [
+            "Tăng tốc DOM render",
+            "Viết mã bất đồng bộ dễ đọc hơn Promise chain",
+            "Thay thế hoàn toàn Web Worker",
+            "Bắt buộc single-thread",
+        ],
+        "correct_index": 1,
+        "explanation": "async/await là cú pháp đường đi trên Promise, giúp code async gọn hơn.",
+    },
+    {
+        "question_text": "Trong React, Hook `useEffect` thường dùng để:",
+        "options": [
+            "Khai báo state",
+            "Side effect (fetch, subscription) theo lifecycle/dependencies",
+            "Thay Router",
+            "Memo hóa giá trị tính toán",
+        ],
+        "correct_index": 1,
+        "explanation": "useEffect nhóm side effects; cleanup trả về từ effect khi unmount/dep đổi.",
+    },
+    {
+        "question_text": "SQL: `PRIMARY KEY` của bảng đảm bảo điều gì?",
+        "options": ["Null nhiều lần", "Duy nhất và không null (thường)", "Luôn là UUID", "Tự động mã hóa"],
+        "correct_index": 1,
+        "explanation": "Primary key định danh mỗi hàng, thường NOT NULL + UNIQUE.",
+    },
+    {
+        "question_text": "`git merge` so với `git rebase` (nhánh feature), phát biểu nào thường đúng?",
+        "options": [
+            "Merge tạo merge commit; rebase viết lại lịch sử commit",
+            "Chúng giống hệt nhau",
+            "Rebase không bao giờ gây conflict",
+            "Merge xóa branch tự động",
+        ],
+        "correct_index": 0,
+        "explanation": "Merge giữ lịch sử phân nhánh; rebase đặt commit lên đỉnh branch khác.",
+    },
+    {
+        "question_text": "Trong mô hình OSI, HTTP thường được xem ở lớp nào (quy ước thông dụng)?",
+        "options": ["Vật lý", "Tầng ứng dụng (Application)", "Tầng liên kết", "Tầng giao vận đơn thuần"],
+        "correct_index": 1,
+        "explanation": "HTTP là giao thức lớp application; TCP nằm ở transport.",
+    },
+    {
+        "question_text": "JSON là viết tắt của?",
+        "options": [
+            "JavaScript Object Notation",
+            "Java Structured Object Network",
+            "Joint Open Network",
+            "Jira Object Notation",
+        ],
+        "correct_index": 0,
+        "explanation": "JSON: JavaScript Object Notation — định dạng trao đổi dữ liệu nhẹ.",
+    },
+    {
+        "question_text": "Tránh SQL injection, biện pháp nào được coi là best practice?",
+        "options": [
+            "Nối chuỗi SQL trực tiếp từ input người dùng",
+            "Tham số hóa / prepared statements + validate input",
+            "Chỉ dùng POST",
+            "Tắt log database",
+        ],
+        "correct_index": 1,
+        "explanation": "Binding tham số + ORM an toàn giúp ngăn nhúng mã SQL độc hại.",
+    },
+    {
+        "question_text": "Trong Linux, lệnh `chmod +x script.sh` làm gì?",
+        "options": [
+            "Xóa file",
+            "Thêm quyền thực thi cho file",
+            "Đổi owner sang root",
+            "Nén file",
+        ],
+        "correct_index": 1,
+        "explanation": "`+x` thêm executable bit để có thể chạy script (nếu shebang/perms phù hợp).",
+    },
+    {
+        "question_text": "JWT (JSON Web Token) gồm phần nào theo định dạng tiêu chuẩn?",
+        "options": [
+            "Chỉ payload",
+            "Header.Payload.Signature (chuỗi base64url, chấm nối)",
+            "CSV ba cột",
+            "XML SOAP envelope",
+        ],
+        "correct_index": 1,
+        "explanation": "JWT thường là ba phần nối bằng dấu chấm và ký để xác minh integrity.",
+    },
+    {
+        "question_text": "RESTful API ‘idempotent’ với PUT thường có nghĩa gì?",
+        "options": [
+            "Lần gọi đầu lỗi thì không gọi lại",
+            "Gọi nhiều lần với cùng payload cho kết quả giống như một lần",
+            "Luôn tạo bản ghi mới",
+            "Chỉ đọc dữ liệu",
+        ],
+        "correct_index": 1,
+        "explanation": "PUT idempotent trong thiết kế chuẩn: không tạo thêm side-effects khi lặp lại.",
+    },
+    {
+        "question_text": "Trong MongoDB/BSON, một document không được vượt quá kích thước bao nhiêu?",
+        "options": ["1 MB", "16 MB", "256 MB", "Không giới hạn"],
+        "correct_index": 1,
+        "explanation": "Giới hạn document BSON mặc định trong MongoDB là 16 MB.",
+    },
+    {
+        "question_text": "Trong Kubernetes, Deployment quản lý gì chủ đạo?",
+        "options": [
+            "Chỉ log",
+            "Pod replicas và rollout/rollback của ứng dụng",
+            "Firewall hardware",
+            "DNS root zone",
+        ],
+        "correct_index": 1,
+        "explanation": "Deployment điều khiển ReplicaSet/Pods và chiến lược rollout.",
+    },
+    {
+        "question_text": "Độ phức tạp trung bình của tìm kiếm trên BST cân bằng có thứ tự N phần tử là?",
+        "options": ["O(N)", "O(log N)", "O(1) luôn luôn", "O(N^2)"],
+        "correct_index": 1,
+        "explanation": "BST cân bằng cho phép insert/search/delete trung bình O(log N).",
+    },
+]
+
+QUIZ_TRUE_FALSE_POOL: List[Tuple[str, str]] = [
+    ("Trong IPv4, địa chỉ IP gồm 32 bit.", "True"),
+    ("HTTPS sử dụng TLS để mã hóa lớp vận chuyển giữa client và server.", "True"),
+    ("Python là ngôn ngữ chỉ biên dịch sang native trước khi chạy, không có interpreter.", "False"),
+    ("React render commit là synchronous trong mọi trường hợp concurrent.", "False"),
+    ("DNS chuyển tên miền thành địa chỉ IP.", "True"),
+]
+
+QUIZ_FILL_IN_BLANK_POOL: List[Tuple[str, str]] = [
+    ("Giao thức không trạng thái của web phổ biến dùng với REST là ____.", "HTTP"),
+    ("Thuật toán hashing một chiều thường dùng lưu mật khẩu trong DB có tiền tố bcrypt/PBKDF là ____ hashing.", "password"),
+    ("Khóa công khai trong RSA thường dùng với chức năng ____ hóa dữ liệu cho người nhận.", "encrypt"),
+    ("Trường `Content-Type` trong HTTP header chỉ báo ____ của payload.", "media"),
+    ("Trong bash, `$?` chứa mã thoát của ____ vừa chạy.", "command"),
+]
+
+
+def pick_avatar_url() -> str:
+    return random.choice(REAL_AVATARS)
+
+
+def pick_thumbnail_url() -> str:
+    return random.choice(REAL_THUMBNAILS)
+
+
+def youtube_watch_from_id(video_id: str) -> str:
+    return f"https://www.youtube.com/watch?v={video_id}"
+
+
+def pick_youtube_watch_url() -> str:
+    return youtube_watch_from_id(random.choice(REAL_YOUTUBE_VIDEO_IDS))
 
 
 @dataclass
@@ -90,13 +430,29 @@ def sample_weighted(values: List[Tuple[str, float]]) -> str:
 
 
 def mk_resource(title: str, rtype: str) -> dict:
+    """Lấy URL thật (W3C / MDN / docs công khai) từ REAL_RESOURCE_POOL — giữ nguyên `rtype` theo schema UI."""
+    rt = (rtype or "link").lower()
+    if rt == "video":
+        preferred = ("link",)
+    elif rt == "slide":
+        preferred = ("pdf", "link")
+    elif rt == "pdf":
+        preferred = ("pdf", "link")
+    elif rt == "code":
+        preferred = ("code", "link")
+    else:
+        preferred = ("link", "pdf", "code")
+    candidates = [r for r in REAL_RESOURCE_POOL if r["type"] in preferred]
+    pool = candidates if candidates else REAL_RESOURCE_POOL
+    src = random.choice(pool)
+    size_mb = src["size_mb"] if src["size_mb"] and src["size_mb"] > 0 else round(random.uniform(0.2, 12.0), 2)
     return {
         "id": gid(),
         "title": title,
         "type": rtype,
-        "url": f"https://example.com/resources/{gid()}",
-        "size_mb": round(random.uniform(0.2, 25.0), 2),
-        "description": fake.sentence(nb_words=12),
+        "url": src["url"],
+        "size_mb": size_mb,
+        "description": src["description"],
     }
 
 
@@ -122,23 +478,28 @@ def mk_quiz_question(order: int) -> dict:
         ("fill_in_blank", 0.2),
         ("true_false", 0.1),
     ])
-    if qtype == "multiple_choice":
-        options = [fake.sentence(nb_words=4) for _ in range(4)]
-        correct = str(random.randint(0, 3))
-    elif qtype == "true_false":
-        options = ["True", "False"]
-        correct = random.choice(["True", "False"])
-    else:
-        options = None
-        correct = fake.word()
     points = random.randint(1, 3)
+    if qtype == "multiple_choice":
+        item = random.choice(QUIZ_MCQ_POOL)
+        question_text = item["question_text"]
+        options = list(item["options"])
+        correct = str(item["correct_index"])
+        explanation = item["explanation"]
+    elif qtype == "true_false":
+        question_text, correct = random.choice(QUIZ_TRUE_FALSE_POOL)
+        options = ["True", "False"]
+        explanation = f"Phát biểu trên {'đúng' if correct == 'True' else 'sai'} theo kiến thức phổ biến về CNTT."
+    else:
+        question_text, correct = random.choice(QUIZ_FILL_IN_BLANK_POOL)
+        options = None
+        explanation = f"Ô trống đúng: «{correct}» (không phân biệt hoa thường khi chấm)."
     return {
         "id": gid(),
         "type": qtype,
-        "question_text": fake.sentence(nb_words=15),
+        "question_text": question_text,
         "options": options,
         "correct_answer": correct,
-        "explanation": fake.sentence(nb_words=14),
+        "explanation": explanation,
         "points": points,
         "is_mandatory": random.choice([True, False]),
         "order": order,
@@ -163,6 +524,34 @@ def mk_assessment_question(difficulty: str) -> dict:
 
 def profile_header(title: str):
     print(f"\n--- {title} ---")
+
+
+# Batch sizes — tránh một lệnh insert quá lớn (BSON ~16MB, RAM spike) khi nội dung lesson/progress nặng
+BATCH_COURSES = 50
+BATCH_MODULES = 200
+BATCH_LESSONS = 200
+BATCH_USERS = 250
+BATCH_CLASSES = 200
+BATCH_ENROLLMENTS = 400
+BATCH_PROGRESS = 120
+BATCH_QUIZZES = 200
+BATCH_QUIZ_ATTEMPTS = 250
+BATCH_ASSESSMENTS = 350
+BATCH_RECOMMENDATIONS = 250
+BATCH_CONVERSATIONS = 150
+BATCH_TOKENS = 500
+
+
+async def insert_many_batched(model: Any, docs: List[Any], batch_size: int) -> int:
+    """Chunk insert_many để giảm rủi ro vượt ngưỡng bulk write / BSON."""
+    if not docs:
+        return 0
+    inserted = 0
+    for i in range(0, len(docs), batch_size):
+        chunk = docs[i : i + batch_size]
+        await model.insert_many(chunk)
+        inserted += len(chunk)
+    return inserted
 
 
 async def drop_all_collections():
@@ -197,13 +586,13 @@ async def seed_users(cfg: SeedConfig) -> Dict[str, List[str]]:
             email=f"admin{i+1}@ailearning.vn",
             hashed_password=hp("Admin@123456"),
             role="admin",
-            status=random.choice(["active", "active", "inactive"]),
-            avatar_url=fake.image_url(),
+            status=sample_weighted([("active", 0.9), ("inactive", 0.06), ("banned", 0.02), ("suspended", 0.02)]),
+            avatar_url=pick_avatar_url(),
             bio=fake.text(max_nb_chars=180),
             contact_info=fake.phone_number(),
             learning_preferences=random.sample(["Programming", "Data Science", "Business", "Languages", "Math"], k=2),
-            email_verified=True,
-            phone_verified=random.choice([True, False]),
+            email_verified=random.random() < 0.94,
+            phone_verified=random.random() < 0.82,
             created_at=past(120, 300),
             updated_at=past(5, 20),
             last_login_at=past(0, 5),
@@ -220,12 +609,12 @@ async def seed_users(cfg: SeedConfig) -> Dict[str, List[str]]:
             hashed_password=hp("Instructor@123"),
             role="instructor",
             status=sample_weighted([("active", 0.8), ("inactive", 0.15), ("banned", 0.03), ("suspended", 0.02)]),
-            avatar_url=fake.image_url(),
+            avatar_url=pick_avatar_url(),
             bio=fake.text(max_nb_chars=260),
             contact_info=fake.phone_number(),
             learning_preferences=random.sample(["Programming", "Data Science", "Business", "Languages", "Math"], k=3),
-            email_verified=random.choice([True, True, False]),
-            phone_verified=random.choice([True, False]),
+            email_verified=random.random() < 0.86,
+            phone_verified=random.random() < 0.74,
             created_by=random.choice(role_ids["admin"]),
             created_at=past(90, 220),
             updated_at=past(1, 20),
@@ -243,12 +632,12 @@ async def seed_users(cfg: SeedConfig) -> Dict[str, List[str]]:
             hashed_password=hp("Student@123"),
             role="student",
             status=sample_weighted([("active", 0.82), ("inactive", 0.11), ("banned", 0.04), ("suspended", 0.03)]),
-            avatar_url=fake.image_url(),
+            avatar_url=pick_avatar_url(),
             bio=fake.text(max_nb_chars=220),
             contact_info=fake.phone_number(),
             learning_preferences=random.sample(["Programming", "Data Science", "Business", "Languages", "Math"], k=random.randint(1, 3)),
-            email_verified=random.choice([True, True, False]),
-            phone_verified=random.choice([True, False]),
+            email_verified=random.random() < 0.82,
+            phone_verified=random.random() < 0.68,
             created_by=random.choice(role_ids["admin"] + role_ids["instructor"]),
             created_at=past(30, 220),
             updated_at=past(1, 20),
@@ -257,7 +646,7 @@ async def seed_users(cfg: SeedConfig) -> Dict[str, List[str]]:
         users.append(user)
         role_ids["student"].append(uid)
 
-    await User.insert_many(users)
+    await insert_many_batched(User, users, BATCH_USERS)
     print(f"Users seeded: {len(users)}")
     return role_ids
 
@@ -311,7 +700,7 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
                     content=f"<h2>{fake.sentence(nb_words=6)}</h2><p>{fake.paragraph(nb_sentences=4)}</p>",
                     content_type=ctype,
                     duration_minutes=mins,
-                    video_url=f"https://youtube.com/watch?v={gid()[:11]}" if has_video else None,
+                    video_url=pick_youtube_watch_url() if has_video else None,
                     audio_url=f"https://cdn.example.com/audio/{gid()}.mp3" if ctype == "audio" else None,
                     learning_objectives=[fake.sentence(nb_words=6) for _ in range(random.randint(2, 4))],
                     resources=[
@@ -390,15 +779,15 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
             description=bp["description"],
             category=bp["category"],
             level=bp["level"],
-            thumbnail_url=fake.image_url(),
-            preview_video_url=f"https://youtube.com/watch?v={gid()[:11]}",
+            thumbnail_url=pick_thumbnail_url(),
+            preview_video_url=pick_youtube_watch_url(),
             language=bp["language"],
             status=sample_weighted([("published", 0.8), ("draft", 0.15), ("archived", 0.05)]),
             owner_id=owner_id,
             owner_type=bp["owner_type"],
             instructor_id=instructor_id,
             instructor_name=f"Instructor {instructor_id[:6]}",
-            instructor_avatar=fake.image_url(),
+            instructor_avatar=pick_avatar_url(),
             instructor_bio=fake.text(max_nb_chars=200),
             course_type="public",
             learning_outcomes=[mk_course_outcome() for _ in range(random.randint(4, 7))],
@@ -442,7 +831,7 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
                     content=f"<h3>{fake.word().title()}</h3><p>{fake.paragraph(nb_sentences=3)}</p>",
                     content_type=ctype,
                     duration_minutes=mins,
-                    video_url=f"https://youtube.com/watch?v={gid()[:11]}" if ctype in ["video", "mixed"] else None,
+                    video_url=pick_youtube_watch_url() if ctype in ["video", "mixed"] else None,
                     learning_objectives=[fake.sentence(nb_words=5) for _ in range(random.randint(1, 3))],
                     resources=[mk_resource("Personal notes", "pdf")],
                     quiz_id=None,
@@ -516,11 +905,13 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
             category=bp["category"],
             level=bp["level"],
             language=bp["language"],
+            thumbnail_url=pick_thumbnail_url(),
+            preview_video_url=pick_youtube_watch_url(),
             status=sample_weighted([("published", 0.45), ("draft", 0.5), ("archived", 0.05)]),
             owner_id=student_id,
             owner_type="student",
             instructor_name=f"Student Owner {student_id[:6]}",
-            instructor_avatar=fake.image_url(),
+            instructor_avatar=pick_avatar_url(),
             instructor_bio=fake.sentence(nb_words=14),
             course_type="personal",
             learning_outcomes=[mk_course_outcome() for _ in range(3)],
@@ -537,9 +928,9 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
         courses.append(course)
         course_map["personal"].append(cid)
 
-    await Course.insert_many(courses)
-    await Module.insert_many(modules)
-    await Lesson.insert_many(lessons)
+    await insert_many_batched(Course, courses, BATCH_COURSES)
+    await insert_many_batched(Module, modules, BATCH_MODULES)
+    await insert_many_batched(Lesson, lessons, BATCH_LESSONS)
     print(f"Courses seeded: {len(courses)} (public={len(course_map['public'])}, personal={len(course_map['personal'])})")
     print(f"Modules seeded: {len(modules)} | Lessons seeded: {len(lessons)}")
     return {"course_map": course_map}
@@ -568,7 +959,7 @@ async def seed_classes(cfg: SeedConfig, role_ids: Dict[str, List[str]], course_m
         )
         classes.append(c)
 
-    await Class.insert_many(classes)
+    await insert_many_batched(Class, classes, BATCH_CLASSES)
     print(f"Classes seeded: {len(classes)}")
     return [c.id for c in classes]
 
@@ -674,9 +1065,9 @@ async def seed_enrollments_progress(cfg: SeedConfig, role_ids: Dict[str, List[st
                 )
                 progresses.append(progress)
 
-    await Enrollment.insert_many(enrollments)
+    await insert_many_batched(Enrollment, enrollments, BATCH_ENROLLMENTS)
     if progresses:
-        await Progress.insert_many(progresses)
+        await insert_many_batched(Progress, progresses, BATCH_PROGRESS)
 
     for c in course_docs:
         c.enrollment_count = len(enrollment_by_course.get(c.id, []))
@@ -800,7 +1191,7 @@ async def seed_quizzes_attempts(cfg: SeedConfig, role_ids: Dict[str, List[str]])
                 attempts.append(attempt)
 
     if attempts:
-        await QuizAttempt.insert_many(attempts)
+        await insert_many_batched(QuizAttempt, attempts, BATCH_QUIZ_ATTEMPTS)
 
     print(f"Quizzes seeded: {len(quizzes)}")
     print(f"Quiz attempts seeded: {len(attempts)}")
@@ -810,7 +1201,8 @@ async def seed_quizzes_attempts(cfg: SeedConfig, role_ids: Dict[str, List[str]])
 async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], course_map: Dict[str, List[str]]) -> Dict[str, str]:
     profile_header("SEED ASSESSMENTS/RECOMMENDATIONS")
     sessions: List[AssessmentSession] = []
-    latest_eval_session_by_user: Dict[str, str] = {}
+    # user -> (session_id, created_at, proficiency_level) — phiên evaluated mới nhất theo created_at
+    user_latest_evaluated: Dict[str, Tuple[str, datetime, str]] = {}
     categories = ["Programming", "Data Science", "Business", "Languages", "Math"]
     level_cfg = {
         "Beginner": (15, 15),
@@ -889,8 +1281,9 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
                     "slowest_question_time": random.randint(80, 150),
                 }
 
+            sid_session = gid()
             session = AssessmentSession(
-                id=gid(),
+                id=sid_session,
                 user_id=sid,
                 category=random.choice(categories),
                 subject=fake.word().title(),
@@ -914,17 +1307,21 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
                 evaluated_at=evaluated_at,
             )
             sessions.append(session)
-            if status == "evaluated":
-                latest_eval_session_by_user[sid] = session.id
+            if status == "evaluated" and proficiency:
+                prev = user_latest_evaluated.get(sid)
+                if prev is None or created >= prev[1]:
+                    user_latest_evaluated[sid] = (sid_session, created, proficiency)
 
     if sessions:
-        await AssessmentSession.insert_many(sessions)
+        await insert_many_batched(AssessmentSession, sessions, BATCH_ASSESSMENTS)
     print(f"Assessment sessions seeded: {len(sessions)}")
 
     recommendations: List[Recommendation] = []
     all_courses = await Course.find({"status": {"$in": ["published", "draft"]}}).to_list()
     for sid in role_ids["student"]:
-        session_id = latest_eval_session_by_user.get(sid)
+        eval_info = user_latest_evaluated.get(sid)
+        session_id = eval_info[0] if eval_info else None
+        prof_from_assessment = eval_info[2] if eval_info else None
         picked = random.sample(all_courses, k=min(len(all_courses), random.randint(4, 7)))
         recs = []
         order = []
@@ -952,12 +1349,23 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
                 "why_this_order": fake.sentence(nb_words=14),
             })
 
+        if session_id and prof_from_assessment:
+            rec_source = "assessment"
+            user_prof_level = prof_from_assessment
+        else:
+            rec_source = random.choice(["learning_history", "ai_suggestion"])
+            user_prof_level = sample_weighted([
+                ("Beginner", 0.32),
+                ("Intermediate", 0.41),
+                ("Advanced", 0.27),
+            ])
+
         recommendation = Recommendation(
             id=gid(),
             user_id=sid,
-            source="assessment" if session_id else random.choice(["learning_history", "ai_suggestion"]),
+            source=rec_source,
             assessment_session_id=session_id,
-            user_proficiency_level=random.choice(["Beginner", "Intermediate", "Advanced"]),
+            user_proficiency_level=user_prof_level,
             recommended_courses=recs,
             suggested_learning_order=order,
             practice_exercises=[
@@ -977,9 +1385,9 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
         recommendations.append(recommendation)
 
     if recommendations:
-        await Recommendation.insert_many(recommendations)
+        await insert_many_batched(Recommendation, recommendations, BATCH_RECOMMENDATIONS)
     print(f"Recommendations seeded: {len(recommendations)}")
-    return latest_eval_session_by_user
+    return {u: info[0] for u, info in user_latest_evaluated.items()}
 
 
 async def seed_conversations_tokens(role_ids: Dict[str, List[str]], course_map: Dict[str, List[str]]):
@@ -1046,11 +1454,11 @@ async def seed_conversations_tokens(role_ids: Dict[str, List[str]], course_map: 
         )
 
     if conversations:
-        await Conversation.insert_many(conversations)
+        await insert_many_batched(Conversation, conversations, BATCH_CONVERSATIONS)
     if refresh_tokens:
-        await RefreshToken.insert_many(refresh_tokens)
+        await insert_many_batched(RefreshToken, refresh_tokens, BATCH_TOKENS)
     if reset_tokens:
-        await PasswordResetTokenDocument.insert_many(reset_tokens)
+        await insert_many_batched(PasswordResetTokenDocument, reset_tokens, BATCH_TOKENS)
 
     print(f"Conversations seeded: {len(conversations)}")
     print(f"Refresh tokens seeded: {len(refresh_tokens)}")
@@ -1139,6 +1547,9 @@ async def validate_integrity() -> Dict[str, int]:
             if sid not in user_ids:
                 errors += 1
 
+    assessments = await AssessmentSession.find().to_list()
+    assessment_by_id = {a.id: a for a in assessments}
+
     recommendations = await Recommendation.find().to_list()
     for r in recommendations:
         if r.user_id not in user_ids:
@@ -1146,6 +1557,19 @@ async def validate_integrity() -> Dict[str, int]:
         for rc in r.recommended_courses:
             if rc.get("course_id") not in course_ids:
                 errors += 1
+        aid = r.assessment_session_id
+        if aid:
+            sess = assessment_by_id.get(aid)
+            if sess is None:
+                errors += 1
+            elif (
+                sess.proficiency_level
+                and r.user_proficiency_level
+                and sess.proficiency_level != r.user_proficiency_level
+            ):
+                errors += 1
+        if r.source == "assessment" and not aid:
+            errors += 1
 
     summary = {
         "users": len(users),
@@ -1156,7 +1580,7 @@ async def validate_integrity() -> Dict[str, int]:
         "progress": len(progresses),
         "quizzes": len(quizzes),
         "quiz_attempts": await QuizAttempt.find().count(),
-        "assessments": await AssessmentSession.find().count(),
+        "assessments": len(assessments),
         "recommendations": len(recommendations),
         "conversations": await Conversation.find().count(),
         "classes": len(classes),

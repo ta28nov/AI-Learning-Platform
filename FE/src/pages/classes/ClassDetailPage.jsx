@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import classService from '@services/classService'
 import Button from '@components/ui/Button'
 import StateView from '@components/ui/StateView'
+import AILoadingState from '@components/ui/AILoadingState'
 import './ClassDetailPage.css'
 
 const CopyIcon = () => (
@@ -50,7 +51,21 @@ const ClassDetailPage = () => {
     toast.success('Đã sao chép mã mời')
   }
 
-  if (loading) return <div className="cld-page"><StateView type="loading" message="Đang tải thông tin lớp học…" /></div>
+  if (loading) {
+    return (
+      <div className="cld-page">
+        <AILoadingState
+          title="AI đang tải thông tin lớp học"
+          message="Đang đồng bộ chi tiết lớp và danh sách học viên."
+          steps={[
+            'Đang tải thông tin lớp học...',
+            'Đang tải danh sách học viên...',
+            'Đang sắp xếp dữ liệu hiển thị...',
+          ]}
+        />
+      </div>
+    )
+  }
   if (!classData) return (
     <div className="cld-page">
       <StateView type="empty" message="Không tìm thấy lớp học" action={{ label: 'Quay lại', onClick: () => navigate('/dashboard/instructor/classes') }} />

@@ -6,6 +6,7 @@ import searchService from '@services/searchService'
 import Card, { CardBody } from '@components/ui/Card'
 import Button from '@components/ui/Button'
 import StateView from '@components/ui/StateView'
+import AILoadingState from '@components/ui/AILoadingState'
 import './SearchResultsPage.css'
 
 /**
@@ -36,6 +37,7 @@ const SearchResultsPage = () => {
   // State
   const [results, setResults] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   // Goi API tim kiem
   useEffect(() => {
@@ -48,6 +50,7 @@ const SearchResultsPage = () => {
     const fetchResults = async () => {
       try {
         setLoading(true)
+        setError('')
         const data = await searchService.search({
           q: query,
           category: categoryFilter || undefined,
@@ -57,7 +60,9 @@ const SearchResultsPage = () => {
         })
         setResults(data)
       } catch (error) {
-        toast.error(error?.message || 'Lỗi khi tìm kiếm')
+        const message = error?.message || 'Lỗi khi tìm kiếm'
+        setError(message)
+        toast.error(message)
       } finally {
         setLoading(false)
       }
@@ -122,6 +127,7 @@ const SearchResultsPage = () => {
 
   // Tinh tong pages
   const totalPages = Math.ceil((results?.total_results || 0) / 20)
+  const groupedResults = results?.results_by_category || []
 
   // Kiem tra co filter nao dang ap dung khong
   const hasActiveFilters = categoryFilter || levelFilter
@@ -141,10 +147,14 @@ const SearchResultsPage = () => {
   if (loading) {
     return (
       <div className="search-results">
-        <StateView
-          type="loading"
-          title="Đang tìm kiếm"
-          message={`Đang tìm kiếm "${query}"...`}
+        <AILoadingState
+          title="AI đang tìm kiếm"
+          message={`Đang truy xuất và xếp hạng kết quả cho "${query}"...`}
+          steps={[
+            'Đang tìm trong khóa học, lớp học, bài học...',
+            'Đang tính độ phù hợp kết quả...',
+            'Đang chuẩn bị danh sách hiển thị...',
+          ]}
         />
       </div>
     )
@@ -158,6 +168,18 @@ const SearchResultsPage = () => {
           type="info"
           title="Bắt đầu tìm kiếm"
           message="Nhập ít nhất 2 ký tự để tìm kiếm"
+        />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="search-results">
+        <StateView
+          type="error"
+          title="Không thể tải kết quả tìm kiếm"
+          message={error}
         />
       </div>
     )
@@ -289,14 +311,14 @@ const SearchResultsPage = () => {
         {/* Main content - ket qua theo category */}
         <div className="search-results__content">
           <AnimatePresence mode="wait">
-            {results?.results_by_category?.length > 0 ? (
+            {groupedResults.length > 0 ? (
               <motion.div
                 key="results"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                {results.results_by_category.map((group) => (
+                {groupedResults.map((group, groupIndex) => (
                   <div key={group.category} className="search-results__category">
                     {/* Category header */}
                     <div className="search-results__category-header">
@@ -312,7 +334,7 @@ const SearchResultsPage = () => {
                     <div className="search-results__grid">
                       {group.items?.map((item, index) => (
                         <motion.div
-                          key={item.id}
+                          key={`${group.category}-${item.type}-${item.id || index}-${groupIndex}`}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.05 }}

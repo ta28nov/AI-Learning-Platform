@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import recommendationService from '@services/recommendationService'
 import Button from '@components/ui/Button'
 import StateView from '@components/ui/StateView'
+import AILoadingState from '@components/ui/AILoadingState'
 import './RecommendationsPage.css'
 
 /**
@@ -66,7 +67,15 @@ const RecommendationsPage = () => {
   if (loading) {
     return (
       <div className="rec-page">
-        <StateView type="loading" title="Đang dựng lộ trình" message="Đang phân tích năng lực của bạn..." />
+        <AILoadingState
+          title="AI đang dựng lộ trình học tập"
+          message="Hệ thống đang phân tích năng lực và ghép khóa học phù hợp nhất."
+          steps={[
+            'Đang đọc dữ liệu đánh giá...',
+            'Đang tính điểm phù hợp khóa học...',
+            'Đang xếp thứ tự lộ trình ưu tiên...',
+          ]}
+        />
       </div>
     )
   }

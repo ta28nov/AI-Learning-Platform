@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import enrollmentService from '@services/enrollmentService'
 import Button from '@components/ui/Button'
 import StateView from '@components/ui/StateView'
+import Modal, { ModalFooter } from '@components/ui/Modal'
 import './MyCoursesPage.css'
 
 const BookOpenIcon = () => (
@@ -40,6 +41,7 @@ const MyCoursesPage = () => {
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('')
+  const [cancelTarget, setCancelTarget] = useState(null)
 
   useEffect(() => {
     const fetchMyCourses = async () => {
@@ -60,10 +62,10 @@ const MyCoursesPage = () => {
   }, [activeTab])
 
   const handleCancel = async (enrollmentId, courseTitle) => {
-    if (!window.confirm(`Bạn có chắc muốn hủy đăng ký khóa học "${courseTitle}"?`)) return
     try {
       await enrollmentService.cancelEnrollment(enrollmentId)
       toast.success('Đã hủy đăng ký thành công')
+      setCancelTarget(null)
       setEnrollments(prev => prev.filter(e => (e.id || e.enrollment_id) !== enrollmentId))
     } catch (error) {
       toast.error(error?.message || 'Không thể hủy đăng ký')
@@ -257,7 +259,7 @@ const MyCoursesPage = () => {
                           )}
                           <button
                             className="mc-card__cancel-btn"
-                            onClick={() => handleCancel(eid, enrollment.course_title)}
+                            onClick={() => setCancelTarget({ enrollmentId: eid, courseTitle: enrollment.course_title })}
                           >
                             Hủy đăng ký
                           </button>
@@ -293,6 +295,18 @@ const MyCoursesPage = () => {
           }
         />
       )}
+      <Modal
+        isOpen={Boolean(cancelTarget)}
+        onClose={() => setCancelTarget(null)}
+        title="Hủy đăng ký khóa học"
+        size="sm"
+      >
+        <p>Bạn có chắc muốn hủy đăng ký "{cancelTarget?.courseTitle}"?</p>
+        <ModalFooter>
+          <Button variant="outline" onClick={() => setCancelTarget(null)}>Giữ lại</Button>
+          <Button variant="danger" onClick={() => handleCancel(cancelTarget.enrollmentId, cancelTarget.courseTitle)}>Hủy đăng ký</Button>
+        </ModalFooter>
+      </Modal>
     </div>
   )
 }

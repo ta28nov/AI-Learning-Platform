@@ -108,14 +108,25 @@ const LessonPage = () => {
       {/* Video player */}
       {lesson.video_info && lesson.video_info.url && (
         <div className="lesson-video">
-          <video
-            controls
-            poster={lesson.video_info.thumbnail_url || ''}
-            className="video-player"
-          >
-            <source src={lesson.video_info.url} type="video/mp4" />
-            Trình duyệt không hỗ trợ video.
-          </video>
+          {getYoutubeEmbedUrl(lesson.video_info.url) ? (
+            <iframe
+              className="video-player"
+              src={getYoutubeEmbedUrl(lesson.video_info.url)}
+              title={lesson.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+          ) : (
+            <video
+              controls
+              poster={lesson.video_info.thumbnail_url || ''}
+              className="video-player"
+            >
+              <source src={lesson.video_info.url} type="video/mp4" />
+              Trình duyệt không hỗ trợ video.
+            </video>
+          )}
         </div>
       )}
 
@@ -140,7 +151,7 @@ const LessonPage = () => {
           <CardBody>
             <ul className="objectives-list">
               {lesson.learning_objectives.map((obj, idx) => (
-                <li key={idx}>{obj}</li>
+                <li key={`${obj}-${idx}`}>{obj}</li>
               ))}
             </ul>
           </CardBody>
@@ -157,7 +168,7 @@ const LessonPage = () => {
             <div className="attachments-list">
               {lesson.attachments.map((file, idx) => (
                 <a
-                  key={idx}
+                  key={file.id || `${file.url}-${idx}`}
                   href={file.url}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -263,6 +274,13 @@ const attachmentTypeLabel = (type) => {
   if (type === 'pdf') return 'PDF'
   if (type === 'code') return 'Code'
   return 'File'
+}
+
+const getYoutubeEmbedUrl = (url = '') => {
+  if (!url) return ''
+  if (url.includes('youtube.com/embed/')) return url
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{6,})/)
+  return match?.[1] ? `https://www.youtube.com/embed/${match[1]}` : ''
 }
 
 export default LessonPage

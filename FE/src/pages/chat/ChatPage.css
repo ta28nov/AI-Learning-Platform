@@ -186,6 +186,17 @@
 .chat-input {
   display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid #f1f5f9; background: #fff;
 }
+.chat-input__course-select {
+  width: 220px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fafafa;
+  color: #334155;
+  font-size: 0.8rem;
+  font-family: inherit;
+}
+.chat-input__course-select:focus { outline: none; border-color: #6366f1; background: #fff; }
 .chat-input__textarea {
   flex: 1; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 10px;
   font-size: 0.85rem; font-family: inherit; resize: none; min-height: 40px;
@@ -193,3 +204,8 @@
 }
 .chat-input__textarea:focus { outline: none; border-color: #6366f1; background: #fff; }
 .chat-input__textarea:disabled { opacity: 0.5; }
+
+@media (max-width: 900px) {
+  .chat-input { flex-direction: column; }
+  .chat-input__course-select { width: 100%; }
+}

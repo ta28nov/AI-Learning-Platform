@@ -1,6 +1,3 @@
-// database để test, sao chép trực tiếp vào scripts/init_data.py để test
-
-
 
 """
 init_data.py — Comprehensive Database Seed Script

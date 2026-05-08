@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import assessmentService from '@services/assessmentService'
 import Button from '@components/ui/Button'
+import AILoadingState from '@components/ui/AILoadingState'
 import './AssessmentSetupPage.css'
 
 const CodeIcon = () => (
@@ -42,6 +43,8 @@ const CATEGORY_ICONS = {
   Math: MathIcon,
   Business: BusinessIcon,
   Languages: LanguageIcon,
+  Engineering: CodeIcon,
+  Marketing: BusinessIcon,
 }
 
 const LEVEL_CONFIG = {
@@ -51,11 +54,24 @@ const LEVEL_CONFIG = {
 }
 
 const SUBJECTS_BY_CATEGORY = {
-  Programming: ['Python', 'JavaScript', 'Java', 'C++', 'Web Development'],
-  'Data Science': ['Data Analysis', 'Machine Learning', 'Statistics', 'Pandas'],
-  Math: ['Algebra', 'Calculus', 'Statistics', 'Linear Algebra'],
-  Business: ['Marketing', 'Finance', 'Management', 'Accounting'],
-  Languages: ['English', 'Japanese', 'Korean', 'Chinese'],
+  Programming: ['Python', 'JavaScript', 'Java', 'C++', 'TypeScript', 'Backend API', 'Web Development'],
+  'Data Science': ['Data Analysis', 'Machine Learning', 'Deep Learning', 'Statistics', 'Pandas', 'SQL for Analytics'],
+  Math: ['Algebra', 'Calculus', 'Statistics', 'Linear Algebra', 'Discrete Math'],
+  Business: ['Marketing', 'Finance', 'Management', 'Accounting', 'Product Strategy'],
+  Languages: ['English', 'Japanese', 'Korean', 'Chinese', 'Communication Skills'],
+  Engineering: ['System Design', 'Cloud Fundamentals', 'DevOps', 'Software Architecture'],
+  Marketing: ['Digital Marketing', 'SEO', 'Content Strategy', 'Performance Ads'],
+}
+
+const FOCUS_AREAS_BY_SUBJECT = {
+  Python: ['Variables', 'Functions', 'OOP', 'Async IO', 'Testing'],
+  JavaScript: ['ES6+', 'Async/Await', 'DOM', 'Array Methods', 'Promises'],
+  'Web Development': ['HTML/CSS', 'REST API', 'Authentication', 'Responsive UI'],
+  'Data Analysis': ['Data Cleaning', 'Visualization', 'EDA', 'Feature Engineering'],
+  'Machine Learning': ['Model Selection', 'Overfitting', 'Evaluation Metrics', 'Hyperparameter Tuning'],
+  Algebra: ['Equations', 'Inequalities', 'Functions'],
+  Calculus: ['Derivatives', 'Integrals', 'Optimization'],
+  'System Design': ['Scalability', 'Caching', 'Load Balancing', 'Database Design'],
 }
 
 /**
@@ -66,6 +82,7 @@ const SUBJECTS_BY_CATEGORY = {
 const AssessmentSetupPage = () => {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
+  const [focusAreas, setFocusAreas] = useState([])
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     defaultValues: { category: '', subject: '', level: 'Beginner', focus_areas: [] },
   })
@@ -74,10 +91,21 @@ const AssessmentSetupPage = () => {
   const selectedSubject = watch('subject')
   const selectedLevel = watch('level')
   const availableSubjects = SUBJECTS_BY_CATEGORY[selectedCategory] || []
+  const availableFocusAreas = FOCUS_AREAS_BY_SUBJECT[selectedSubject] || []
 
   const handleCategorySelect = (cat) => {
     setValue('category', cat)
     setValue('subject', '') // reset subject when category changes
+    setFocusAreas([])
+    setValue('focus_areas', [])
+  }
+
+  const toggleFocusArea = (topic) => {
+    const next = focusAreas.includes(topic)
+      ? focusAreas.filter((x) => x !== topic)
+      : [...focusAreas, topic]
+    setFocusAreas(next)
+    setValue('focus_areas', next)
   }
 
   const onSubmit = async (data) => {
@@ -124,6 +152,18 @@ const AssessmentSetupPage = () => {
         <h1 className="asp-hero__title">Đánh giá năng lực</h1>
         <p className="asp-hero__sub">AI tạo bài kiểm tra cá nhân hóa theo trình độ của bạn</p>
       </motion.div>
+
+      {isLoading && (
+        <AILoadingState
+          title="AI đang tạo bài đánh giá"
+          message="Hệ thống đang xây dựng bộ câu hỏi phù hợp với trình độ của bạn."
+          steps={[
+            'Đang phân tích cấp độ và môn học...',
+            'Đang sinh câu hỏi theo độ khó...',
+            'Đang tối ưu thời lượng làm bài...',
+          ]}
+        />
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="asp-form">
         {/* Step 1: Category */}
@@ -176,7 +216,11 @@ const AssessmentSetupPage = () => {
                     key={sub}
                     type="button"
                     className={`asp-subject-pill ${selectedSubject === sub ? 'asp-subject-pill--active' : ''}`}
-                    onClick={() => setValue('subject', sub)}
+                    onClick={() => {
+                      setValue('subject', sub)
+                      setFocusAreas([])
+                      setValue('focus_areas', [])
+                    }}
                   >
                     {sub}
                   </button>
@@ -184,6 +228,38 @@ const AssessmentSetupPage = () => {
               </div>
               {errors.subject && <p className="asp-error">{errors.subject.message}</p>}
               <input type="hidden" {...register('subject', { required: 'Vui lòng chọn môn học' })} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Step 2.5: Focus Areas */}
+        <AnimatePresence>
+          {selectedSubject && availableFocusAreas.length > 0 && (
+            <motion.div
+              className="asp-step"
+              key="step-focus-areas"
+              variants={stepVariant}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              <div className="asp-step__label">
+                <span className="asp-step__num">02.5</span>
+                <span className="asp-step__title">Chủ đề trọng tâm (tuỳ chọn)</span>
+              </div>
+              <div className="asp-subject-pills">
+                {availableFocusAreas.map((topic) => (
+                  <button
+                    key={topic}
+                    type="button"
+                    className={`asp-subject-pill ${focusAreas.includes(topic) ? 'asp-subject-pill--active' : ''}`}
+                    onClick={() => toggleFocusArea(topic)}
+                  >
+                    {topic}
+                  </button>
+                ))}
+              </div>
+              <input type="hidden" {...register('focus_areas')} />
             </motion.div>
           )}
         </AnimatePresence>

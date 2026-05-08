@@ -2,7 +2,13 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { fadeUp } from '@/styles/motion'
 
-const AdminDashboard = ({ data }) => (
+const AdminDashboard = ({ data }) => {
+  const roleStats = data?.users_by_role || {}
+  const students = roleStats.students ?? roleStats.student ?? 0
+  const instructors = roleStats.instructors ?? roleStats.instructor ?? 0
+  const admins = roleStats.admins ?? roleStats.admin ?? 0
+
+  return (
   <>
     <motion.div className="dash-stats" variants={fadeUp}>
       <StatCard icon={<UsersIcon />} value={data?.total_users || 0} label="Tổng người dùng" color="blue" />
@@ -15,9 +21,9 @@ const AdminDashboard = ({ data }) => (
       <motion.section className="dash-section" variants={fadeUp}>
         <h2 className="dash-section__title">Phân bổ người dùng</h2>
         <div className="dash-admin-stats">
-          <div className="dash-admin-stat"><span className="dash-admin-stat__label">Học viên</span><span className="dash-admin-stat__value">{data.users_by_role.student || 0}</span></div>
-          <div className="dash-admin-stat"><span className="dash-admin-stat__label">Giảng viên</span><span className="dash-admin-stat__value">{data.users_by_role.instructor || 0}</span></div>
-          <div className="dash-admin-stat"><span className="dash-admin-stat__label">Quản trị</span><span className="dash-admin-stat__value">{data.users_by_role.admin || 0}</span></div>
+          <div className="dash-admin-stat"><span className="dash-admin-stat__label">Học viên</span><span className="dash-admin-stat__value">{students}</span></div>
+          <div className="dash-admin-stat"><span className="dash-admin-stat__label">Giảng viên</span><span className="dash-admin-stat__value">{instructors}</span></div>
+          <div className="dash-admin-stat"><span className="dash-admin-stat__label">Quản trị</span><span className="dash-admin-stat__value">{admins}</span></div>
         </div>
       </motion.section>
     )}
@@ -43,7 +49,7 @@ const AdminDashboard = ({ data }) => (
       </div>
     </motion.section>
   </>
-)
+)}
 
 const StatCard = ({ icon, value, label, color }) => (
   <motion.div className={`dash-stat-card dash-stat-card--${color}`} variants={fadeUp}>

@@ -130,7 +130,8 @@
 
 .personal-courses-prompt__textarea {
   width: 100%;
-  padding: 10px 12px;
+  min-height: 170px;
+  padding: 12px 14px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: var(--font-size-sm);
@@ -144,6 +145,51 @@
 .personal-courses-prompt__textarea:focus {
   outline: none;
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+.personal-courses-prompt__templates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.personal-courses-prompt__template-btn {
+  border: 1px dashed var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+
+.personal-courses-prompt__template-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.personal-courses-prompt__config {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.personal-courses-prompt__config-item {
+  display: grid;
+  gap: 6px;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.personal-courses-prompt__config-item select {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
 }
 
 .personal-courses-prompt__counter {
@@ -173,5 +219,11 @@
 
   .personal-courses-page {
     padding: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 760px) {
+  .personal-courses-prompt__config {
+    grid-template-columns: 1fr;
   }
 }

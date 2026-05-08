@@ -45,7 +45,7 @@ const GlobalSearchBar = () => {
   const fetchHistory = useCallback(async () => {
     try {
       const data = await searchService.getHistory()
-      setHistory(data?.recent_searches || data || [])
+      setHistory(data?.search_history || data?.recent_searches || data || [])
     } catch {
       setHistory([])
     }
@@ -158,14 +158,14 @@ const GlobalSearchBar = () => {
                 <button
                   key={idx}
                   className="global-search__suggestion"
-                  onClick={() => handlePickSuggestion(sug?.text || sug?.title || sug)}
+                  onClick={() => handlePickSuggestion(sug?.query || sug?.text || sug?.title || sug)}
                   role="option"
                 >
                   <span className="global-search__suggestion-icon">
                     {sug?.type === 'course' ? '📚' : sug?.type === 'lesson' ? '📝' : '🔍'}
                   </span>
                   <span className="global-search__suggestion-text">
-                    {sug?.text || sug?.title || sug}
+                    {sug?.query || sug?.text || sug?.title || sug}
                   </span>
                   {sug?.category && (
                     <span className="global-search__suggestion-tag">{sug.category}</span>

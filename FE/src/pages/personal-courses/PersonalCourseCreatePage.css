@@ -1,0 +1,93 @@
+.personal-course-create-page {
+  padding: var(--space-md);
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.personal-course-create-header {
+  margin-bottom: 18px;
+}
+
+.personal-course-create-header__ornament {
+  width: 120px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.personal-course-create-header__ornament svg {
+  width: 100%;
+  height: 14px;
+}
+
+.personal-course-create-header h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+}
+
+.personal-course-create-header p {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+}
+
+.personal-course-create-form {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.personal-course-create-field {
+  display: grid;
+  gap: 6px;
+}
+
+.personal-course-create-field > span {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.personal-course-create-field input,
+.personal-course-create-field select,
+.personal-course-create-field textarea {
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  box-sizing: border-box;
+}
+
+.personal-course-create-field textarea {
+  resize: vertical;
+  min-height: 140px;
+}
+
+.personal-course-create-field small {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.personal-course-create-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.personal-course-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 840px) {
+  .personal-course-create-grid {
+    grid-template-columns: 1fr;
+  }
+}

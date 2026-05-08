@@ -6,6 +6,7 @@ import assessmentService from '@services/assessmentService'
 import Button from '@components/ui/Button'
 import Card, { CardBody } from '@components/ui/Card'
 import StateView from '@components/ui/StateView'
+import AILoadingState from '@components/ui/AILoadingState'
 import { pageTurn, pageFade } from '@/styles/motion'
 import './AssessmentQuizPage.css'
 
@@ -95,8 +96,11 @@ const AssessmentQuizPage = () => {
     try {
       const formattedAnswers = questions.map((q) => ({
         question_id: q.question_id,
-        answer_content: answers[q.question_id] || '',
-        selected_option: typeof answers[q.question_id] === 'number' ? answers[q.question_id] : null,
+        // BE schema yêu cầu answer_content luôn là string (422 nếu gửi number/null)
+        answer_content: String(answers[q.question_id] ?? ''),
+        selected_option: q.question_type === 'multiple_choice' && typeof answers[q.question_id] === 'number'
+          ? answers[q.question_id]
+          : null,
         time_taken_seconds: 0
       }))
 
@@ -116,7 +120,19 @@ const AssessmentQuizPage = () => {
     }
   }
 
-  if (loading) return <div className="loading-spinner">Đang tải...</div>
+  if (loading) {
+    return (
+      <AILoadingState
+        title="Đang chuẩn bị bài đánh giá"
+        message="Vui lòng chờ trong giây lát để đồng bộ dữ liệu phiên làm bài."
+        steps={[
+          'Đang đồng bộ phiên đánh giá...',
+          'Đang nạp câu hỏi...',
+          'Đang khởi tạo bộ đếm thời gian...',
+        ]}
+      />
+    )
+  }
   if (!questions.length) return <StateView type="empty" title="Không tìm thấy bài đánh giá" message="Session đánh giá không có câu hỏi khả dụng." actionLabel="Quay lại đánh giá" onAction={() => navigate('/dashboard/assessment')} />
 
   const currentQuestion = questions[currentIndex]

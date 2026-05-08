@@ -6,6 +6,7 @@ import assessmentService from '@services/assessmentService'
 import Button from '@components/ui/Button'
 import Card, { CardHeader, CardBody } from '@components/ui/Card'
 import StateView from '@components/ui/StateView'
+import AILoadingState from '@components/ui/AILoadingState'
 import './AssessmentResultsPage.css'
 
 /**
@@ -35,7 +36,19 @@ const AssessmentResultsPage = () => {
     fetchResults()
   }, [sessionId])
 
-  if (loading) return <div className="loading-spinner">Đang tải kết quả...</div>
+  if (loading) {
+    return (
+      <AILoadingState
+        title="AI đang chấm và phân tích kết quả"
+        message="Hệ thống đang tổng hợp điểm số, kỹ năng và lộ trình đề xuất cho bạn."
+        steps={[
+          'Đang đánh giá độ chính xác đáp án...',
+          'Đang phân tích điểm mạnh và lỗ hổng...',
+          'Đang dựng báo cáo kết quả...',
+        ]}
+      />
+    )
+  }
   if (!results) return <StateView type="empty" title="Không tìm thấy kết quả" message="Session kết quả không tồn tại hoặc chưa hoàn tất." actionLabel="Quay lại đánh giá" onAction={() => navigate('/dashboard/assessment')} />
 
   // Xac dinh mau theo diem

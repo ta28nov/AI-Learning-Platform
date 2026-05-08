@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import { useCourseStore } from '@stores/courseStore'
 import Button from '@components/ui/Button'
 import StateView from '@components/ui/StateView'
+import AILoadingState from '@components/ui/AILoadingState'
 import appLogger from '@utils/logger'
 import { fadeUp, staggerEditorial, inView } from '@/styles/motion'
 import './CoursesPage.css'
@@ -176,18 +177,15 @@ const CoursesPage = () => {
 
       {/* Trạng thái đang tải */}
       {isLoading && (
-        <div className="courses-grid">
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="course-skeleton">
-              <div className="course-skeleton__img" />
-              <div className="course-skeleton__body">
-                <div className="course-skeleton__line course-skeleton__line--title" />
-                <div className="course-skeleton__line" />
-                <div className="course-skeleton__line course-skeleton__line--short" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <AILoadingState
+          title="AI đang tải danh sách khóa học"
+          message="Đang gom kết quả phù hợp với bộ lọc của bạn."
+          steps={[
+            'Đang truy xuất dữ liệu khóa học...',
+            'Đang áp dụng bộ lọc và sắp xếp...',
+            'Đang chuẩn bị danh sách hiển thị...',
+          ]}
+        />
       )}
 
       {!isLoading && pageError && (

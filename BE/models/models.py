@@ -433,17 +433,13 @@ class AssessmentSession(Document):
     proficiency_level: Optional[str] = Field(None, description="Beginner|Intermediate|Advanced dựa trên kết quả thực tế")
     correct_answers: Optional[int] = Field(None, description="Số câu trả lời đúng (tính từ answers sau khi evaluate)")
 
-    # FIX: skill_analysis phải là LIST[dict] theo List[SkillAnalysis] schema (assessment.py)
-    # KHÔNG phải Optional[dict] (single dict)
-    skill_analysis: Optional[List[dict]] = Field(None, description="Phân tích từng kỹ năng - LIST of SkillAnalysis")
-    # Mỗi item theo assessment.py SkillAnalysis: {
-    #   "skill_tag": "python-syntax",
-    #   "questions_count": int,
-    #   "correct_count": int,
-    #   "proficiency_percentage": float,   # 0-100
-    #   "strength_level": "Strong|Average|Weak",
-    #   "detailed_feedback": "Nhận xét chi tiết"
+    # skill_analysis lưu payload tổng hợp từ service:
+    # {
+    #   "skill_analysis": [SkillAnalysis...],
+    #   "score_breakdown": {...},
+    #   "overall_feedback": "..."
     # }
+    skill_analysis: Optional[dict] = Field(None, description="Phân tích kỹ năng tổng hợp gồm list skills + breakdown")
 
     # Lỗ hổng kiến thức - theo KnowledgeGap schema
     knowledge_gaps: List[dict] = Field(default_factory=list, description="Các lỗ hổng kiến thức được phát hiện")

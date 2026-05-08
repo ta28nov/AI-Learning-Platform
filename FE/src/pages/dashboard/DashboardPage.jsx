@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { useAuthStore } from '@stores/authStore'
 import dashboardService from '@services/dashboardService'
 import StateView from '@components/ui/StateView'
+import AILoadingState from '@components/ui/AILoadingState'
 import DashboardShell from './components/DashboardShell'
 import StudentDashboard from './components/StudentDashboard'
 import InstructorDashboard from './components/InstructorDashboard'
@@ -70,11 +71,15 @@ const DashboardPage = () => {
       primaryAction={<PrimaryAction role={role} />}
     >
       {loading && (
-        <div className="dash-loading">
-          <div className="dash-loading__grid">
-            {[1, 2, 3, 4].map((i) => <div key={i} className="dash-skeleton" />)}
-          </div>
-        </div>
+        <AILoadingState
+          title="AI đang chuẩn bị dashboard"
+          message="Đang tổng hợp chỉ số học tập và hoạt động mới nhất."
+          steps={[
+            'Đang tải thống kê người dùng...',
+            'Đang tổng hợp tiến độ học tập...',
+            'Đang dựng bảng điều khiển...',
+          ]}
+        />
       )}
 
       {!loading && error && (

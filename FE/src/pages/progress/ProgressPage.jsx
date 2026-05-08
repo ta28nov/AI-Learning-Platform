@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import analyticsService from '@services/analyticsService'
 import StateView from '@components/ui/StateView'
+import AILoadingState from '@components/ui/AILoadingState'
 import './ProgressPage.css'
 
 /* ─── SVG Icons ───────────────────────────────────── */
@@ -128,7 +129,21 @@ const ProgressPage = () => {
     fetchData()
   }, [])
 
-  if (loading) return <div className="pp-page"><StateView type="loading" message="Đang tải tiến độ…" /></div>
+  if (loading) {
+    return (
+      <div className="pp-page">
+        <AILoadingState
+          title="AI đang tổng hợp tiến độ học tập"
+          message="Đang tính toán chỉ số, biểu đồ và thành tựu của bạn."
+          steps={[
+            'Đang tải learning stats...',
+            'Đang tải dữ liệu biểu đồ tiến độ...',
+            'Đang tổng hợp thành tựu cá nhân...',
+          ]}
+        />
+      </div>
+    )
+  }
 
   const progress = Math.round(stats?.overall_progress || 0)
   const circumference = 2 * Math.PI * 42 // r=42

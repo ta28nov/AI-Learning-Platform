@@ -2,7 +2,13 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import Button from '@components/ui/Button'
+import enrollmentService from '@services/enrollmentService'
+import courseService from '@services/courseService'
+import adminService from '@services/adminService'
 import useChatLogic from '@hooks/useChatLogic'
+import Modal, { ModalFooter } from '@components/ui/Modal'
+import AILoadingState from '@components/ui/AILoadingState'
+import { useAuthStore } from '@stores/authStore'
 import './ChatPage.css'
 
 /**
@@ -16,6 +22,7 @@ import './ChatPage.css'
  * Giao diện: sidebar danh sách hội thoại + khu vực chat chính
  */
 const ChatPage = () => {
+  const { user } = useAuthStore()
   const {
     messages,
     conversations,
@@ -34,6 +41,9 @@ const ChatPage = () => {
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeCourseId, setActiveCourseId] = useState(null)
+  const [myCourses, setMyCourses] = useState([])
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false)
+  const [deleteConversationId, setDeleteConversationId] = useState(null)
 
   // Ref để auto-scroll xuống cuối khi có tin nhắn mới
   const messagesEndRef = useRef(null)
@@ -45,6 +55,36 @@ const ChatPage = () => {
   useEffect(() => {
     loadHistory()
   }, [loadHistory])
+
+  useEffect(() => {
+    const fetchMyCourses = async () => {
+      try {
+        if (user?.role === 'student') {
+          const data = await enrollmentService.getMyCourses({ limit: 100 })
+          setMyCourses(data?.enrollments || data?.data || [])
+          return
+        }
+        if (user?.role === 'admin') {
+          const adminCourses = await adminService.getCourses({ skip: 0, limit: 50 })
+          const normalizedAdmin = (adminCourses?.data || []).map((c) => ({
+            course_id: c.course_id || c.id,
+            course_title: c.title,
+          }))
+          setMyCourses(normalizedAdmin)
+          return
+        }
+        const publicCourses = await courseService.getPublicCourses({ skip: 0, limit: 50 })
+        const normalized = (publicCourses?.courses || publicCourses?.data || []).map((c) => ({
+          course_id: c.course_id || c.id,
+          course_title: c.title,
+        }))
+        setMyCourses(normalized)
+      } catch {
+        setMyCourses([])
+      }
+    }
+    fetchMyCourses()
+  }, [user?.role])
 
   const selectConversation = async (conversationId) => {
     if (currentConversationId === conversationId) return
@@ -67,10 +107,11 @@ const ChatPage = () => {
     if (!question || sending) return
     setInputText('')
     const fallbackCourse = activeCourseId || conversations.find(c => c.conversation_id === currentConversationId)?.course_id
-    await sendMessage(question, 'general', { courseId: fallbackCourse })
     if (!fallbackCourse) {
-      toast.error('Vui lòng chọn hội thoại thuộc khóa học trước khi hỏi.')
+      toast.error('Vui lòng chọn khóa học ở phần nhập tin nhắn để bắt đầu chat.')
+      return
     }
+    await sendMessage(question, 'general', { courseId: fallbackCourse })
     setTimeout(scrollToBottom, 50)
   }
 
@@ -82,17 +123,36 @@ const ChatPage = () => {
 
   const handleDeleteConversation = async (conversationId, e) => {
     e.stopPropagation()
-    if (!window.confirm('Bạn có chắc muốn xóa hội thoại này?')) return
-    const ok = await deleteConversation(conversationId)
+    setDeleteConversationId(conversationId)
+  }
+
+  const confirmDeleteConversation = async () => {
+    if (!deleteConversationId) return
+    const ok = await deleteConversation(deleteConversationId)
+    setDeleteConversationId(null)
     if (ok) toast.success('Đã xóa hội thoại')
     else toast.error('Không thể xóa hội thoại')
   }
 
   const handleDeleteAllConversations = async () => {
-    if (!window.confirm('Bạn có chắc muốn xóa TẤT CẢ hội thoại?')) return
-    const ok = await deleteAllConversations()
-    if (ok) toast.success('Đã xóa tất cả hội thoại')
+    setShowDeleteAllModal(true)
+  }
+
+  const confirmDeleteAll = async () => {
+    const allOk = await deleteAllConversations()
+    setShowDeleteAllModal(false)
+    if (allOk) toast.success('Đã xóa tất cả hội thoại')
     else toast.error('Không thể xóa hội thoại')
+  }
+
+  const courseOptions = myCourses.map((item) => ({
+    id: item.course_id || item.id,
+    title: item.course_title || item.title || 'Khóa học',
+  })).filter((item) => item.id)
+
+  const selectedCourseId = activeCourseId || conversations.find(c => c.conversation_id === currentConversationId)?.course_id || ''
+  const handleCourseChange = (value) => {
+    setActiveCourseId(value || null)
   }
 
   // Nhấn Enter để gửi
@@ -203,7 +263,16 @@ const ChatPage = () => {
           )}
 
           {loadingMessages && (
-            <div className="chat-loading">Đang tải tin nhắn...</div>
+            <AILoadingState
+              compact
+              title="Đang tải hội thoại AI"
+              message="Hệ thống đang khôi phục ngữ cảnh để phản hồi chính xác."
+              steps={[
+                'Đang nạp lịch sử hội thoại...',
+                'Đang đồng bộ ngữ cảnh khóa học...',
+                'Sẵn sàng trao đổi...',
+              ]}
+            />
           )}
 
           {messages.map((msg) => (
@@ -274,6 +343,16 @@ const ChatPage = () => {
 
         {/* Thanh nhập tin nhắn */}
         <div className="chat-input">
+          <select
+            className="chat-input__course-select"
+            value={selectedCourseId}
+            onChange={(e) => handleCourseChange(e.target.value)}
+          >
+            <option value="">Chọn khóa học để chat</option>
+            {courseOptions.map((course) => (
+              <option key={course.id} value={course.id}>{course.title}</option>
+            ))}
+          </select>
           <textarea
             className="chat-input__textarea"
             placeholder="Nhập câu hỏi của bạn..."
@@ -294,6 +373,22 @@ const ChatPage = () => {
           </Button>
         </div>
       </main>
+
+      <Modal isOpen={Boolean(deleteConversationId)} onClose={() => setDeleteConversationId(null)} title="Xóa hội thoại" size="sm">
+        <p>Bạn có chắc muốn xóa hội thoại này?</p>
+        <ModalFooter>
+          <Button variant="outline" onClick={() => setDeleteConversationId(null)}>Hủy</Button>
+          <Button variant="danger" onClick={confirmDeleteConversation}>Xóa</Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={showDeleteAllModal} onClose={() => setShowDeleteAllModal(false)} title="Xóa tất cả hội thoại" size="sm">
+        <p>Hành động này sẽ xóa toàn bộ lịch sử chat AI.</p>
+        <ModalFooter>
+          <Button variant="outline" onClick={() => setShowDeleteAllModal(false)}>Hủy</Button>
+          <Button variant="danger" onClick={confirmDeleteAll}>Xóa tất cả</Button>
+        </ModalFooter>
+      </Modal>
     </div>
   )
 }

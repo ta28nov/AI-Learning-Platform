@@ -289,6 +289,14 @@
   transition: border-color .2s;
 }
 
+.adm-select--full { width: 100%; }
+
+.adm-modal__text {
+  margin: 0 0 12px;
+  color: var(--text-secondary, #64748b);
+  font-size: 0.88rem;
+}
+
 .adm-select:focus {
   outline: none;
   border-color: var(--gold, #c9a84c);
@@ -382,6 +390,35 @@
 
 .adm-btn--danger { color: #ef4444; border-color: rgba(239,68,68,.2); }
 .adm-btn--danger:hover { background: #fef2f2; border-color: #ef4444; }
+
+.adm-pagination {
+  margin-top: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.adm-pagination__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.78rem;
+}
+
+.adm-pagination__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.adm-stat-item--inline {
+  min-width: 140px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 10px 12px;
+}
 
 /* ─── Badges ───────────────────────────────────── */
 .adm-badge {

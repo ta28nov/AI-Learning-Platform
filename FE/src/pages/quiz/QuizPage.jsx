@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import quizService from '@services/quizService'
 import Button from '@components/ui/Button'
 import StateView from '@components/ui/StateView'
+import AILoadingState from '@components/ui/AILoadingState'
 import './QuizPage.css'
 
 const SearchIcon = () => (
@@ -82,7 +83,18 @@ const QuizPage = () => {
       </div>
 
       {/* Loading */}
-      {loading && <StateView type="loading" message="Đang tải danh sách quiz…" />}
+      {loading && (
+        <AILoadingState
+          compact
+          title="Đang tải ngân hàng quiz"
+          message="Hệ thống đang đồng bộ danh sách bài kiểm tra."
+          steps={[
+            'Đang tải danh sách quiz...',
+            'Đang sắp xếp theo bộ lọc...',
+            'Sẵn sàng hiển thị...',
+          ]}
+        />
+      )}
 
       {/* Grid */}
       {!loading && quizzes.length > 0 && (
