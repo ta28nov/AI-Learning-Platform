@@ -45,6 +45,13 @@ const ChatPage = () => {
   const [showDeleteAllModal, setShowDeleteAllModal] = useState(false)
   const [deleteConversationId, setDeleteConversationId] = useState(null)
 
+  const normalizeCourseItems = (items = []) => items
+    .map((item) => ({
+      course_id: item?.course_id || item?.id || item?.course?.course_id || item?.course?.id,
+      course_title: item?.course_title || item?.title || item?.course?.course_title || item?.course?.title,
+    }))
+    .filter((item) => item.course_id)
+
   // Ref để auto-scroll xuống cuối khi có tin nhắn mới
   const messagesEndRef = useRef(null)
 
@@ -61,30 +68,35 @@ const ChatPage = () => {
       try {
         if (user?.role === 'student') {
           const data = await enrollmentService.getMyCourses({ limit: 100 })
-          setMyCourses(data?.enrollments || data?.data || [])
+          const studentCourses = normalizeCourseItems(data?.enrollments || data?.data || [])
+          if (studentCourses.length) {
+            setMyCourses(studentCourses)
+            return
+          }
+          const publicCourses = await courseService.getPublicCourses({ skip: 0, limit: 50 })
+          setMyCourses(normalizeCourseItems(publicCourses?.courses || publicCourses?.data || []))
           return
         }
         if (user?.role === 'admin') {
           const adminCourses = await adminService.getCourses({ skip: 0, limit: 50 })
-          const normalizedAdmin = (adminCourses?.data || []).map((c) => ({
-            course_id: c.course_id || c.id,
-            course_title: c.title,
-          }))
-          setMyCourses(normalizedAdmin)
+          setMyCourses(normalizeCourseItems(adminCourses?.data || []))
           return
         }
         const publicCourses = await courseService.getPublicCourses({ skip: 0, limit: 50 })
-        const normalized = (publicCourses?.courses || publicCourses?.data || []).map((c) => ({
-          course_id: c.course_id || c.id,
-          course_title: c.title,
-        }))
-        setMyCourses(normalized)
+        setMyCourses(normalizeCourseItems(publicCourses?.courses || publicCourses?.data || []))
       } catch {
         setMyCourses([])
       }
     }
     fetchMyCourses()
   }, [user?.role])
+
+  useEffect(() => {
+    if (!activeCourseId && myCourses.length > 0) {
+      const firstId = myCourses[0]?.course_id || myCourses[0]?.id
+      if (firstId) setActiveCourseId(firstId)
+    }
+  }, [myCourses, activeCourseId])
 
   const selectConversation = async (conversationId) => {
     if (currentConversationId === conversationId) return

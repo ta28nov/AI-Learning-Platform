@@ -6,7 +6,7 @@ import { create } from 'zustand'
  */
 export const useUiStore = create((set) => ({
   // Sidebar state
-  sidebarOpen: true,
+  sidebarOpen: false,
   sidebarCollapsed: false,
 
   // Global loading overlay
@@ -26,7 +26,7 @@ export const useUiStore = create((set) => ({
 
   // Reset
   reset: () => set({
-    sidebarOpen: true,
+    sidebarOpen: false,
     sidebarCollapsed: false,
     globalLoading: false
   })

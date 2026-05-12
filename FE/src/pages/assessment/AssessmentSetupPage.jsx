@@ -304,8 +304,9 @@ const AssessmentSetupPage = () => {
           transition={{ delay: 0.35 }}
         >
           <Button
-            type="submit"
+            type="button"
             size="lg"
+            onClick={handleSubmit(onSubmit)}
             loading={isLoading}
             disabled={isLoading || !selectedCategory || !selectedSubject}
           >

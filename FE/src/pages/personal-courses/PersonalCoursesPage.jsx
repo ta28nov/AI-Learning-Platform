@@ -27,6 +27,16 @@ const PersonalCoursesPage = () => {
   const [aiLanguage, setAiLanguage] = useState('vi')
   const promptRef = useRef(null)
 
+  const handleOpenPersonalCourse = (course) => {
+    const courseId = course.id || course.course_id
+    if (!courseId) return
+    if (course.status === 'draft') {
+      navigate(`/dashboard/personal-courses/${courseId}/edit`)
+      return
+    }
+    navigate(`/dashboard/courses/${courseId}/modules`)
+  }
+
   const promptTemplates = useMemo(() => ([
     'Tôi muốn học Python từ cơ bản đến làm project thực tế: biến, hàm, OOP, xử lý file, và mini project quản lý dữ liệu.',
     'Tôi muốn học ReactJS bài bản để tự xây dashboard: hooks, state management, gọi API, routing, và tối ưu hiệu năng.',
@@ -138,7 +148,7 @@ const PersonalCoursesPage = () => {
             <Card
               hover
               className="personal-course-card"
-              onClick={() => navigate(`/dashboard/courses/${course.id || course.course_id}`)}
+              onClick={() => handleOpenPersonalCourse(course)}
             >
               <CardBody>
                 <h3 className="personal-course-card__title">{course.title}</h3>

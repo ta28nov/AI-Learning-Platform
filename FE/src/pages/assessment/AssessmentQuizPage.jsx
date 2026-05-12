@@ -49,7 +49,12 @@ const AssessmentQuizPage = () => {
         const saved = sessionStorage.getItem(`assessment_${sessionId}`)
         if (saved) {
           const parsed = JSON.parse(saved)
-          setQuestions(parsed.questions || [])
+          const normalizedQuestions = (parsed.questions || []).map((q, idx) => ({
+            ...q,
+            // Defensive fallback: một số response AI có thể thiếu/trùng question_id
+            question_id: q?.question_id || `local-q-${idx + 1}`,
+          }))
+          setQuestions(normalizedQuestions)
           setTimeLeft(parsed.time_limit_minutes * 60)
           setTotalTime(parsed.time_limit_minutes * 60)
         }
@@ -92,6 +97,7 @@ const AssessmentQuizPage = () => {
 
   // Xu ly nop bai
   const handleSubmit = async () => {
+    if (submitting || !questions.length) return
     setSubmitting(true)
     try {
       const formattedAnswers = questions.map((q) => ({
@@ -135,7 +141,9 @@ const AssessmentQuizPage = () => {
   }
   if (!questions.length) return <StateView type="empty" title="Không tìm thấy bài đánh giá" message="Session đánh giá không có câu hỏi khả dụng." actionLabel="Quay lại đánh giá" onAction={() => navigate('/dashboard/assessment')} />
 
-  const currentQuestion = questions[currentIndex]
+  const safeIndex = Math.min(Math.max(currentIndex, 0), Math.max(questions.length - 1, 0))
+  const currentQuestion = questions[safeIndex]
+  const safeQuestionId = currentQuestion?.question_id || `local-q-${safeIndex + 1}`
   const answeredCount = Object.keys(answers).length
   const isWarning = timeLeft < 60
 
@@ -144,11 +152,11 @@ const AssessmentQuizPage = () => {
       {/* Header: timer + progress */}
       <div className="quiz-header">
         <div className="quiz-progress">
-          <span>Câu {currentIndex + 1}/{questions.length}</span>
+          <span>Câu {safeIndex + 1}/{questions.length}</span>
           <div className="quiz-progress__bar">
             <div
               className="quiz-progress__fill"
-              style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+              style={{ width: `${((safeIndex + 1) / questions.length) * 100}%` }}
             />
           </div>
         </div>
@@ -160,7 +168,7 @@ const AssessmentQuizPage = () => {
       {/* Cau hoi hien tai */}
       <AnimatePresence mode="wait">
       <motion.div
-        key={currentQuestion.question_id}
+        key={`${safeQuestionId}-${safeIndex}`}
         variants={shouldReduceMotion ? pageFade : pageTurn}
         initial="initial"
         animate="animate"
@@ -190,13 +198,13 @@ const AssessmentQuizPage = () => {
               {currentQuestion.options.map((option, idx) => (
                 <label
                   key={idx}
-                  className={`option-item ${answers[currentQuestion.question_id] === idx ? 'option-item--selected' : ''}`}
+                  className={`option-item ${answers[safeQuestionId] === idx ? 'option-item--selected' : ''}`}
                 >
                   <input
                     type="radio"
-                    name={`q_${currentQuestion.question_id}`}
-                    checked={answers[currentQuestion.question_id] === idx}
-                    onChange={() => handleAnswer(currentQuestion.question_id, idx)}
+                    name={`q_${safeQuestionId}`}
+                    checked={answers[safeQuestionId] === idx}
+                    onChange={() => handleAnswer(safeQuestionId, idx)}
                   />
                   <span className="option-label">{String.fromCharCode(65 + idx)}</span>
                   <span className="option-text">{option}</span>
@@ -211,8 +219,8 @@ const AssessmentQuizPage = () => {
                 type="text"
                 className="fill-input"
                 placeholder="Nhập câu trả lời..."
-                value={answers[currentQuestion.question_id] || ''}
-                onChange={(e) => handleAnswer(currentQuestion.question_id, e.target.value)}
+                value={answers[safeQuestionId] || ''}
+                onChange={(e) => handleAnswer(safeQuestionId, e.target.value)}
               />
             </div>
           )}
@@ -223,8 +231,8 @@ const AssessmentQuizPage = () => {
                 type="text"
                 className="fill-input"
                 placeholder="Nhập thứ tự/sắp xếp đáp án của bạn..."
-                value={answers[currentQuestion.question_id] || ''}
-                onChange={(e) => handleAnswer(currentQuestion.question_id, e.target.value)}
+                value={answers[safeQuestionId] || ''}
+                onChange={(e) => handleAnswer(safeQuestionId, e.target.value)}
               />
             </div>
           )}
@@ -234,13 +242,13 @@ const AssessmentQuizPage = () => {
               {['True', 'False'].map((option, idx) => (
                 <label
                   key={idx}
-                  className={`option-item ${answers[currentQuestion.question_id] === option ? 'option-item--selected' : ''}`}
+                  className={`option-item ${answers[safeQuestionId] === option ? 'option-item--selected' : ''}`}
                 >
                   <input
                     type="radio"
-                    name={`q_${currentQuestion.question_id}`}
-                    checked={answers[currentQuestion.question_id] === option}
-                    onChange={() => handleAnswer(currentQuestion.question_id, option)}
+                    name={`q_${safeQuestionId}`}
+                    checked={answers[safeQuestionId] === option}
+                    onChange={() => handleAnswer(safeQuestionId, option)}
                   />
                   <span className="option-text">{option}</span>
                 </label>
@@ -254,8 +262,8 @@ const AssessmentQuizPage = () => {
                 type="text"
                 className="fill-input"
                 placeholder="Nhập câu trả lời..."
-                value={answers[currentQuestion.question_id] || ''}
-                onChange={(e) => handleAnswer(currentQuestion.question_id, e.target.value)}
+                value={answers[safeQuestionId] || ''}
+                onChange={(e) => handleAnswer(safeQuestionId, e.target.value)}
               />
             </div>
           )}
@@ -269,13 +277,13 @@ const AssessmentQuizPage = () => {
         <Button
           variant="outline"
           onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
-          disabled={currentIndex === 0}
+          disabled={safeIndex === 0}
         >
           ← Câu trước
         </Button>
 
-        {currentIndex < questions.length - 1 ? (
-          <Button onClick={() => setCurrentIndex((i) => i + 1)}>
+        {safeIndex < questions.length - 1 ? (
+          <Button onClick={() => setCurrentIndex((i) => Math.min(i + 1, questions.length - 1))}>
             Câu tiếp →
           </Button>
         ) : (

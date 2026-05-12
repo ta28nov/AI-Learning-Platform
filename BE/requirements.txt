@@ -1,5 +1,5 @@
 # ============================================================================
-# BeLearning AI - Educational Platform Requirements
+# AI Learning Platform - Educational Platform Requirements
 # ============================================================================
 # Last updated: 2025-11-08
 # Python version: 3.11+
