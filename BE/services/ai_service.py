@@ -277,14 +277,28 @@ async def evaluate_assessment_answers(
     
     # Phân tích theo skill tag
     skill_stats = {}
-    
-    answer_map = {ans.get("question_id"): ans.get("answer_content", ans.get("answer", "")) for ans in answers}
-    
+
+    answer_by_id = {a.get("question_id"): a for a in answers if a.get("question_id")}
+
+    def _normalize_user_answer_text(answer: Dict, question: Dict) -> str:
+        """Chuỗi đáp án đưa vào prompt chấm — MC lấy theo selected_option + options."""
+        q_type = (question.get("question_type") or "").lower()
+        opts = question.get("options")
+        if q_type == "multiple_choice" and opts and isinstance(opts, list):
+            sel = answer.get("selected_option")
+            if isinstance(sel, int) and 0 <= sel < len(opts):
+                return str(opts[sel])
+        ac = answer.get("answer_content")
+        if ac is not None:
+            return str(ac)
+        return str(answer.get("answer") or "")
+
     # Sử dụng AI để đánh giá từng câu (vì chỉ có correct_answer_hint, không có đáp án thực)
     evaluation_pairs = []
     for question in questions:
         q_id = question["question_id"]
-        user_answer = answer_map.get(q_id, "")
+        ans = answer_by_id.get(q_id, {})
+        user_answer = _normalize_user_answer_text(ans, question)
         evaluation_pairs.append({
             "question_id": q_id,
             "question_text": question.get("question_text", ""),
@@ -298,7 +312,7 @@ async def evaluate_assessment_answers(
         })
     
     # IMPORTANT FIX: Batch evaluation để tránh timeout với nhiều câu hỏi
-    grading_map = {}
+    grading_details: Dict[str, Dict] = {}
     batch_size = 10  # Evaluate 10 questions at a time
     
     for batch_start in range(0, len(evaluation_pairs), batch_size):
@@ -340,18 +354,41 @@ Lưu ý:
             grading_text = grading_text.strip()
             
             batch_results = json.loads(grading_text)
+            if not isinstance(batch_results, list):
+                raise ValueError("grading JSON must be an array")
             for r in batch_results:
-                grading_map[r["question_id"]] = r["is_correct"]
+                qid = r.get("question_id")
+                if not qid:
+                    continue
+                grading_details[qid] = {
+                    "is_correct": bool(r.get("is_correct", False)),
+                    "explanation": str(r.get("explanation") or ""),
+                }
         
         except Exception as e:
             print(f"AI grading error for batch {batch_start}-{batch_end}: {e}. Using fallback.")
             # Fallback: chấm đơn giản bằng keyword matching với hint
             for pair in batch_pairs:
+                qid = pair["question_id"]
                 hint = pair["correct_answer_hint"].lower()
                 answer = pair["user_answer"].lower()
                 # Simple heuristic: nếu answer chứa từ khóa trong hint
-                grading_map[pair["question_id"]] = (hint in answer or answer in hint)
+                ok = bool(answer and (hint in answer or answer in hint))
+                grading_details[qid] = {"is_correct": ok, "explanation": ""}
     
+    def _is_correct(q_id: str) -> bool:
+        d = grading_details.get(q_id)
+        return bool(d.get("is_correct")) if d else False
+
+    per_question_results = [
+        {
+            "question_id": q["question_id"],
+            "is_correct": _is_correct(q["question_id"]),
+            "explanation": (grading_details.get(q["question_id"]) or {}).get("explanation", ""),
+        }
+        for q in questions
+    ]
+
     # Tính điểm dựa trên kết quả AI grading
     for question in questions:
         q_id = question["question_id"]
@@ -363,7 +400,7 @@ Lưu ý:
         max_weighted_score += points
         
         # Kiểm tra đáp án từ AI
-        is_correct = grading_map.get(q_id, False)
+        is_correct = _is_correct(q_id)
         if is_correct:
             correct_count += 1
             total_weighted_score += points
@@ -484,7 +521,8 @@ Lưu ý:
                 "easy": {"correct": easy_correct, "total": easy_total},
                 "medium": {"correct": medium_correct, "total": medium_total},
                 "hard": {"correct": hard_correct, "total": hard_total}
-            }
+            },
+            "per_question_results": per_question_results,
         }
     
     except Exception as e:
@@ -530,7 +568,8 @@ Lưu ý:
                 "easy": {"correct": easy_correct, "total": easy_total},
                 "medium": {"correct": medium_correct, "total": medium_total},
                 "hard": {"correct": hard_correct, "total": hard_total}
-            }
+            },
+            "per_question_results": per_question_results,
         }
 
 

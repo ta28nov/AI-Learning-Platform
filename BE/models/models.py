@@ -461,6 +461,15 @@ class AssessmentSession(Document):
     #   "fastest_question_time": int,
     #   "slowest_question_time": int
     # }
+
+    # Tổng thời gian làm bài (giây) do client gửi khi submit — dùng khi mỗi câu không có time_taken_seconds
+    total_elapsed_seconds: Optional[int] = Field(None, description="Tổng giây làm bài từ client")
+
+    # Đúng/sai từng câu sau khi chấm AI — hiển thị xem lại bài làm
+    per_question_results: List[dict] = Field(
+        default_factory=list,
+        description='[{"question_id","is_correct","explanation"}]',
+    )
     
     # Timestamps
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Thời gian tạo assessment")

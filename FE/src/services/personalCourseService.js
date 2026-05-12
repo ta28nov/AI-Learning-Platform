@@ -49,6 +49,19 @@ export const personalCourseService = {
   },
 
   /**
+   * Lay chi tiet day du khoa hoc ca nhan (bao gom lesson content)
+   * @param {string} courseId
+   */
+  async getPersonalCourseDetail(courseId) {
+    try {
+      const response = await api.get(`/courses/personal/${courseId}`)
+      return handleApiResponse(response)
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  /**
    * Cap nhat khoa hoc ca nhan (modules, lessons, noi dung)
    * @param {string} courseId - UUID khoa hoc
    * @param {Object} data - Noi dung cap nhat (nested modules/lessons)

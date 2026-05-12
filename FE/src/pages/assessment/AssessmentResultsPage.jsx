@@ -9,6 +9,22 @@ import StateView from '@components/ui/StateView'
 import AILoadingState from '@components/ui/AILoadingState'
 import './AssessmentResultsPage.css'
 
+function formatTotalDuration(seconds) {
+  const s = Math.max(0, Math.round(seconds ?? 0))
+  if (s < 60) return `${s} giây`
+  const m = Math.floor(s / 60)
+  const r = s % 60
+  if (r === 0) return `${m} phút`
+  return `${m} phút ${r} giây`
+}
+
+function formatAvgPerQuestion(seconds) {
+  const x = Number(seconds) || 0
+  if (x <= 0) return '0 giây'
+  if (x < 60) return `${Math.round(x)} giây`
+  return `${(x / 60).toFixed(1)} phút`
+}
+
 /**
  * Trang ket qua danh gia nang luc
  * Route: /dashboard/assessment/:sessionId/results
@@ -174,7 +190,7 @@ const AssessmentResultsPage = () => {
         </Card>
       )}
 
-      {/* Section 4: Thoi gian */}
+      {/* Section 4: Phân tích thời gian (total_elapsed từ lúc nộp bài + chia TB theo số câu) */}
       {results.time_analysis && (
         <Card>
           <CardHeader>
@@ -184,13 +200,13 @@ const AssessmentResultsPage = () => {
             <div className="time-stats">
               <div className="stat-card">
                 <span className="stat-card__value">
-                  {Math.round(results.time_analysis.total_time_seconds / 60)} phút
+                  {formatTotalDuration(results.time_analysis.total_time_seconds)}
                 </span>
                 <span className="stat-card__label">Tổng thời gian</span>
               </div>
               <div className="stat-card">
                 <span className="stat-card__value">
-                  {Math.round(results.time_analysis.average_time_per_question)}s
+                  {formatAvgPerQuestion(results.time_analysis.average_time_per_question)}
                 </span>
                 <span className="stat-card__label">TB mỗi câu</span>
               </div>
@@ -213,6 +229,12 @@ const AssessmentResultsPage = () => {
 
       {/* Actions */}
       <div className="results-actions">
+        <Button
+          variant="outline"
+          onClick={() => navigate(`/dashboard/assessment/${sessionId}/review`)}
+        >
+          Xem lại bài làm
+        </Button>
         <Button
           variant="outline"
           onClick={() => navigate('/dashboard/assessment')}

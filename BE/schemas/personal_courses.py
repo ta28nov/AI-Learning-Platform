@@ -163,6 +163,44 @@ class PersonalCourseListResponse(BaseModel):
     archived_count: int = Field(..., description="Số khóa học archived")
 
 
+class PersonalCourseDetailLesson(BaseModel):
+    id: str
+    title: str
+    description: Optional[str] = None
+    order: int
+    content: str = ""
+    content_type: str = "text"
+    duration_minutes: int = 0
+    video_url: Optional[str] = None
+
+
+class PersonalCourseDetailModule(BaseModel):
+    id: str
+    title: str
+    description: str
+    order: int
+    difficulty: str = "Basic"
+    estimated_hours: float = 0
+    learning_outcomes: List[dict] = Field(default_factory=list)
+    lessons: List[PersonalCourseDetailLesson] = Field(default_factory=list)
+
+
+class PersonalCourseDetailResponse(BaseModel):
+    id: str
+    title: str
+    description: str
+    category: str
+    level: str
+    status: str
+    language: str = "vi"
+    thumbnail_url: Optional[str] = None
+    learning_outcomes: List[str] = Field(default_factory=list)
+    prerequisites: List[str] = Field(default_factory=list)
+    modules: List[PersonalCourseDetailModule] = Field(default_factory=list)
+    created_at: datetime
+    updated_at: datetime
+
+
 # ============================================================================
 # Section 2.5.4: CHỈNH SỬA KHÓA HỌC CÁ NHÂN
 # ============================================================================

@@ -19,7 +19,11 @@ from schemas.assessment import (
     ScoreBreakdownCategory,
     SkillAnalysis,
     KnowledgeGap,
-    TimeAnalysis
+    TimeAnalysis,
+    AssessmentHistoryResponse,
+    AssessmentHistoryItem,
+    AssessmentReviewResponse,
+    AssessmentReviewItem,
 )
 from services import assessment_service
 
@@ -139,11 +143,18 @@ async def handle_submit_assessment(
                 detail="Không có quyền truy cập session này"
             )
         
-        # Kiểm tra trạng thái
+        # Đã chấm xong — idempotent cho client retry sau timeout/proxy trong khi server đã xử lý xong
         if session.status == "evaluated":
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Bài đánh giá đã được nộp trước đó"
+            time_taken_minutes = (
+                request.total_time_seconds / 60.0 if request.total_time_seconds else 0.0
+            )
+            return AssessmentSubmitResponse(
+                session_id=session.id,
+                submitted_at=session.submitted_at or datetime.utcnow(),
+                total_questions=session.total_questions,
+                time_taken_minutes=round(time_taken_minutes, 1),
+                status="evaluated",
+                message="Bài làm đã được ghi nhận trước đó.",
             )
         
         if datetime.utcnow() > session.expires_at:
@@ -166,7 +177,8 @@ async def handle_submit_assessment(
         # Submit và evaluate
         evaluated_session = await assessment_service.submit_assessment(
             session_id=session_id,
-            answers=answers_list
+            answers=answers_list,
+            total_elapsed_seconds=request.total_time_seconds,
         )
         
         if not evaluated_session:
@@ -290,20 +302,42 @@ async def handle_get_assessment_results(
             KnowledgeGap(**gap) for gap in knowledge_gaps_data
         ]
         
-        # Tính time_analysis (từ answers)
-        total_time = sum(ans.get("time_taken_seconds", 0) for ans in session.answers) if session.answers else 0
-        avg_time = total_time / len(session.answers) if session.answers else 0
-        time_list = [ans.get("time_taken_seconds", 0) for ans in session.answers] if session.answers else [0]
-        
+        # Tính time_analysis — ưu tiên total_elapsed_seconds từ lúc nộp bài (FE gửi total_time_seconds)
+        n_answered = len(session.answers) if session.answers else 0
+        n_questions = max(n_answered, session.total_questions or 0, 1)
+
+        if getattr(session, "total_elapsed_seconds", None) is not None:
+            total_time = max(0, int(session.total_elapsed_seconds))
+        else:
+            total_time = sum(
+                ans.get("time_taken_seconds", 0) for ans in (session.answers or [])
+            )
+
+        avg_time = round(total_time / n_questions, 1) if n_questions else 0.0
+        time_list = [
+            ans.get("time_taken_seconds", 0) for ans in (session.answers or [])
+        ]
+        if time_list and sum(time_list) > 0:
+            fastest_q = min(time_list)
+            slowest_q = max(time_list)
+        else:
+            fastest_q = 0
+            slowest_q = 0
+
         time_analysis = TimeAnalysis(
             total_time_seconds=total_time,
-            average_time_per_question=round(avg_time, 1),
-            fastest_question_time=min(time_list) if time_list else 0,
-            slowest_question_time=max(time_list) if time_list else 0
+            average_time_per_question=avg_time,
+            fastest_question_time=int(fastest_q),
+            slowest_question_time=int(slowest_q),
         )
         
-        # Tính correct_answers
-        correct_answers = easy_data["correct"] + medium_data["correct"] + hard_data["correct"]
+        # Tính correct_answers (ưu tiên số đếm từ per_question_results khi có)
+        if session.correct_answers is not None:
+            correct_answers = int(session.correct_answers)
+        else:
+            correct_answers = (
+                easy_data["correct"] + medium_data["correct"] + hard_data["correct"]
+            )
         
         # AI feedback
         ai_feedback = session.skill_analysis.get("overall_feedback", "") if session.skill_analysis else ""
@@ -337,3 +371,83 @@ async def handle_get_assessment_results(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Lỗi khi lấy kết quả: {str(e)}"
         )
+
+
+async def handle_list_assessment_history(
+    current_user: Dict,
+    skip: int = 0,
+    limit: int = 30,
+) -> AssessmentHistoryResponse:
+    """
+    Danh sách phiên đánh giá của user (mới nhất trước).
+    GET /api/v1/assessments/history
+    """
+    user_id = current_user.get("user_id")
+    cap = min(max(limit, 1), 50)
+    sessions = await assessment_service.get_user_assessment_sessions(
+        user_id=user_id,
+        skip=max(skip, 0),
+        limit=cap,
+    )
+    items = [
+        AssessmentHistoryItem(
+            session_id=s.id,
+            category=s.category,
+            subject=s.subject,
+            level=s.level,
+            status=s.status,
+            total_questions=s.total_questions,
+            overall_score=s.overall_score,
+            proficiency_level=s.proficiency_level,
+            created_at=s.created_at,
+            submitted_at=s.submitted_at,
+            evaluated_at=s.evaluated_at,
+        )
+        for s in sessions
+    ]
+    return AssessmentHistoryResponse(sessions=items)
+
+
+async def handle_get_assessment_review(
+    session_id: str,
+    current_user: Dict,
+) -> AssessmentReviewResponse:
+    """
+    Xem lại toàn bộ câu hỏi và đáp án đã nộp (read-only).
+    GET /api/v1/assessments/{session_id}/review
+    """
+    user_id = current_user.get("user_id")
+    session = await assessment_service.get_assessment_session(session_id)
+
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Assessment session không tồn tại",
+        )
+
+    if session.user_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Không có quyền truy cập session này",
+        )
+
+    if session.status != "evaluated":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Chỉ xem lại được sau khi bài đã được chấm xong.",
+        )
+
+    payload = assessment_service.build_assessment_review_payload(session)
+    items = [AssessmentReviewItem(**row) for row in payload["items"]]
+
+    return AssessmentReviewResponse(
+        session_id=payload["session_id"],
+        category=payload["category"],
+        subject=payload["subject"],
+        level=payload["level"],
+        total_questions=payload["total_questions"],
+        overall_score=payload["overall_score"],
+        proficiency_level=payload["proficiency_level"],
+        evaluated_at=payload["evaluated_at"],
+        items=items,
+    )

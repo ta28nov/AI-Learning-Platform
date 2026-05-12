@@ -293,6 +293,60 @@ async def list_my_personal_courses(
     }
 
 
+async def get_personal_course_detail(user_id: str, course_id: str) -> Optional[Dict]:
+    """Lấy full detail khóa học cá nhân để chỉnh sửa (bao gồm lesson.content)."""
+    course = await Course.find_one(
+        Course.id == course_id,
+        Course.owner_id == user_id,
+        Course.owner_type == "student",
+    )
+    if not course:
+        return None
+
+    modules_data = []
+    for m in course.modules or []:
+        modules_data.append(
+            {
+                "id": m.id,
+                "title": m.title,
+                "description": m.description,
+                "order": m.order,
+                "difficulty": m.difficulty,
+                "estimated_hours": m.estimated_hours,
+                "learning_outcomes": m.learning_outcomes or [],
+                "lessons": [
+                    {
+                        "id": l.id,
+                        "title": l.title,
+                        "description": l.description,
+                        "order": l.order,
+                        "content": l.content or "",
+                        "content_type": l.content_type or "text",
+                        "duration_minutes": l.duration_minutes or 0,
+                        "video_url": l.video_url,
+                    }
+                    for l in (m.lessons or [])
+                ],
+            }
+        )
+
+    return {
+        "id": course.id,
+        "title": course.title,
+        "description": course.description,
+        "category": course.category,
+        "level": course.level,
+        "status": course.status,
+        "language": course.language or "vi",
+        "thumbnail_url": course.thumbnail_url,
+        "learning_outcomes": course.learning_outcomes or [],
+        "prerequisites": course.prerequisites or [],
+        "modules": modules_data,
+        "created_at": course.created_at,
+        "updated_at": course.updated_at,
+    }
+
+
 # ============================================================================
 # Section 2.5.4: CHỈNH SỬA KHÓA HỌC CÁ NHÂN
 # ============================================================================
@@ -364,11 +418,12 @@ async def update_personal_course(
             # Tạo lessons
             lessons = []
             for lesson_data in module_data.get("lessons", []):
-                lesson = Lesson(
+                lesson = EmbeddedLesson(
                     id=lesson_data.get("id") or generate_uuid(),
                     title=lesson_data["title"],
                     order=lesson_data["order"],
-                    content=lesson_data["content"],
+                    description=lesson_data.get("description"),
+                    content=lesson_data.get("content", ""),
                     content_type=lesson_data.get("content_type", "text"),
                     video_url=lesson_data.get("video_url"),
                     duration_minutes=lesson_data.get("duration_minutes", 0),
@@ -377,18 +432,20 @@ async def update_personal_course(
                 lessons.append(lesson)
             
             # Tạo module
-            module = Module(
+            module = EmbeddedModule(
                 id=module_data.get("id") or generate_uuid(),
                 title=module_data["title"],
-                description=module_data["description"],
+                description=module_data.get("description", ""),
                 order=module_data["order"],
                 difficulty=module_data.get("difficulty", "Basic"),
                 estimated_hours=module_data.get("estimated_hours", 0),
                 learning_outcomes=module_data.get("learning_outcomes", []),
-                lessons=lessons
+                lessons=lessons,
+                total_lessons=len(lessons),
+                total_duration_minutes=sum((l.duration_minutes or 0) for l in lessons)
             )
             modules.append(module)
-            total_duration += int(module.estimated_hours * 60)
+            total_duration += module.total_duration_minutes
         
         course.modules = modules
         course.total_duration_minutes = total_duration

@@ -29,6 +29,7 @@ import InstructorDashboardPage from '@pages/enrollment/InstructorDashboardPage'
 import AssessmentSetupPage from '@pages/assessment/AssessmentSetupPage'
 import AssessmentQuizPage from '@pages/assessment/AssessmentQuizPage'
 import AssessmentResultsPage from '@pages/assessment/AssessmentResultsPage'
+import AssessmentReviewPage from '@pages/assessment/AssessmentReviewPage'
 
 // Learning pages
 import ModuleListPage from '@pages/learning/ModuleListPage'
@@ -121,6 +122,9 @@ const AppRouter = () => {
         } />
         <Route path="/dashboard/assessment/:sessionId" element={
           <StudentRoute><AssessmentQuizPage /></StudentRoute>
+        } />
+        <Route path="/dashboard/assessment/:sessionId/review" element={
+          <StudentRoute><AssessmentReviewPage /></StudentRoute>
         } />
         <Route path="/dashboard/assessment/:sessionId/results" element={
           <StudentRoute><AssessmentResultsPage /></StudentRoute>

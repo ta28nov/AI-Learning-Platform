@@ -156,3 +156,56 @@ class AssessmentResultsResponse(BaseModel):
     knowledge_gaps: List[KnowledgeGap]
     time_analysis: TimeAnalysis
     ai_feedback: str = Field(..., description="Nhận xét tổng quan và chi tiết từ AI")
+
+
+# ===== LỊCH SỬ & XEM LẠI BÀI (UI) =====
+
+class AssessmentHistoryItem(BaseModel):
+    """Một dòng trong lịch sử đánh giá - GET /api/v1/assessments/history"""
+    session_id: str
+    category: str
+    subject: str
+    level: str
+    status: str
+    total_questions: int
+    overall_score: Optional[float] = None
+    proficiency_level: Optional[str] = None
+    created_at: datetime
+    submitted_at: Optional[datetime] = None
+    evaluated_at: Optional[datetime] = None
+
+
+class AssessmentHistoryResponse(BaseModel):
+    """Danh sách phiên đánh giá của user"""
+    sessions: List[AssessmentHistoryItem]
+
+
+class AssessmentReviewItem(BaseModel):
+    """Một câu trong bài xem lại (read-only)"""
+    question_id: str
+    question_text: str
+    question_type: str
+    difficulty: Optional[str] = None
+    skill_tag: Optional[str] = None
+    points: Optional[int] = None
+    options: Optional[List[str]] = None
+    correct_answer_hint: Optional[str] = None
+    answer_content: str = ""
+    selected_option: Optional[int] = None
+    selected_option_text: Optional[str] = None
+    time_taken_seconds: int = 0
+    is_correct: Optional[bool] = Field(None, description="Đúng/sai sau khi chấm AI")
+    grading_note: Optional[str] = Field(None, description="Nhận xét ngắn khi chấm")
+
+
+class AssessmentReviewResponse(BaseModel):
+    """Xem lại câu hỏi + đáp án đã nộp - GET /api/v1/assessments/{session_id}/review"""
+    session_id: str
+    category: str
+    subject: str
+    level: str
+    total_questions: int
+    overall_score: Optional[float] = None
+    proficiency_level: Optional[str] = None
+    evaluated_at: Optional[datetime] = None
+    items: List[AssessmentReviewItem]

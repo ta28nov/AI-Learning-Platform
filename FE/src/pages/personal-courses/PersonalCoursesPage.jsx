@@ -30,11 +30,7 @@ const PersonalCoursesPage = () => {
   const handleOpenPersonalCourse = (course) => {
     const courseId = course.id || course.course_id
     if (!courseId) return
-    if (course.status === 'draft') {
-      navigate(`/dashboard/personal-courses/${courseId}/edit`)
-      return
-    }
-    navigate(`/dashboard/courses/${courseId}/modules`)
+    navigate(`/dashboard/personal-courses/${courseId}/edit`)
   }
 
   const promptTemplates = useMemo(() => ([
@@ -167,6 +163,27 @@ const PersonalCoursesPage = () => {
                       {course.level}
                     </span>
                   )}
+                </div>
+                <div className="personal-course-card__stats">
+                  <span>{course.modules_count || 0} module</span>
+                  <span>·</span>
+                  <span>{course.lessons_count || 0} bài học</span>
+                </div>
+                <div className="personal-course-card__actions" onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate(`/dashboard/personal-courses/${course.id || course.course_id}/edit`)}
+                  >
+                    Chỉnh sửa
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => navigate(`/dashboard/courses/${course.id || course.course_id}/modules`)}
+                    disabled={(course.lessons_count || 0) === 0}
+                  >
+                    {(course.lessons_count || 0) > 0 ? 'Vào học' : 'Chưa có bài học'}
+                  </Button>
                 </div>
               </CardBody>
             </Card>

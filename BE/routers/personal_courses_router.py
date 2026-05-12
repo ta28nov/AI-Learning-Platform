@@ -13,7 +13,8 @@ from controllers.personal_courses_controller import (
     handle_create_personal_course,
     handle_list_my_personal_courses,
     handle_update_personal_course,
-    handle_delete_personal_course
+    handle_delete_personal_course,
+    handle_get_personal_course_detail
 )
 from schemas.personal_courses import (
     CourseFromPromptRequest,
@@ -23,7 +24,8 @@ from schemas.personal_courses import (
     PersonalCourseListResponse,
     PersonalCourseUpdateRequest,
     PersonalCourseUpdateResponse,
-    PersonalCourseDeleteResponse
+    PersonalCourseDeleteResponse,
+    PersonalCourseDetailResponse
 )
 
 
@@ -86,6 +88,20 @@ async def create_personal_course(
 # ============================================================================
 # Section 2.5.3: XEM DANH SÁCH KHÓA HỌC CÁ NHÂN
 # ============================================================================
+
+@router.get(
+    "/personal/{course_id}",
+    response_model=PersonalCourseDetailResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Chi tiết khóa học cá nhân để chỉnh sửa",
+    description="Lấy full dữ liệu khóa học cá nhân (bao gồm lesson content) cho owner."
+)
+async def get_personal_course_detail(
+    course_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    return await handle_get_personal_course_detail(course_id, current_user)
+
 
 @router.get(
     "/my-personal",

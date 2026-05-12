@@ -15,7 +15,8 @@ from schemas.personal_courses import (
     PersonalCourseListResponse,
     PersonalCourseUpdateRequest,
     PersonalCourseUpdateResponse,
-    PersonalCourseDeleteResponse
+    PersonalCourseDeleteResponse,
+    PersonalCourseDetailResponse
 )
 from services import personal_courses_service
 
@@ -152,6 +153,24 @@ async def handle_list_my_personal_courses(
     )
     
     return PersonalCourseListResponse(**courses_data)
+
+
+async def handle_get_personal_course_detail(
+    course_id: str,
+    current_user: Dict
+) -> PersonalCourseDetailResponse:
+    """Lấy full detail khóa học cá nhân để chỉnh sửa."""
+    user_id = current_user.get("user_id")
+    data = await personal_courses_service.get_personal_course_detail(
+        user_id=user_id,
+        course_id=course_id
+    )
+    if not data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Khóa học không tồn tại hoặc bạn không có quyền truy cập"
+        )
+    return PersonalCourseDetailResponse(**data)
 
 
 # ============================================================================

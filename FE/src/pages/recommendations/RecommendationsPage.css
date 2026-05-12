@@ -2,7 +2,7 @@
 
 .rec-page {
   padding: var(--space-md);
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
 }
 
@@ -304,4 +304,271 @@
   .rec-item {
     transition: none;
   }
+}
+
+/* ── Hub điều hướng: đánh giá / tiến độ / khóa học ── */
+.rec-hub {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+}
+
+@media (min-width: 640px) {
+  .rec-hub {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+  }
+}
+
+.rec-hub__card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.rec-hub__card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+}
+
+.rec-hub__icon {
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.rec-hub__label {
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+.rec-hub__hint {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.rec-context-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+/* Phiên đánh giá */
+.rec-history {
+  margin-bottom: var(--space-xl);
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary, rgba(0, 0, 0, 0.02));
+}
+
+.rec-history__title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  margin: 0 0 var(--space-md);
+  color: var(--text-primary);
+}
+
+.rec-history__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.rec-history__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+@media (min-width: 560px) {
+  .rec-history__item {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.rec-history__subject {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+.rec-history__meta {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.rec-history__dot {
+  margin: 0 6px;
+  opacity: 0.5;
+}
+
+/* Khối AI bổ sung */
+.rec-ai-extra {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.rec-ai-extra__hours {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.rec-panel {
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+}
+
+.rec-panel--advice {
+  border-left: 4px solid var(--accent);
+}
+
+.rec-panel__title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  margin: 0 0 var(--space-sm);
+}
+
+.rec-panel__body {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.65;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+
+.rec-learning-order {
+  margin: 0;
+  padding-left: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.rec-learning-order__item {
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.rec-learning-order__item:last-child {
+  border-bottom: none;
+}
+
+.rec-learning-order__step {
+  display: block;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.rec-learning-order__course {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--accent);
+  font-family: var(--font-body);
+}
+
+.rec-learning-order__why,
+.rec-learning-order__modules {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.rec-practice-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.rec-practice-item {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.rec-practice-item__skill {
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  margin-right: var(--space-sm);
+}
+
+.rec-practice-item__badge {
+  font-size: var(--font-size-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-xl);
+  background: var(--primary-light);
+  color: var(--primary-hover);
+  margin-right: 6px;
+}
+
+.rec-practice-item__diff {
+  font-size: var(--font-size-xs);
+  text-transform: capitalize;
+  color: var(--text-muted);
+}
+
+.rec-practice-item__desc {
+  margin: var(--space-xs) 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.rec-practice-item__time {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.rec-item__desc {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-xs);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.rec-empty-wrap {
+  margin-bottom: var(--space-xl);
 }

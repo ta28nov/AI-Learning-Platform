@@ -18,6 +18,9 @@ const api = axios.create({
  */
 export const AI_TIMEOUT = 120000 // 2 phut
 
+/** POST /assessments/:id/submit chạy sinh + chấm AI trên server — thường > 30s */
+export const ASSESSMENT_SUBMIT_TIMEOUT = 180000 // 3 phut
+
 /**
  * Loai bo query params rong/deprecated truoc khi goi API
  */

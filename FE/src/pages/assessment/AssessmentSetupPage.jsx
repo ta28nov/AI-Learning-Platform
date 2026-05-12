@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -63,6 +63,13 @@ const SUBJECTS_BY_CATEGORY = {
   Marketing: ['Digital Marketing', 'SEO', 'Content Strategy', 'Performance Ads'],
 }
 
+const SESSION_STATUS_LABEL = {
+  evaluated: 'Đã hoàn thành',
+  pending: 'Chưa bắt đầu',
+  in_progress: 'Đang làm',
+  submitted: 'Đang chấm điểm',
+}
+
 const FOCUS_AREAS_BY_SUBJECT = {
   Python: ['Variables', 'Functions', 'OOP', 'Async IO', 'Testing'],
   JavaScript: ['ES6+', 'Async/Await', 'DOM', 'Array Methods', 'Promises'],
@@ -82,6 +89,8 @@ const FOCUS_AREAS_BY_SUBJECT = {
 const AssessmentSetupPage = () => {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
+  const [historySessions, setHistorySessions] = useState([])
+  const [historyLoading, setHistoryLoading] = useState(true)
   const [focusAreas, setFocusAreas] = useState([])
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     defaultValues: { category: '', subject: '', level: 'Beginner', focus_areas: [] },
@@ -107,6 +116,25 @@ const AssessmentSetupPage = () => {
     setFocusAreas(next)
     setValue('focus_areas', next)
   }
+
+  useEffect(() => {
+    let cancelled = false
+    const loadHistory = async () => {
+      try {
+        setHistoryLoading(true)
+        const res = await assessmentService.listHistory({ limit: 25 })
+        if (!cancelled && res?.sessions) setHistorySessions(res.sessions)
+      } catch {
+        if (!cancelled) setHistorySessions([])
+      } finally {
+        if (!cancelled) setHistoryLoading(false)
+      }
+    }
+    loadHistory()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const onSubmit = async (data) => {
     setIsLoading(true)
@@ -314,6 +342,86 @@ const AssessmentSetupPage = () => {
           </Button>
         </motion.div>
       </form>
+
+      <section className="asp-history" aria-labelledby="asp-history-title">
+        <div className="asp-history__head">
+          <h2 id="asp-history-title" className="asp-history__title">
+            Lịch sử đánh giá
+          </h2>
+          <p className="asp-history__sub">Xem lại kết quả phân tích hoặc đề bài và đáp án đã nộp.</p>
+        </div>
+        {historyLoading && <p className="asp-history__loading">Đang tải lịch sử…</p>}
+        {!historyLoading && historySessions.length === 0 && (
+          <p className="asp-history__empty">Bạn chưa có phiên đánh giá nào.</p>
+        )}
+        {!historyLoading && historySessions.length > 0 && (
+          <ul className="asp-history-list">
+            {historySessions.map((s) => (
+              <li key={s.session_id} className="asp-history-card">
+                <div className="asp-history-card__main">
+                  <div className="asp-history-card__title">
+                    <span className="asp-history-card__subject">{s.subject}</span>
+                    <span className="asp-history-card__level">{s.level}</span>
+                  </div>
+                  <p className="asp-history-card__meta">
+                    {s.category}
+                    <span className="asp-history-card__dot">·</span>
+                    {s.created_at
+                      ? new Date(s.created_at).toLocaleString('vi-VN', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : '—'}
+                    <span className="asp-history-card__dot">·</span>
+                    <span className={`asp-history-status asp-history-status--${s.status}`}>
+                      {SESSION_STATUS_LABEL[s.status] ?? s.status}
+                    </span>
+                  </p>
+                  {s.status === 'evaluated' && s.overall_score != null && (
+                    <p className="asp-history-card__score">Điểm: {Math.round(s.overall_score)}</p>
+                  )}
+                </div>
+                <div className="asp-history-card__actions">
+                  {s.status === 'evaluated' && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        type="button"
+                        onClick={() => navigate(`/dashboard/assessment/${s.session_id}/results`)}
+                      >
+                        Kết quả
+                      </Button>
+                      <Button
+                        size="sm"
+                        type="button"
+                        onClick={() => navigate(`/dashboard/assessment/${s.session_id}/review`)}
+                      >
+                        Xem lại bài
+                      </Button>
+                    </>
+                  )}
+                  {(s.status === 'pending' || s.status === 'in_progress') && (
+                    <Button
+                      size="sm"
+                      type="button"
+                      onClick={() => navigate(`/dashboard/assessment/${s.session_id}`)}
+                    >
+                      Tiếp tục làm
+                    </Button>
+                  )}
+                  {s.status === 'submitted' && (
+                    <span className="asp-history__pending">Đang chấm, vui lòng chờ hoặc mở kết quả sau vài giây.</span>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   )
 }

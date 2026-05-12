@@ -1,6 +1,6 @@
 /* AssessmentSetupPage — Editorial Wizard */
 
-.asp-page { max-width: 720px; margin: 0 auto; }
+.asp-page { max-width: 880px; margin: 0 auto; }
 
 /* Hero */
 .asp-hero { text-align: center; margin-bottom: var(--space-8); }
@@ -126,3 +126,101 @@
 /* Submit */
 .asp-submit { display: flex; justify-content: center; padding-top: var(--space-2); }
 .asp-submit .btn { min-width: 220px; }
+
+/* Lịch sử */
+.asp-history {
+  margin-top: var(--space-10);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--border-subtle);
+}
+.asp-history__head { margin-bottom: var(--space-5); }
+.asp-history__title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ink-900);
+  margin: 0 0 var(--space-2);
+}
+.asp-history__sub {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-400);
+}
+.asp-history__loading,
+.asp-history__empty {
+  font-size: 0.88rem;
+  color: var(--ink-400);
+  margin: 0;
+}
+.asp-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.asp-history-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: var(--surface-1);
+}
+@media (min-width: 640px) {
+  .asp-history-card {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+}
+.asp-history-card__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.asp-history-card__subject {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink-900);
+}
+.asp-history-card__level {
+  font-size: 0.78rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--ink-600);
+}
+.asp-history-card__meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-400);
+  line-height: 1.5;
+}
+.asp-history-card__dot { margin: 0 5px; opacity: 0.6; }
+.asp-history-card__score {
+  margin: var(--space-2) 0 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--gold-600, #b45309);
+}
+.asp-history-status--evaluated { color: var(--color-success, #059669); font-weight: 600; }
+.asp-history-status--pending,
+.asp-history-status--in_progress { color: var(--ink-500); }
+.asp-history-status--submitted { color: var(--color-warning, #d97706); }
+.asp-history-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+.asp-history__pending {
+  font-size: 0.78rem;
+  color: var(--ink-400);
+  max-width: 240px;
+  line-height: 1.4;
+}

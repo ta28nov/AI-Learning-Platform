@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useReducedMotion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import personalCourseService from '@services/personalCourseService'
-import courseService from '@services/courseService'
 import Button from '@components/ui/Button'
 import StateView from '@components/ui/StateView'
 import './CourseEditorPage.css'
@@ -36,48 +35,58 @@ const PuzzleIcon = () => (
   </svg>
 )
 
-const GripIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="editor-grip-icon">
-    <circle cx="9" cy="7" r="1.5" /><circle cx="15" cy="7" r="1.5" />
-    <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
-    <circle cx="9" cy="17" r="1.5" /><circle cx="15" cy="17" r="1.5" />
-  </svg>
-)
-
-const ChevronRightIcon = () => (
-  <svg viewBox="0 0 20 20" fill="currentColor" className="editor-chevron" aria-hidden="true">
-    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1
-      1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02Z"
-      clipRule="evenodd" />
-  </svg>
-)
-
 const CourseEditorPage = () => {
   const { courseId } = useParams()
   const navigate = useNavigate()
   const prefersReduced = useReducedMotion()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [expandedModule, setExpandedModule] = useState(null)
+  const [savingAndLearn, setSavingAndLearn] = useState(false)
   const [course, setCourse] = useState({
     title: '',
     description: '',
     category: '',
     level: 'Beginner',
-    modules: []
+    status: 'draft',
+    learning_outcomes_text: '',
+    prerequisites_text: '',
+    modules: [],
   })
 
   useEffect(() => {
     const fetchCourse = async () => {
       try {
         setLoading(true)
-        const data = await courseService.getCourseDetail(courseId)
+        const data = await personalCourseService.getPersonalCourseDetail(courseId)
+        const modules = (data.modules || []).map((m, mIdx) => ({
+          id: m.id,
+          title: m.title || `Module ${mIdx + 1}`,
+          description: m.description || '',
+          order: m.order || mIdx + 1,
+          difficulty: m.difficulty || 'Basic',
+          estimated_hours: m.estimated_hours || 0,
+          learning_outcomes: m.learning_outcomes || [],
+          lessons: (m.lessons || []).map((l, lIdx) => ({
+            id: l.id,
+            title: l.title || `Bài ${lIdx + 1}`,
+            description: l.description || '',
+            order: l.order || lIdx + 1,
+            content: l.content || '',
+            content_type: l.content_type || 'text',
+            duration_minutes: l.duration_minutes || 0,
+            video_url: l.video_url || '',
+          })),
+        }))
+
         setCourse({
           title: data.title || '',
           description: data.description || '',
           category: data.category || '',
           level: data.level || 'Beginner',
-          modules: data.modules || []
+          status: data.status || 'draft',
+          learning_outcomes_text: (data.learning_outcomes || []).join('\n'),
+          prerequisites_text: (data.prerequisites || []).join('\n'),
+          modules,
         })
       } catch {
         toast.error('Không thể tải dữ liệu khóa học')
@@ -93,21 +102,155 @@ const CourseEditorPage = () => {
     setCourse((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSave = async (e) => {
-    e.preventDefault()
+  const updateModuleField = (moduleIdx, field, value) => {
+    setCourse((prev) => {
+      const modules = [...prev.modules]
+      modules[moduleIdx] = { ...modules[moduleIdx], [field]: value }
+      return { ...prev, modules }
+    })
+  }
+
+  const updateLessonField = (moduleIdx, lessonIdx, field, value) => {
+    setCourse((prev) => {
+      const modules = [...prev.modules]
+      const lessons = [...(modules[moduleIdx].lessons || [])]
+      lessons[lessonIdx] = { ...lessons[lessonIdx], [field]: value }
+      modules[moduleIdx] = { ...modules[moduleIdx], lessons }
+      return { ...prev, modules }
+    })
+  }
+
+  const addModule = () => {
+    setCourse((prev) => ({
+      ...prev,
+      modules: [
+        ...prev.modules,
+        {
+          id: undefined,
+          title: `Module ${prev.modules.length + 1}`,
+          description: '',
+          order: prev.modules.length + 1,
+          difficulty: 'Basic',
+          estimated_hours: 1,
+          learning_outcomes: [],
+          lessons: [],
+        },
+      ],
+    }))
+  }
+
+  const removeModule = (moduleIdx) => {
+    setCourse((prev) => {
+      const modules = prev.modules.filter((_, i) => i !== moduleIdx)
+      return {
+        ...prev,
+        modules: modules.map((m, idx) => ({ ...m, order: idx + 1 })),
+      }
+    })
+  }
+
+  const addLesson = (moduleIdx) => {
+    setCourse((prev) => {
+      const modules = [...prev.modules]
+      const lessons = [...(modules[moduleIdx].lessons || [])]
+      lessons.push({
+        id: undefined,
+        title: `Bài ${lessons.length + 1}`,
+        description: '',
+        order: lessons.length + 1,
+        content: '',
+        content_type: 'text',
+        duration_minutes: 10,
+        video_url: '',
+      })
+      modules[moduleIdx] = { ...modules[moduleIdx], lessons }
+      return { ...prev, modules }
+    })
+  }
+
+  const removeLesson = (moduleIdx, lessonIdx) => {
+    setCourse((prev) => {
+      const modules = [...prev.modules]
+      const lessons = (modules[moduleIdx].lessons || [])
+        .filter((_, i) => i !== lessonIdx)
+        .map((l, idx) => ({ ...l, order: idx + 1 }))
+      modules[moduleIdx] = { ...modules[moduleIdx], lessons }
+      return { ...prev, modules }
+    })
+  }
+
+  const buildPayload = (nextStatus) => {
+    const modules = course.modules.map((m, mIdx) => ({
+      id: m.id,
+      title: (m.title || '').trim() || `Module ${mIdx + 1}`,
+      description: (m.description || '').trim(),
+      order: mIdx + 1,
+      difficulty: m.difficulty || 'Basic',
+      estimated_hours: Number(m.estimated_hours || 0),
+      learning_outcomes: m.learning_outcomes || [],
+      lessons: (m.lessons || []).map((l, lIdx) => ({
+        id: l.id,
+        title: (l.title || '').trim() || `Bài ${lIdx + 1}`,
+        order: lIdx + 1,
+        description: (l.description || '').trim(),
+        content: l.content || '',
+        content_type: l.content_type || 'text',
+        video_url: l.video_url || null,
+        duration_minutes: Number(l.duration_minutes || 0),
+        resources: [],
+      })),
+    }))
+
+    return {
+      title: course.title.trim(),
+      description: course.description.trim(),
+      category: course.category,
+      level: course.level,
+      status: nextStatus || course.status || 'draft',
+      learning_outcomes: course.learning_outcomes_text
+        .split('\n')
+        .map((x) => x.trim())
+        .filter(Boolean),
+      prerequisites: course.prerequisites_text
+        .split('\n')
+        .map((x) => x.trim())
+        .filter(Boolean),
+      modules,
+    }
+  }
+
+  const handleSave = async (e, { publishAndLearn = false } = {}) => {
+    if (e) e.preventDefault()
     if (!course.title.trim()) {
       toast.error('Tiêu đề khóa học là bắt buộc')
       return
     }
+    if (course.modules.length === 0) {
+      toast.error('Hãy thêm ít nhất 1 module')
+      return
+    }
+    if (course.modules.some((m) => (m.lessons || []).length === 0)) {
+      toast.error('Mỗi module cần có ít nhất 1 bài học')
+      return
+    }
+
     try {
-      setSaving(true)
-      await personalCourseService.updateCourse(courseId, course)
-      toast.success('Lưu khóa học thành công')
-      navigate('/dashboard/personal-courses')
+      setSaving(!publishAndLearn)
+      setSavingAndLearn(publishAndLearn)
+      const nextStatus = publishAndLearn ? 'published' : course.status || 'draft'
+      const payload = buildPayload(nextStatus)
+      await personalCourseService.updateCourse(courseId, payload)
+      toast.success(publishAndLearn ? 'Đã xuất bản và mở khóa học' : 'Lưu khóa học thành công')
+      if (publishAndLearn) {
+        navigate(`/dashboard/courses/${courseId}/modules`)
+      } else {
+        navigate('/dashboard/personal-courses')
+      }
     } catch {
       toast.error('Lưu thất bại. Vui lòng thử lại')
     } finally {
       setSaving(false)
+      setSavingAndLearn(false)
     }
   }
 
@@ -122,12 +265,6 @@ const CourseEditorPage = () => {
   const pageVariants = prefersReduced
     ? {}
     : { hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.65, 0, 0.35, 1] } } }
-
-  const moduleVariants = {
-    hidden: { height: 0, opacity: 0 },
-    visible: { height: 'auto', opacity: 1, transition: { duration: 0.28, ease: [0.65, 0, 0.35, 1] } },
-    exit: { height: 0, opacity: 0, transition: { duration: 0.2 } },
-  }
 
   return (
     <motion.div
@@ -149,11 +286,14 @@ const CourseEditorPage = () => {
           <h1 className="course-editor-bar__title">Chỉnh sửa khóa học</h1>
         </div>
         <div className="course-editor-bar__actions">
-          <Button variant="outline" onClick={() => navigate('/dashboard/personal-courses')} disabled={saving}>
+          <Button variant="outline" onClick={() => navigate('/dashboard/personal-courses')} disabled={saving || savingAndLearn}>
             Hủy
           </Button>
-          <Button variant="primary" onClick={handleSave} loading={saving} disabled={saving}>
-            {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+          <Button variant="outline" onClick={(e) => handleSave(e, { publishAndLearn: false })} loading={saving} disabled={saving || savingAndLearn}>
+            {saving ? 'Đang lưu...' : 'Lưu nháp'}
+          </Button>
+          <Button variant="primary" onClick={(e) => handleSave(e, { publishAndLearn: true })} loading={savingAndLearn} disabled={saving || savingAndLearn}>
+            {savingAndLearn ? 'Đang xuất bản...' : 'Xuất bản & vào học'}
           </Button>
         </div>
       </div>
@@ -225,6 +365,30 @@ const CourseEditorPage = () => {
                 rows={6}
               />
             </div>
+            <div className="course-editor-field">
+              <label htmlFor="learning_outcomes_text" className="course-editor-field__label">Kết quả đầu ra (mỗi dòng 1 ý)</label>
+              <textarea
+                id="learning_outcomes_text"
+                name="learning_outcomes_text"
+                className="course-editor-field__textarea"
+                value={course.learning_outcomes_text}
+                onChange={handleChange}
+                rows={4}
+                placeholder="Ví dụ: Viết được API CRUD cơ bản"
+              />
+            </div>
+            <div className="course-editor-field">
+              <label htmlFor="prerequisites_text" className="course-editor-field__label">Yêu cầu đầu vào (mỗi dòng 1 ý)</label>
+              <textarea
+                id="prerequisites_text"
+                name="prerequisites_text"
+                className="course-editor-field__textarea"
+                value={course.prerequisites_text}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Ví dụ: Biết cú pháp JavaScript cơ bản"
+              />
+            </div>
           </form>
         </section>
 
@@ -232,6 +396,9 @@ const CourseEditorPage = () => {
         <section className="course-editor-modules-pane">
           <div className="course-editor-section-label">Cấu trúc khóa học</div>
 
+          <div className="course-editor-module-actions">
+            <Button size="sm" onClick={addModule}>+ Thêm module</Button>
+          </div>
           {course.modules && course.modules.length > 0 ? (
             <div className="course-editor-module-list">
               {course.modules.map((mod, idx) => (
@@ -242,49 +409,90 @@ const CourseEditorPage = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.04, duration: 0.25 }}
                 >
-                  <button
-                    type="button"
-                    className="course-editor-module__header"
-                    onClick={() => setExpandedModule(expandedModule === idx ? null : idx)}
-                    aria-expanded={expandedModule === idx}
-                  >
-                    <span className="course-editor-module__grip">
-                      <GripIcon />
-                    </span>
-                    <span className="course-editor-module__order">{String(idx + 1).padStart(2, '0')}</span>
-                    <span className="course-editor-module__title">{mod.title || `Module ${idx + 1}`}</span>
-                    <span className={`course-editor-module__chevron ${expandedModule === idx ? 'expanded' : ''}`}>
-                      <ChevronRightIcon />
-                    </span>
-                  </button>
-
-                  <AnimatePresence>
-                    {expandedModule === idx && (
-                      <motion.div
-                        className="course-editor-module__body"
-                        variants={moduleVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        style={{ overflow: 'hidden' }}
-                      >
-                        {(mod.lessons || []).length > 0 ? (
-                          <ul className="course-editor-lesson-list">
-                            {mod.lessons.map((lesson, lIdx) => (
-                              <li key={lIdx} className="course-editor-lesson">
-                                <span className="course-editor-lesson__dot" />
-                                <span className="course-editor-lesson__title">
-                                  {lesson.title || `Bài ${lIdx + 1}`}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="course-editor-module__empty">Chưa có bài học</p>
-                        )}
-                      </motion.div>
+                  <div className="course-editor-module__body course-editor-module__body--always-open">
+                    <div className="course-editor-module-row">
+                      <label className="course-editor-field course-editor-field--compact">
+                        <span className="course-editor-field__label">Tên module</span>
+                        <input
+                          className="course-editor-field__input"
+                          value={mod.title || ''}
+                          onChange={(e) => updateModuleField(idx, 'title', e.target.value)}
+                        />
+                      </label>
+                      <label className="course-editor-field course-editor-field--compact">
+                        <span className="course-editor-field__label">Độ khó</span>
+                        <select
+                          className="course-editor-field__select"
+                          value={mod.difficulty || 'Basic'}
+                          onChange={(e) => updateModuleField(idx, 'difficulty', e.target.value)}
+                        >
+                          <option value="Basic">Basic</option>
+                          <option value="Intermediate">Intermediate</option>
+                          <option value="Advanced">Advanced</option>
+                        </select>
+                      </label>
+                    </div>
+                    <label className="course-editor-field course-editor-field--compact">
+                      <span className="course-editor-field__label">Mô tả module</span>
+                      <textarea
+                        className="course-editor-field__textarea"
+                        rows={2}
+                        value={mod.description || ''}
+                        onChange={(e) => updateModuleField(idx, 'description', e.target.value)}
+                      />
+                    </label>
+                    <div className="course-editor-module-toolbar">
+                      <Button size="sm" variant="outline" onClick={() => addLesson(idx)}>+ Thêm bài học</Button>
+                      <Button size="sm" variant="danger" onClick={() => removeModule(idx)}>Xóa module</Button>
+                    </div>
+                    {(mod.lessons || []).length > 0 ? (
+                      <ul className="course-editor-lesson-list">
+                        {mod.lessons.map((lesson, lIdx) => (
+                          <li key={lesson.id || lIdx} className="course-editor-lesson course-editor-lesson--editor">
+                            <div className="course-editor-lesson-head">
+                              <strong>Bài {lIdx + 1}</strong>
+                              <Button size="sm" variant="ghost" onClick={() => removeLesson(idx, lIdx)}>Xóa</Button>
+                            </div>
+                            <input
+                              className="course-editor-field__input"
+                              placeholder="Tiêu đề bài học"
+                              value={lesson.title || ''}
+                              onChange={(e) => updateLessonField(idx, lIdx, 'title', e.target.value)}
+                            />
+                            <textarea
+                              className="course-editor-field__textarea"
+                              rows={3}
+                              placeholder="Nội dung bài học"
+                              value={lesson.content || ''}
+                              onChange={(e) => updateLessonField(idx, lIdx, 'content', e.target.value)}
+                            />
+                            <div className="course-editor-module-row">
+                              <label className="course-editor-field course-editor-field--compact">
+                                <span className="course-editor-field__label">Thời lượng (phút)</span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  className="course-editor-field__input"
+                                  value={lesson.duration_minutes || 0}
+                                  onChange={(e) => updateLessonField(idx, lIdx, 'duration_minutes', Number(e.target.value || 0))}
+                                />
+                              </label>
+                              <label className="course-editor-field course-editor-field--compact">
+                                <span className="course-editor-field__label">Video URL (tuỳ chọn)</span>
+                                <input
+                                  className="course-editor-field__input"
+                                  value={lesson.video_url || ''}
+                                  onChange={(e) => updateLessonField(idx, lIdx, 'video_url', e.target.value)}
+                                />
+                              </label>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="course-editor-module__empty">Chưa có bài học trong module này</p>
                     )}
-                  </AnimatePresence>
+                  </div>
                 </motion.div>
               ))}
             </div>

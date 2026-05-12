@@ -120,13 +120,75 @@ async def get_user_assessment_sessions(
     Returns:
         List AssessmentSession documents
     """
-    query = AssessmentSession.find(AssessmentSession.user_id == user_id)
-    
     if status:
-        query = query.find(AssessmentSession.status == status)
-    
-    sessions = await query.skip(skip).limit(limit).to_list()
+        query = AssessmentSession.find(
+            AssessmentSession.user_id == user_id,
+            AssessmentSession.status == status,
+        )
+    else:
+        query = AssessmentSession.find(AssessmentSession.user_id == user_id)
+
+    sessions = await query.sort(-AssessmentSession.created_at).skip(skip).limit(limit).to_list()
     return sessions
+
+
+def build_assessment_review_payload(session: AssessmentSession) -> Dict:
+    """Ghép câu hỏi + câu trả lời đã lưu cho UI xem lại (read-only)."""
+    answers_by_id: Dict[str, Dict] = {}
+    for a in session.answers or []:
+        qid = a.get("question_id")
+        if qid:
+            answers_by_id[qid] = a
+
+    items: List[Dict] = []
+    for q in session.questions or []:
+        qid = q.get("question_id") or ""
+        ans = answers_by_id.get(qid, {})
+        content = ans.get("answer_content")
+        if content is None:
+            content = ""
+        sel = ans.get("selected_option")
+        opt_text = None
+        opts = q.get("options")
+        if sel is not None and isinstance(sel, int) and opts and isinstance(opts, list):
+            if 0 <= sel < len(opts):
+                opt_text = opts[sel]
+
+        row = {
+                "question_id": qid,
+                "question_text": q.get("question_text") or "",
+                "question_type": q.get("question_type") or "",
+                "difficulty": q.get("difficulty"),
+                "skill_tag": q.get("skill_tag"),
+                "points": q.get("points"),
+                "options": opts if isinstance(opts, list) else None,
+                "correct_answer_hint": q.get("correct_answer_hint"),
+                "answer_content": str(content),
+                "selected_option": sel if isinstance(sel, int) else None,
+                "selected_option_text": opt_text,
+                "time_taken_seconds": int(ans.get("time_taken_seconds") or 0),
+            }
+        items.append(row)
+
+    results_by_id = {r.get("question_id"): r for r in (session.per_question_results or [])}
+    for row in items:
+        rid = row.get("question_id")
+        pr = results_by_id.get(rid)
+        if pr:
+            row["is_correct"] = pr.get("is_correct")
+            row["grading_note"] = pr.get("explanation") or None
+
+    return {
+        "session_id": session.id,
+        "category": session.category,
+        "subject": session.subject,
+        "level": session.level,
+        "total_questions": session.total_questions,
+        "overall_score": session.overall_score,
+        "proficiency_level": session.proficiency_level,
+        "evaluated_at": session.evaluated_at,
+        "items": items,
+    }
 
 
 # ============================================================================
@@ -158,7 +220,8 @@ async def start_assessment(session_id: str) -> Optional[AssessmentSession]:
 
 async def submit_assessment(
     session_id: str,
-    answers: List[Dict]
+    answers: List[Dict],
+    total_elapsed_seconds: Optional[int] = None,
 ) -> Optional[AssessmentSession]:
     """
     Submit câu trả lời và đánh giá kết quả
@@ -206,6 +269,14 @@ async def submit_assessment(
         "overall_feedback": evaluation["overall_feedback"]
     }
     session.knowledge_gaps = evaluation["knowledge_gaps"]
+    session.per_question_results = evaluation.get("per_question_results") or []
+    cq = sum(
+        1 for r in session.per_question_results if r.get("is_correct") is True
+    )
+    session.correct_answers = cq
+
+    if total_elapsed_seconds is not None:
+        session.total_elapsed_seconds = max(0, int(total_elapsed_seconds))
     
     session.status = "evaluated"
     session.evaluated_at = datetime.utcnow()

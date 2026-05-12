@@ -4,19 +4,23 @@ Tuân thủ: ENDPOINTS.md Assessment Router, API_SCHEMA.md Section 2
 Version: 2.0 - Khớp với assessment_controller.py (Version 2.0)
 """
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Query
 from typing import Dict
 from schemas.assessment import (
     AssessmentGenerateRequest,
     AssessmentGenerateResponse,
     AssessmentSubmitRequest,
     AssessmentSubmitResponse,
-    AssessmentResultsResponse
+    AssessmentResultsResponse,
+    AssessmentHistoryResponse,
+    AssessmentReviewResponse,
 )
 from controllers.assessment_controller import (
     handle_generate_assessment,
     handle_submit_assessment,
-    handle_get_assessment_results
+    handle_get_assessment_results,
+    handle_list_assessment_history,
+    handle_get_assessment_review,
 )
 from middleware.auth import get_current_user
 
@@ -52,6 +56,25 @@ async def generate_assessment(
     Controller: handle_generate_assessment
     """
     return await handle_generate_assessment(request, current_user)
+
+
+@router.get(
+    "/history",
+    response_model=AssessmentHistoryResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Lịch sử các phiên đánh giá của tôi",
+    description="""
+    Trả về các phiên đánh giá đã tạo, mới nhất trước.
+    Dùng cho màn hình xem lại kết quả và bài làm (đã hoàn thành).
+    """,
+)
+async def list_assessment_history(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(30, ge=1, le=50),
+    current_user: Dict = Depends(get_current_user),
+) -> AssessmentHistoryResponse:
+    """GET /api/v1/assessments/history"""
+    return await handle_list_assessment_history(current_user, skip=skip, limit=limit)
 
 
 @router.post(
@@ -119,3 +142,20 @@ async def get_assessment_results(
     Controller: handle_get_assessment_results
     """
     return await handle_get_assessment_results(session_id, current_user)
+
+
+@router.get(
+    "/{session_id}/review",
+    response_model=AssessmentReviewResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Xem lại đề bài và đáp án đã nộp",
+    description="""
+    Read-only: toàn bộ câu hỏi và câu trả lời đã lưu sau khi phiên ở trạng thái **evaluated**.
+    """,
+)
+async def get_assessment_review(
+    session_id: str,
+    current_user: Dict = Depends(get_current_user),
+) -> AssessmentReviewResponse:
+    """GET /api/v1/assessments/{session_id}/review"""
+    return await handle_get_assessment_review(session_id, current_user)

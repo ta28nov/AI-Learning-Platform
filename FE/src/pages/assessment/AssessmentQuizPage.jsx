@@ -10,6 +10,14 @@ import AILoadingState from '@components/ui/AILoadingState'
 import { pageTurn, pageFade } from '@/styles/motion'
 import './AssessmentQuizPage.css'
 
+async function tryGetAssessmentResults(sessionId) {
+  try {
+    return await assessmentService.getResults(sessionId)
+  } catch {
+    return null
+  }
+}
+
 /**
  * Trang lam bai danh gia nang luc
  * Route: /dashboard/assessment/:sessionId
@@ -112,7 +120,7 @@ const AssessmentQuizPage = () => {
 
       await assessmentService.submit(sessionId, {
         answers: formattedAnswers,
-        total_time_seconds: totalTime - timeLeft,
+        total_time_seconds: Math.max(0, Math.round(totalTime - timeLeft)),
         submitted_at: new Date().toISOString()  // BE yêu cầu submitted_at (required)
       })
 
@@ -120,7 +128,42 @@ const AssessmentQuizPage = () => {
       sessionStorage.removeItem(`assessment_${sessionId}`)
       navigate(`/dashboard/assessment/${sessionId}/results`)
     } catch (error) {
-      toast.error(error.message || 'Không thể nộp bài')
+      const msg = error.message || ''
+      // Server đã ghi nhận (retry sau khi client timeout / BE idempotent)
+      if (/nộp trước|ghi nhận trước|already submitted/i.test(msg)) {
+        toast.success('Bài làm đã được ghi nhận. Đang chuyển đến kết quả…')
+        sessionStorage.removeItem(`assessment_${sessionId}`)
+        navigate(`/dashboard/assessment/${sessionId}/results`)
+        return
+      }
+      // Client timeout / mất response — server có thể vẫn đang chấm hoặc đã xong
+      const maybeNetwork =
+        msg.includes('Không thể kết nối') ||
+        msg.includes('ket noi den server') ||
+        error.code === 'ECONNABORTED'
+      if (maybeNetwork) {
+        const pollToast = toast.loading(
+          'Đang chờ server hoàn tất chấm điểm (có thể mất vài chục giây)…'
+        )
+        for (let i = 0; i < 28; i += 1) {
+          await new Promise((r) => setTimeout(r, 2500))
+          const data = await tryGetAssessmentResults(sessionId)
+          if (data && data.overall_score !== undefined) {
+            toast.dismiss(pollToast)
+            toast.success('Đã ghi nhận bài làm!')
+            sessionStorage.removeItem(`assessment_${sessionId}`)
+            navigate(`/dashboard/assessment/${sessionId}/results`)
+            return
+          }
+        }
+        toast.dismiss(pollToast)
+        toast.error(
+          'Chưa nhận được phản hồi kịp. Mở mục Đánh giá hoặc làm mới trang kết quả sau vài phút.',
+          { duration: 8000 }
+        )
+        return
+      }
+      toast.error(msg || 'Không thể nộp bài')
     } finally {
       setSubmitting(false)
     }

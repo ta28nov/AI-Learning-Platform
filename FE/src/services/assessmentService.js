@@ -1,4 +1,9 @@
-import api, { handleApiResponse, handleApiError, AI_TIMEOUT } from './api'
+import api, {
+  handleApiResponse,
+  handleApiError,
+  AI_TIMEOUT,
+  ASSESSMENT_SUBMIT_TIMEOUT
+} from './api'
 
 /**
  * Service xu ly danh gia nang luc AI
@@ -32,7 +37,9 @@ export const assessmentService = {
         ...data,
         submitted_at: data.submitted_at || new Date().toISOString()
       }
-      const response = await api.post(`/assessments/${sessionId}/submit`, payload)
+      const response = await api.post(`/assessments/${sessionId}/submit`, payload, {
+        timeout: ASSESSMENT_SUBMIT_TIMEOUT
+      })
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)
@@ -47,6 +54,30 @@ export const assessmentService = {
   async getResults(sessionId) {
     try {
       const response = await api.get(`/assessments/${sessionId}/results`)
+      return handleApiResponse(response)
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  /**
+   * Lich su phien danh gia (moi nhat truoc)
+   */
+  async listHistory(params = {}) {
+    try {
+      const response = await api.get('/assessments/history', { params })
+      return handleApiResponse(response)
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
+  /**
+   * Xem lai de bai + dap an da nop (read-only, sau khi da cham xong)
+   */
+  async getReview(sessionId) {
+    try {
+      const response = await api.get(`/assessments/${sessionId}/review`)
       return handleApiResponse(response)
     } catch (error) {
       handleApiError(error)
