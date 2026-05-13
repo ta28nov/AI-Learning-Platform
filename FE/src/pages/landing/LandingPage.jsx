@@ -48,36 +48,24 @@ const CHAT_PREVIEW = [
 
 /* ----- Animation variants ----- */
 const tileDropVariants = {
-  hidden: {
-    opacity: 0,
-    y: -180,
-    scale: 0.82,
-    rotate: -4,
-    filter: 'blur(8px)',
-  },
+  hidden: { opacity: 0, y: -72, scale: 0.9, rotate: -2, filter: 'blur(6px)' },
   show: {
     opacity: 1,
     y: 0,
     scale: 1,
     rotate: 0,
     filter: 'blur(0px)',
-    transition: {
-      type: 'spring',
-      stiffness: 120,
-      damping: 13,
-      mass: 1.2,
-      restDelta: 0.001,
-    },
+    transition: { type: 'spring', stiffness: 220, damping: 18, mass: 1 },
   },
 }
 
 const containerStagger = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.14, delayChildren: 0.1 } },
+  show: { transition: { staggerChildren: 0.12, delayChildren: 0.08 } },
 }
 
 const wordVariants = {
-  hidden: { opacity: 0, y: 36, rotate: 4 },
+  hidden: { opacity: 0, y: 32, rotate: 4 },
   show: {
     opacity: 1,
     y: 0,
@@ -87,22 +75,10 @@ const wordVariants = {
 }
 
 /* ----- Reusable components ----- */
-/**
- * Tile self-animates when it enters the viewport.
- * Each tile drops in independently, so cuộn tới đâu, khung mới rơi tới đó.
- * mode="container" lets a parent (BentoScreen) drive the stagger via variants instead.
- */
-const Tile = ({ children, className, reduce, mode = 'self', ...rest }) => {
+const Tile = ({ children, className, reduce, ...rest }) => {
   const props = reduce
     ? {}
-    : mode === 'container'
-    ? { variants: tileDropVariants }
-    : {
-        variants: tileDropVariants,
-        initial: 'hidden',
-        whileInView: 'show',
-        viewport: { once: true, amount: 0.25, margin: '0px 0px -8% 0px' },
-      }
+    : { variants: tileDropVariants }
 
   return (
     <motion.article className={`bento-tile ${className || ''}`} {...props} {...rest}>
@@ -356,19 +332,19 @@ const LandingHeader = ({ menuOpen, setMenuOpen, closeMenu }) => (
   </header>
 )
 
-/* ----- Bento group wrappers ----- */
-/**
- * BentoGroup: plain grid; each child Tile self-animates on enter view.
- * Giúp hiệu ứng "rơi xuống" gắn theo cuộn chuột thay vì rơi cả nhóm cùng lúc.
- */
-const BentoGroup = ({ children }) => (
-  <div className="bento-grid">{children}</div>
+/* ----- BentoGroup wrapper for stagger ----- */
+const BentoGroup = ({ children, reduce }) => (
+  <motion.div
+    className="bento-grid"
+    variants={reduce ? undefined : containerStagger}
+    initial="hidden"
+    whileInView="show"
+    viewport={{ once: true, amount: 0.12 }}
+  >
+    {children}
+  </motion.div>
 )
 
-/**
- * BentoScreen (hero row): trên-the-fold, dùng stagger để rơi tuần tự khi load,
- * không phụ thuộc cuộn.
- */
 const BentoScreen = ({ children, reduce }) => (
   <motion.div
     className="bento-grid bento-grid--screen"
@@ -409,9 +385,9 @@ const LandingPage = () => {
         <section className="bento" aria-labelledby="bento-heading">
           <h2 className="sr-only" id="bento-heading">AI learning bento layout</h2>
 
-          {/* ---------- Hero row (above-the-fold, stagger driven by parent) ---------- */}
+          {/* ---------- Hero row ---------- */}
           <BentoScreen reduce={r}>
-            <Tile className="bento-tile--hero tone-ink deco-dots" reduce={r} mode="container">
+            <Tile className="bento-tile--hero tone-ink deco-dots" reduce={r}>
               <div className="hero-aurora" aria-hidden="true" />
               <p className="tile-kicker">AI Learning Platform</p>
               <motion.h1
@@ -441,11 +417,11 @@ const LandingPage = () => {
               </div>
             </Tile>
 
-            <Tile className="bento-tile--media-tall tone-paper-2" reduce={r} mode="container">
+            <Tile className="bento-tile--media-tall tone-paper-2" reduce={r}>
               <MediaPlaceholder title="Ảnh 01" subtitle="Dashboard học tập cá nhân" ratio="portrait" />
             </Tile>
 
-            <Tile className="bento-tile--chips tone-cream tile-stack-top" reduce={r} mode="container">
+            <Tile className="bento-tile--chips tone-cream tile-stack-top" reduce={r}>
               <p className="tile-kicker">Mới cho bạn</p>
               <div className="chip-list chip-list--interactive">
                 <button type="button"><span className="chip-dot" aria-hidden="true" />Đánh giá năng lực</button>
@@ -454,7 +430,7 @@ const LandingPage = () => {
               </div>
             </Tile>
 
-            <Tile className="bento-tile--stat-a tone-honey" reduce={r} mode="container">
+            <Tile className="bento-tile--stat-a tone-honey" reduce={r}>
               <p className="tile-kicker">Cá nhân hóa</p>
               <p className="tile-stat"><Counter to={1} />:<Counter to={1} /></p>
               <p className="tile-copy tile-copy--sm">Lộ trình riêng cho từng học viên theo mục tiêu cá nhân.</p>
