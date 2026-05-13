@@ -27,7 +27,6 @@
   white-space: nowrap;
   /* Faux-3D baseline — Framer Motion will add rotateX/Y on hover */
   transform-style: preserve-3d;
-  will-change: transform;
 }
 
 /* Button sizes */

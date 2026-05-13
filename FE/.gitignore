@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/package-lock.json
 /.pnp
 .pnp.js
 
@@ -85,3 +86,5 @@ pids
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
+package-lock.json
+  

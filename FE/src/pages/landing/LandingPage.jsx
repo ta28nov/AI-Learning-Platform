@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   motion,
@@ -44,6 +44,22 @@ const CHAT_PREVIEW = [
   { role: 'user', text: 'Giải thích đoạn code này giúp mình?' },
   { role: 'ai',   text: 'Đoạn này dùng useEffect để gọi API khi mount...' },
   { role: 'user', text: 'Vậy tại sao cần cleanup?' },
+]
+
+const AI_RESPONSE = 'Hàm cleanup giúp tránh memory leak khi component bị unmount trước khi API trả về.'
+
+const CHIP_LABELS = ['Đánh giá năng lực', 'AI Tutor ngữ cảnh', 'Lộ trình tuần']
+const CHIP_STORIES = [
+  'Hà, 23 tuổi, mất 12 phút. Nhận ra mình ổn về lý thuyết nhưng yếu ở bài tập ứng dụng.',
+  'Mắc kẹt ở bài 4. Hỏi thẳng đoạn code. Hiểu ngay. Không cần Google.',
+  'Tuần này bận. AI rút xuống 3 bài thay vì 7. Vẫn đúng hướng.',
+]
+
+const HEATMAP_OPACITIES = [
+  0.3, 0.7, 0.2, 0.9, 0.5, 0.1, 0.8, 0.4,
+  0.6, 0.3, 1.0, 0.2, 0.7, 0.5, 0.3, 0.9,
+  0.1, 0.8, 0.4, 0.6, 0.2, 0.9, 0.5, 0.1,
+  0.7, 0.4, 0.6, 0.3, 0.8, 0.2, 1.0, 0.5,
 ]
 
 /* ----- Animation variants ----- */
@@ -192,32 +208,145 @@ const RoadmapStepper = ({ steps }) => {
   )
 }
 
-/* Chat preview */
+/* Chat preview — looping state machine */
 const ChatPreview = ({ messages }) => {
   const reduce = useReducedMotion()
-  const ref = useRef(null)
-  const inView = useInView(ref, { once: true, amount: 0.4 })
+  const containerRef = useRef(null)
+  const inView = useInView(containerRef, { once: false, amount: 0.4 })
+  const [phase, setPhase] = useState(-1)
+  const [visibleCount, setVisibleCount] = useState(0)
+  const [showTyping, setShowTyping] = useState(false)
+  const [showResponse, setShowResponse] = useState(false)
+  const [scrollingOut, setScrollingOut] = useState(false)
+  const responseRef = useRef(null)
+  const timerRef = useRef(null)
+  const wordTimerRef = useRef(null)
+  const startedRef = useRef(false)
+
+  const clearTimers = () => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
+    if (wordTimerRef.current) { clearTimeout(wordTimerRef.current); wordTimerRef.current = null }
+  }
+
+  const revealWords = () => {
+    const words = AI_RESPONSE.split(' ')
+    let idx = 0
+    const tick = () => {
+      idx++
+      if (responseRef.current) responseRef.current.textContent = words.slice(0, idx).join(' ')
+      if (idx >= words.length) { setPhase(6); return }
+      const remaining = words.length - idx
+      const delay = remaining <= 3 ? 120 + Math.random() * 40 : 50 + Math.random() * 30
+      wordTimerRef.current = setTimeout(tick, delay)
+    }
+    tick()
+  }
+
+  /* Start loop when first in view */
+  useEffect(() => {
+    if (reduce || !inView) return
+    if (!startedRef.current) { startedRef.current = true; setPhase(0) }
+  }, [inView, reduce])
+
+  /* Phase machine */
+  useEffect(() => {
+    if (reduce || phase < 0) return
+    clearTimers()
+
+    const delays = [500, 700, 500, 600, 1400, 0, 2000]
+    const actions = {
+      0: () => { setVisibleCount(1); setPhase(1) },
+      1: () => { setVisibleCount(2); setPhase(2) },
+      2: () => { setVisibleCount(3); setPhase(3) },
+      3: () => { setShowTyping(true); setPhase(4) },
+      4: () => { setShowTyping(false); setShowResponse(true); setPhase(5); revealWords() },
+      5: () => {},
+      6: () => {
+        setScrollingOut(true)
+        timerRef.current = setTimeout(() => {
+          setScrollingOut(false); setVisibleCount(0)
+          setShowTyping(false); setShowResponse(false)
+          if (responseRef.current) responseRef.current.textContent = ''
+          setPhase(0)
+        }, 800)
+      },
+    }
+
+    if (phase === 5) return
+    timerRef.current = setTimeout(() => actions[phase]?.(), delays[phase] || 0)
+    return clearTimers
+  }, [phase, reduce])
+
+  /* Reduced motion: static display */
+  if (reduce) {
+    return (
+      <div ref={containerRef} className="chat-preview" aria-hidden="true">
+        {messages.map((m, i) => (
+          <div key={i} className={`chat-msg chat-msg--${m.role}`}>{m.text}</div>
+        ))}
+        <div className="chat-msg chat-msg--ai">{AI_RESPONSE}</div>
+      </div>
+    )
+  }
+
   return (
-    <div ref={ref} className="chat-preview" aria-hidden="true">
-      {messages.map((m, i) => (
-        <motion.div
-          key={i}
-          className={`chat-msg chat-msg--${m.role}`}
-          initial={reduce ? false : { opacity: 0, y: 10 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.4, delay: 0.25 + i * 0.35, ease: [0.4, 0, 0.2, 1] }}
-        >
-          {m.text}
-        </motion.div>
-      ))}
-      <motion.div
-        className="chat-msg chat-msg--typing"
-        initial={reduce ? { opacity: 1 } : { opacity: 0 }}
-        animate={inView ? { opacity: 1 } : {}}
-        transition={{ delay: 0.25 + messages.length * 0.35 }}
-      >
-        <span /><span /><span />
-      </motion.div>
+    <div
+      ref={containerRef}
+      className={`chat-preview${scrollingOut ? ' chat-preview--scroll-out' : ''}`}
+      aria-hidden="true"
+    >
+      <AnimatePresence>
+        {visibleCount >= 1 && (
+          <motion.div
+            key="m0"
+            className="chat-msg chat-msg--user"
+            initial={{ opacity: 0, y: 12, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            transition={{ type: 'spring', stiffness: 300, damping: 12 }}
+          >{messages[0].text}</motion.div>
+        )}
+        {visibleCount >= 2 && (
+          <motion.div
+            key="m1"
+            className="chat-msg chat-msg--ai"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            transition={{ duration: 0.35, ease: 'linear' }}
+          >{messages[1].text}</motion.div>
+        )}
+        {visibleCount >= 3 && (
+          <motion.div
+            key="m2"
+            className="chat-msg chat-msg--user"
+            initial={{ opacity: 0, y: 12, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            transition={{ type: 'spring', stiffness: 300, damping: 12 }}
+          >{messages[2].text}</motion.div>
+        )}
+        {showTyping && (
+          <motion.div
+            key="typing"
+            className="chat-msg chat-msg--typing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          ><span /><span /><span /></motion.div>
+        )}
+        {showResponse && (
+          <motion.div
+            key="response"
+            className="chat-msg chat-msg--ai"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            transition={{ duration: 0.35, ease: 'linear' }}
+          ><span ref={responseRef} /></motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -286,6 +415,166 @@ const CheckList = ({ items }) => {
         </motion.li>
       ))}
     </ul>
+  )
+}
+
+/* ----- Inline data visualizations ----- */
+
+/* Portrait — concentric arcs (dashboard) */
+const DashboardViz = () => (
+  <div className="viz-arcs" aria-hidden="true">
+    <svg viewBox="0 0 200 260" fill="none">
+      <g transform="translate(75, 90)">
+        <circle
+          r="90" stroke="var(--c-honey)" strokeWidth="6"
+          strokeDasharray="407.15 158.34" transform="rotate(-90)"
+        />
+        <circle
+          r="68" stroke="var(--c-clay)" strokeWidth="6"
+          strokeDasharray="234.99 192.27" transform="rotate(-90)"
+        />
+        <circle
+          r="46" stroke="var(--c-sage)" strokeWidth="6"
+          strokeDasharray="254.35 34.68" transform="rotate(-90)"
+        />
+      </g>
+    </svg>
+  </div>
+)
+
+/* Wide — bezier curve with stage dots (roadmap) */
+const RoadmapViz = () => (
+  <div className="viz-curve" aria-hidden="true">
+    <svg viewBox="0 0 500 160" preserveAspectRatio="xMidYMid meet" fill="none">
+      <path
+        d="M0,130 C31,130 31,30 62,30 C93,30 93,130 125,130 C156,130 156,30 187,30 C218,30 218,130 250,130 C281,130 281,30 312,30 C343,30 343,130 375,130 C406,130 406,30 437,30 C468,30 468,130 500,130"
+        stroke="var(--c-honey)" strokeWidth="1.5"
+      />
+      <circle cx="62"  cy="30" r="4" fill="var(--c-honey)" />
+      <circle cx="187" cy="30" r="6" fill="var(--c-honey)" className="viz-curve__dot-active" />
+      <circle cx="312" cy="30" r="4" fill="var(--c-honey)" />
+      <circle cx="437" cy="30" r="4" fill="var(--c-honey)" />
+    </svg>
+  </div>
+)
+
+/* Landscape — 8×4 heatmap grid (instructor) */
+const HeatmapGrid = () => (
+  <div className="viz-heatmap" aria-hidden="true">
+    {HEATMAP_OPACITIES.map((op, i) => (
+      <span key={i} className="heatmap-cell" style={{ opacity: op }} />
+    ))}
+  </div>
+)
+
+/* Full-bleed — animated data flow network (capabilities) */
+const CapabilitiesViz = () => (
+  <div className="viz-network" aria-hidden="true">
+    <svg viewBox="0 0 600 400" fill="none" preserveAspectRatio="xMidYMid slice">
+      {/* Flow paths — each represents a capability stream */}
+      <path
+        d="M-20,200 C80,200 130,60 230,60 S380,200 480,200 S560,100 620,100"
+        stroke="var(--c-honey)" strokeWidth="1.5" className="viz-flow viz-flow--1"
+      />
+      <path
+        d="M-20,300 C60,300 100,340 200,340 S340,100 440,100 S560,300 620,300"
+        stroke="var(--c-clay)" strokeWidth="1.5" className="viz-flow viz-flow--2"
+      />
+      <path
+        d="M-20,100 C80,100 180,360 300,200 S460,40 620,200"
+        stroke="var(--c-sage)" strokeWidth="1.5" className="viz-flow viz-flow--3"
+      />
+      <path
+        d="M-20,360 C130,360 180,200 300,200 S470,360 620,60"
+        stroke="var(--c-honey-2)" strokeWidth="1" opacity="0.45" className="viz-flow viz-flow--4"
+      />
+      {/* Connector threads */}
+      <path
+        d="M230,60 Q265,130 300,200" stroke="var(--c-line-2)" strokeWidth="0.8"
+      />
+      <path
+        d="M440,100 Q370,150 300,200" stroke="var(--c-line-2)" strokeWidth="0.8"
+      />
+      {/* Intersection nodes */}
+      <circle cx="230" cy="60"  r="6" fill="var(--c-honey)" className="viz-node viz-node--1" />
+      <circle cx="300" cy="200" r="9" fill="var(--c-clay)"  className="viz-node viz-node--2" />
+      <circle cx="440" cy="100" r="5" fill="var(--c-sage)"  className="viz-node viz-node--3" />
+      <circle cx="200" cy="340" r="5" fill="var(--c-honey)" className="viz-node viz-node--4" />
+      {/* Small accent dots */}
+      <circle cx="480" cy="200" r="3" fill="var(--c-honey)" opacity="0.5" />
+      <circle cx="100" cy="200" r="3" fill="var(--c-clay)" opacity="0.4" />
+      <circle cx="380" cy="320" r="2.5" fill="var(--c-sage)" opacity="0.4" />
+    </svg>
+  </div>
+)
+/* Chip tile with micro-story morph */
+const ChipListTile = () => {
+  const reduce = useReducedMotion()
+  const [activeChip, setActiveChip] = useState(-1)
+  const storyRef = useRef(null)
+  const charTimerRef = useRef(null)
+
+  const handleClick = (idx) => {
+    if (charTimerRef.current) { clearInterval(charTimerRef.current); charTimerRef.current = null }
+
+    if (activeChip === idx) { setActiveChip(-1); return }
+    setActiveChip(idx)
+
+    /* character-by-character reveal via direct DOM */
+    if (reduce) return
+    const text = CHIP_STORIES[idx]
+    let pos = 0
+    /* clear previous text — will be set once AnimatePresence renders the node */
+    const startReveal = () => {
+      if (!storyRef.current) {
+        /* wait for DOM node from AnimatePresence */
+        requestAnimationFrame(startReveal)
+        return
+      }
+      storyRef.current.textContent = ''
+      charTimerRef.current = setInterval(() => {
+        pos++
+        if (storyRef.current) storyRef.current.textContent = text.slice(0, pos)
+        if (pos >= text.length && charTimerRef.current) clearInterval(charTimerRef.current)
+      }, 30)
+    }
+    requestAnimationFrame(startReveal)
+  }
+
+  useEffect(() => () => {
+    if (charTimerRef.current) clearInterval(charTimerRef.current)
+  }, [])
+
+  return (
+    <>
+      <p className="tile-kicker">Mới cho bạn</p>
+      <div className="chip-list chip-list--interactive">
+        {CHIP_LABELS.map((label, i) => (
+          <button
+            key={label}
+            type="button"
+            className={activeChip === i ? 'is-active' : ''}
+            onClick={() => handleClick(i)}
+          >
+            <span className="chip-dot" aria-hidden="true" />{label}
+          </button>
+        ))}
+      </div>
+      <AnimatePresence mode="wait">
+        {activeChip >= 0 ? (
+          <motion.p
+            key={`story-${activeChip}`}
+            className="chip-story"
+            initial={reduce ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+          >
+            <span ref={storyRef}>{reduce ? CHIP_STORIES[activeChip] : ''}</span>
+          </motion.p>
+        ) : null}
+      </AnimatePresence>
+    </>
   )
 }
 
@@ -418,16 +707,11 @@ const LandingPage = () => {
             </Tile>
 
             <Tile className="bento-tile--media-tall tone-paper-2" reduce={r}>
-              <MediaPlaceholder title="Ảnh 01" subtitle="Dashboard học tập cá nhân" ratio="portrait" />
+              <DashboardViz />
             </Tile>
 
             <Tile className="bento-tile--chips tone-cream tile-stack-top" reduce={r}>
-              <p className="tile-kicker">Mới cho bạn</p>
-              <div className="chip-list chip-list--interactive">
-                <button type="button"><span className="chip-dot" aria-hidden="true" />Đánh giá năng lực</button>
-                <button type="button"><span className="chip-dot" aria-hidden="true" />AI Tutor ngữ cảnh</button>
-                <button type="button"><span className="chip-dot" aria-hidden="true" />Lộ trình tuần</button>
-              </div>
+              <ChipListTile />
             </Tile>
 
             <Tile className="bento-tile--stat-a tone-honey" reduce={r}>
@@ -458,43 +742,29 @@ const LandingPage = () => {
               <RoadmapStepper steps={FLOW_STEPS} />
             </Tile>
 
-            <Tile className="bento-tile--capabilities tone-cream tile-stack-top" reduce={r}>
-              <p className="tile-kicker">Khả năng cốt lõi</p>
-              <ul className="feature-list">
-                {CORE_FEATURES.map((item) => (
-                  <li key={item.title}>
-                    <span className="feature-icon" aria-hidden="true">{item.icon}</span>
-                    <strong>{item.title}</strong>
-                    <span>{item.desc}</span>
-                  </li>
-                ))}
-              </ul>
+            <Tile className="bento-tile--capabilities tone-cream" reduce={r}>
+              <CapabilitiesViz />
             </Tile>
 
             <Tile className="bento-tile--media-wide tone-paper-2" reduce={r}>
-              <MediaPlaceholder title="Ảnh 04" subtitle="Lộ trình học cá nhân hóa" ratio="wide" />
+              <RoadmapViz />
             </Tile>
 
             <Tile className="bento-tile--instructor tone-sage" reduce={r} id="giang-vien">
               <p className="tile-kicker">Dành cho giảng viên</p>
               <h3 className="tile-title">Soạn nội dung một lần, AI hỗ trợ quiz và theo dõi tiến độ lớp.</h3>
-              <MediaPlaceholder title="Ảnh 05" subtitle="Giao diện quản lý lớp/khóa" ratio="landscape" />
+              <HeatmapGrid />
             </Tile>
 
             <Tile className="bento-tile--trust tone-ink deco-dots tile-stack-top" reduce={r}>
               <p className="tile-kicker">Tin cậy</p>
               <h3 className="tile-title">Dữ liệu học tập tách biệt và bảo mật.</h3>
-              <CheckList items={TRUST_ITEMS} />
-              <div className="trust-meta">
-                <div>
-                  <strong><Counter to={256} /></strong>
-                  <span>bit encryption</span>
-                </div>
-                <div>
-                  <strong><Counter to={99} suffix=".9%" /></strong>
-                  <span>uptime SLA</span>
-                </div>
-              </div>
+              <img
+                src="/landing/trust-security.png"
+                alt="Mã hóa dữ liệu đầu cuối, bảo mật 256-bit, 99.9% uptime"
+                className="tile-hero-img tile-hero-img--dark"
+                loading="lazy"
+              />
             </Tile>
 
             <Tile className="bento-tile--faq tone-paper tile-stack-top" reduce={r}>
@@ -503,7 +773,12 @@ const LandingPage = () => {
             </Tile>
 
             <Tile className="bento-tile--community tone-paper-2" reduce={r}>
-              <MediaPlaceholder title="Ảnh 06" subtitle="Hình ảnh cộng đồng học viên" ratio="landscape" />
+              <img
+                src="/landing/community-learners.png"
+                alt="Cộng đồng học viên AI Learning"
+                className="community-img"
+                loading="lazy"
+              />
               <p className="tile-copy">“Lộ trình rõ ràng hơn hẳn và AI giải thích đúng chỗ mình vướng.”</p>
               <p className="tile-attribution">— Học viên Data Analytics</p>
             </Tile>
