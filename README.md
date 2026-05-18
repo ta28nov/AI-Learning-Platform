@@ -305,11 +305,70 @@ Mục này tổng hợp những điểm code thực tế **lệch** với tài l
 
 - [ ] **Forgot / reset / verify password** — page tồn tại (`FE/src/pages/auth/{ForgotPassword,ResetPassword,VerifyEmail}Page.jsx`) nhưng service throw vì BE chưa có endpoint (`FE/src/services/authService.js`). `auth_router.py` chỉ có `register / login / logout / refresh`.
 - [x] **Seed script** — có sẵn [`BE/scripts/init_data.py`](BE/scripts/init_data.py): `cd BE && python -m scripts.init_data` (full reset DB + seed lớn). Sau khi chạy, script in demo accounts (ví dụ `admin1@ailearning.vn / Admin@123456`, `instructor1@ailearning.vn / Instructor@123`, `student1@gmail.com / Student@123`). Có thể dùng kèm smoke test [`BE/scripts/smoke_test.py`](BE/scripts/smoke_test.py).
-- [ ] **Tests** — `pytest` có trong `BE/requirements.txt` và `vitest` có trong `FE/package.json`, nhưng **không có file test thực tế** trong cả 2 phân hệ.
+- [x] **Tests** — Integration tests (`BE/tests/`, pytest + httpx) và E2E Playwright (`e2e/`, JavaScript). Xem [Chạy tests](#11-chạy-tests) bên dưới.
 - [ ] **`SECRET_KEY` vs `JWT_SECRET_KEY`** — `BE/QUICKSTART.md` viết `JWT_SECRET_KEY`, nhưng `BE/config/config.py` đọc biến tên **`SECRET_KEY`**. Dùng `SECRET_KEY` trong `.env`.
 - [ ] **RBAC helpers chưa gắn router** — `BE/middleware/rbac.py` có `require_admin / require_instructor / require_student`, hierarchy đầy đủ, nhưng các router hiện kiểm `role` bằng cách so chuỗi trong controller (xem `BE/controllers/{admin,dashboard,quiz,search}_controller.py`).
 - [ ] **Progress page chưa wire BE** — `BE/routers/progress_router.py` expose `GET /progress/course/{id}` và `FE/src/services/progressService.js` đã có hàm gọi, nhưng **không page nào import**. `ProgressPage` đang dùng `analyticsService` (`/analytics/learning-stats`, `/analytics/progress-chart`).
 - [ ] **Instructor bị chặn personal-courses** — `FE/src/AppRouter.jsx` bọc `/dashboard/personal-courses*` trong `<StudentRoute>` ⇒ role `instructor` sẽ rơi vào `/unauthorized`. Nếu muốn instructor cũng dùng course editor, cần đổi guard.
+
+---
+
+## 11. Chạy tests
+
+### Coverage (Phase 2)
+
+| Metric | Phase 1 | Phase 2 |
+|--------|---------|---------|
+| pytest cases | 38 | **171** |
+| API routes có test (ước lượng) | ~22 | **~68/74** path OpenAPI |
+| E2E specs (Playwright JS) | 9 | **~17** |
+| Student FLOW_STEPS (pytest) | một phần | happy path (`integration/test_flow_steps.py`) |
+| Student FLOW_STEPS (E2E) | generate only | generate + enroll/lesson + quiz (seed); assessment/chat cần `GOOGLE_API_KEY` |
+
+### Backend (pytest)
+
+Yêu cầu MongoDB đang chạy (`docker compose up -d mongodb` trong `BE/`).
+
+```powershell
+cd BE
+pip install -r requirements.txt
+pytest -q
+pytest tests/recommendations -v
+pytest tests/integration -v -m integration
+python scripts/export_openapi.py      # refresh OpenAPI snapshot
+python scripts/generate_postman.py    # refresh Postman collection
+```
+
+Tests dùng database riêng `ai_learning_test` và mock Google Gemini (không gọi API thật). Markers: `integration`, `ai` (xem `BE/pytest.ini`).
+
+**Coverage & lỗi:** [`docs/reports/API_COVERAGE_LOG.md`](docs/reports/API_COVERAGE_LOG.md) (danh sách API + flow), [`docs/reports/TEST_ISSUES_AND_GAPS.md`](docs/reports/TEST_ISSUES_AND_GAPS.md) (BUG-001–014, RBAC).
+
+### Postman
+
+Import collection đã export:
+
+- [`docs/postman/AI-Learning-Platform.postman_collection.json`](docs/postman/AI-Learning-Platform.postman_collection.json)
+- [`docs/postman/local.postman_environment.json`](docs/postman/local.postman_environment.json)
+
+Hoặc import trực tiếp từ `http://localhost:8000/openapi.json` khi BE đang chạy.
+
+### E2E (Playwright, JavaScript)
+
+Yêu cầu: seed data (`cd BE && python -m scripts.init_data`). Flow assessment và chat E2E cần `GOOGLE_API_KEY` hợp lệ (spec tự `test.skip` nếu thiếu).
+
+```powershell
+cd e2e
+npm install
+npx playwright install chromium
+npm test
+npm run test:ui
+```
+
+Specs: `auth`, `student-flow`, `assessment-flow`, `recommendations`, `enrollment-lesson`, `chat`, `quiz`, `instructor`, `admin`. Page objects trong `e2e/pages/`.
+
+Biến môi trường tùy chọn: `E2E_BASE_URL`, `E2E_SKIP_WEB_SERVER=true` (khi BE/FE đã chạy sẵn).
+
+**Lỗi BE ghi nhận qua test:** xem [`docs/reports/TEST_ISSUES_AND_GAPS.md`](docs/reports/TEST_ISSUES_AND_GAPS.md) (BUG-001 … BUG-008, endpoint chưa cover).
 
 ---
 

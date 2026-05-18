@@ -300,7 +300,7 @@ Reference đầy đủ: [`../docs/API.md`](../docs/API.md).
 
 - **Seed**: [`scripts/init_data.py`](scripts/init_data.py) — chạy `cd BE && python -m scripts.init_data` (full reset collections + seed lớn: users, courses, enrollments, quizzes, classes, …). Cuối script in **demo accounts** (ví dụ `admin1@ailearning.vn / Admin@123456`). Tham khảo thêm [`docs/reports/SEED_SCHEMA_MATRIX.md`](docs/reports/SEED_SCHEMA_MATRIX.md).
   - Nếu không muốn reset toàn DB: chỉ dùng Swagger `POST /auth/register` rồi `PUT /admin/users/{id}/role` khi cần role đặc biệt.
-- **Tests**: `pytest`, `pytest-asyncio`, `coverage`, `Faker` đã có trong `requirements.txt`, nhưng repo **chưa có file test** thực tế (không có thư mục `tests/`). Khi viết test sẽ cần fixture: motor client riêng cho test DB, override `get_settings()` dependency.
+- **Tests**: Thư mục [`tests/`](tests/) — **171** pytest cases; báo cáo lỗi: [`docs/reports/TEST_ISSUES_AND_GAPS.md`](../docs/reports/TEST_ISSUES_AND_GAPS.md) (integration, mock Gemini), database `ai_learning_test`. Modules: auth, assessments, recommendations, courses, enrollments, learning, quizzes, dashboard, chat, users, progress, search, analytics, classes, personal_courses, admin, instructor, **rbac** (`tests/rbac/` — ma trận Admin/Instructor + unit `middleware/rbac.py`), `integration/test_flow_steps.py`. Chạy: `pytest -q`. Export OpenAPI: `python scripts/export_openapi.py`; Postman: `python scripts/generate_postman.py`.
 
 ---
 
@@ -318,7 +318,6 @@ Reference đầy đủ: [`../docs/API.md`](../docs/API.md).
 ## 14. Known gaps & lưu ý
 
 - **`PasswordResetTokenDocument`** có collection nhưng không router nào dùng (chưa có endpoint forgot/reset password). FE có page nhưng service báo lỗi 501.
-- **Không có file test thực sự**, dù đã có `pytest` setup.
 - **`SECRET_KEY` vs `JWT_SECRET_KEY`** — QUICKSTART đang nhầm tên biến; dùng `SECRET_KEY` trong `.env`.
 - **RBAC dependency không được gắn router** — như mục 9.2 mô tả. Khuyến nghị refactor sang `Depends(require_role(...))`.
 - **`GEMINI_MODEL` không nhất quán** — code default `gemini-1.5-pro`, `.env.example` ghi `gemini-2.5-flash`.
