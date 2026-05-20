@@ -59,7 +59,7 @@ async def test_join_class_already_joined(client, student_auth, instructor_with_c
 async def test_join_class_preparing_status_rejected(
     client, student_auth, instructor_auth, published_catalog_course
 ):
-    """BUG-014: POST /classes sets status=preparing; join requires active."""
+    """BUG-014: preparing class rejects join until active."""
     now = datetime.now(timezone.utc)
     created = await client.post(
         "/classes",
@@ -67,8 +67,8 @@ async def test_join_class_preparing_status_rejected(
             "name": "Preparing Class",
             "description": "Class not yet active for join",
             "course_id": published_catalog_course.id,
-            "start_date": now.isoformat(),
-            "end_date": (now + timedelta(days=30)).isoformat(),
+            "start_date": (now + timedelta(days=7)).isoformat(),
+            "end_date": (now + timedelta(days=37)).isoformat(),
             "max_students": 10,
         },
         headers=instructor_auth["headers"],

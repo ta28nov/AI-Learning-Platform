@@ -7,6 +7,7 @@ Section 2.7.1
 from typing import Dict, Optional
 from fastapi import HTTPException, status
 
+from middleware.rbac import Role, ensure_minimum_role, ensure_student_only
 from schemas.dashboard import (
     StudentDashboardResponse,
     LearningStatsResponse,
@@ -79,6 +80,7 @@ async def handle_get_learning_stats(current_user: Dict) -> LearningStatsResponse
     Raises:
         HTTPException 500: Lỗi khi tính toán stats
     """
+    ensure_student_only(current_user, "Chỉ học viên mới có quyền truy cập thống kê học tập")
     user_id = current_user.get("user_id")
     
     try:
@@ -172,15 +174,12 @@ async def handle_get_instructor_dashboard(current_user: Dict) -> InstructorDashb
         
     Endpoint: GET /api/v1/dashboard/instructor
     """
+    ensure_minimum_role(
+        current_user,
+        Role.INSTRUCTOR,
+        "Chỉ giảng viên hoặc admin mới có quyền truy cập dashboard này",
+    )
     instructor_id = current_user.get("user_id")
-    role = current_user.get("role")
-    
-    # Check instructor role
-    if role != "instructor":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Chỉ instructor mới có quyền truy cập dashboard này"
-        )
     
     try:
         dashboard_data = await dashboard_service.get_instructor_dashboard(instructor_id)
@@ -219,15 +218,12 @@ async def handle_get_instructor_class_stats(
         
     Endpoint: GET /api/v1/analytics/instructor/classes?class_id=xxx
     """
+    ensure_minimum_role(
+        current_user,
+        Role.INSTRUCTOR,
+        "Chỉ giảng viên hoặc admin mới có quyền truy cập analytics này",
+    )
     instructor_id = current_user.get("user_id")
-    role = current_user.get("role")
-    
-    # Check instructor role
-    if role != "instructor":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Chỉ instructor mới có quyền truy cập analytics này"
-        )
     
     try:
         stats_data = await dashboard_service.get_instructor_class_stats(
@@ -272,15 +268,12 @@ async def handle_get_instructor_progress_chart(
         
     Endpoint: GET /api/v1/analytics/instructor/progress-chart?time_range=week&class_id=xxx
     """
+    ensure_minimum_role(
+        current_user,
+        Role.INSTRUCTOR,
+        "Chỉ giảng viên hoặc admin mới có quyền truy cập analytics này",
+    )
     instructor_id = current_user.get("user_id")
-    role = current_user.get("role")
-    
-    # Check instructor role
-    if role != "instructor":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Chỉ instructor mới có quyền truy cập analytics này"
-        )
     
     # Validate time_range
     valid_ranges = ["day", "week", "month"]
@@ -330,15 +323,12 @@ async def handle_get_instructor_quiz_performance(
         
     Endpoint: GET /api/v1/analytics/instructor/quiz-performance
     """
+    ensure_minimum_role(
+        current_user,
+        Role.INSTRUCTOR,
+        "Chỉ giảng viên hoặc admin mới có quyền truy cập analytics này",
+    )
     instructor_id = current_user.get("user_id")
-    role = current_user.get("role")
-    
-    # Check instructor role
-    if role != "instructor":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Chỉ instructor mới có quyền truy cập analytics này"
-        )
     
     try:
         performance_data = await dashboard_service.get_instructor_quiz_performance(instructor_id)

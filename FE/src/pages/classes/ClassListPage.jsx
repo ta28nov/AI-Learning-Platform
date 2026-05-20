@@ -7,7 +7,7 @@ import { useAuthStore } from '@stores/authStore'
 import Button from '@components/ui/Button'
 import StateView from '@components/ui/StateView'
 import JoinClassModal from '@components/classes/JoinClassModal'
-import './ClassListPage.css'
+import { navigateToCourseLearning } from '@utils/classLearningContext'
 
 const UsersIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -95,13 +95,24 @@ const ClassListPage = () => {
           animate="visible"
           variants={{ visible: { transition: { staggerChildren: 0.07 } } }}
         >
-          {classes.map((cls) => (
+          {classes.map((cls) => {
+            const id = cls.id || cls.class_id
+            const courseId = cls.course_id
+            const isStudent = user?.role === 'student'
+            return (
             <motion.div
-              key={cls.id}
+              key={id}
               className="cls-card"
               variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.65, 0, 0.35, 1] } } }}
               whileHover={{ y: -3 }}
-              onClick={() => navigate(`/dashboard/instructor/classes/${cls.id}`)}
+              onClick={() => {
+                if (user?.role === 'instructor' || user?.role === 'admin') {
+                  navigate(`/dashboard/instructor/classes/${id}`)
+                } else {
+                  navigate(`/dashboard/classes/${id}`)
+                }
+              }}
+              style={{ cursor: 'pointer' }}
             >
               <div className="cls-card__top">
                 <h3 className="cls-card__name">{cls.name}</h3>
@@ -111,6 +122,9 @@ const ClassListPage = () => {
               </div>
 
               {cls.course_title && <p className="cls-card__course">{cls.course_title}</p>}
+              {isStudent && cls.instructor_name && (
+                <p className="cls-card__course">GV: {cls.instructor_name}</p>
+              )}
 
               <div className="cls-card__meta">
                 <span className="cls-card__meta-item">
@@ -131,8 +145,29 @@ const ClassListPage = () => {
                   <span className="cls-card__progress-pct">{Math.round(cls.progress)}%</span>
                 </div>
               )}
+
+              {isStudent && courseId && (
+                <div className="cls-card__actions">
+                  <Button
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      navigateToCourseLearning(navigate, {
+                        courseId,
+                        classId: id,
+                        className: cls.name,
+                        instructorName: cls.instructor_name,
+                        nextLesson: cls.next_lesson,
+                        resume: true,
+                      })
+                    }}
+                  >
+                    {(cls.progress ?? 0) > 0 ? 'Tiếp tục học' : 'Bắt đầu học'}
+                  </Button>
+                </div>
+              )}
             </motion.div>
-          ))}
+          )})}
         </motion.div>
       )}
 
@@ -141,7 +176,11 @@ const ClassListPage = () => {
         <StateView
           type="empty"
           message={user?.role === 'student' ? 'Bạn chưa tham gia lớp học nào' : 'Bạn chưa có lớp học nào'}
-          action={user?.role !== 'student' ? { label: 'Tạo lớp mới', onClick: () => navigate('/dashboard/instructor/classes/create') } : undefined}
+          action={
+            user?.role === 'student'
+              ? { label: 'Tham gia bằng mã mời', onClick: () => setJoinModalOpen(true) }
+              : { label: 'Tạo lớp mới', onClick: () => navigate('/dashboard/instructor/classes/create') }
+          }
         />
       )}
 

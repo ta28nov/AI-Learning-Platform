@@ -56,16 +56,11 @@ async def create_class(
 @router.get(
     "/my-classes",
     response_model=ClassListResponse,
-    summary="3.1.2: Danh sách lớp của instructor",
+    summary="3.1.2: Danh sách lớp của tôi (theo role)",
     description="""
-    Xem tất cả lớp học mà instructor đã tạo.
-    
-    **Features:**
-    - Filter theo status (preparing/active/completed)
-    - Sort theo created_at DESC
-    - Hiển thị student count và overall progress
-    
-    **Auth:** Bearer token (Instructor)
+  - **Instructor:** lớp đã tạo (`instructor_id`)
+  - **Student:** lớp đã tham gia (`student_ids`)
+  - Filter `status`, sort `created_at` DESC
     """
 )
 async def list_my_classes(
@@ -87,7 +82,7 @@ async def list_my_classes(
     - Danh sách students với progress
     - Statistics: lessons completed, avg quiz score
     
-    **Auth:** Bearer token (Instructor - owner only)
+    **Auth:** Instructor (owner), Student (đã join), Admin
     """
 )
 async def get_class_detail(
@@ -231,6 +226,23 @@ async def remove_student(
     current_user: dict = Depends(get_current_user)
 ):
     return await class_controller.handle_remove_student(class_id, student_id, current_user)
+
+
+@router.get(
+    "/{class_id}/my-progress",
+    response_model=ClassStudentDetailResponse,
+    summary="3.2.3b: Tiến độ cá nhân HV trong lớp",
+    description="""
+    Học viên xem tiến độ module/quiz của bản thân trong lớp đã tham gia.
+
+    **Auth:** Bearer token (Student đã join lớp)
+    """
+)
+async def get_my_class_progress(
+    class_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    return await class_controller.handle_get_my_class_progress(class_id, current_user)
 
 
 @router.get(

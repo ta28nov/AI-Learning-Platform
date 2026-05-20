@@ -831,6 +831,12 @@ async def generate_course_from_prompt(
         Dict containing course structure (title, description, modules, lessons)
     """
     try:
+        def _ai_log(message: str) -> None:
+            try:
+                print(message, flush=True)
+            except UnicodeEncodeError:
+                print(message.encode("ascii", errors="replace").decode("ascii"), flush=True)
+
         # Build prompt for AI
         system_prompt = f"""Bạn là một chuyên gia thiết kế khóa học. 
 Nhiệm vụ: Tạo cấu trúc khóa học hoàn chỉnh dựa trên yêu cầu của người dùng.
@@ -881,7 +887,7 @@ LƯU Ý:
         user_prompt = f"Tạo khóa học: {prompt[:200]}"  # Giới hạn prompt
         
         # Generate course structure
-        print(f"🤖 Calling Gemini API for course generation...", flush=True)
+        _ai_log("[AI] Calling Gemini API for course generation...")
         response = model.generate_content(
             [system_prompt, user_prompt],
             generation_config=genai.types.GenerationConfig(
@@ -890,44 +896,44 @@ LƯU Ý:
             )
         )
         
-        print(f"✅ Gemini API responded", flush=True)
+        _ai_log("[AI] Gemini API responded")
         
         # Parse response
         response_text = response.text.strip()
-        print(f"📄 Response length: {len(response_text)} characters", flush=True)
+        _ai_log(f"[AI] Response length: {len(response_text)} characters")
         
         # Extract JSON - IMPROVED LOGIC
         json_str = None
         
         # Method 1: Check for ```json specifically
         if "```json" in response_text:
-            print(f"📋 Found ```json block", flush=True)
+            _ai_log("[AI] Found ```json block")
             json_start = response_text.find("```json") + 7
             json_end = response_text.find("```", json_start)
             if json_end > json_start:
                 json_str = response_text[json_start:json_end].strip()
-                print(f"📋 Method 1 extracted {len(json_str)} chars", flush=True)
+                _ai_log(f"[AI] Method 1 extracted {len(json_str)} chars")
             else:
-                print(f"📋 Method 1 failed: json_end ({json_end}) <= json_start ({json_start})", flush=True)
+                _ai_log(f"[AI] Method 1 failed: json_end ({json_end}) <= json_start ({json_start})")
         
         # Method 2: Look for JSON object directly (starts with {)
         if not json_str:
-            print(f"📋 Method 1 didn't work, trying Method 2...", flush=True)
+            _ai_log("[AI] Method 1 didn't work, trying Method 2...")
             # Find first { and last }
             first_brace = response_text.find("{")
             last_brace = response_text.rfind("}")
             
             if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
-                print(f"📋 Found JSON object at position {first_brace}-{last_brace}", flush=True)
+                _ai_log(f"[AI] Found JSON object at position {first_brace}-{last_brace}")
                 json_str = response_text[first_brace:last_brace+1]
             else:
-                print(f"❌ No JSON object found in response", flush=True)
+                _ai_log("[AI] No JSON object found in response")
                 raise ValueError("No valid JSON found in AI response")
         else:
-            print(f"📋 Using Method 1 result", flush=True)
+            _ai_log("[AI] Using Method 1 result")
         
-        print(f"📋 Extracted JSON length: {len(json_str)} chars", flush=True)
-        print(f"📋 JSON preview: {json_str[:300]}...", flush=True)
+        _ai_log(f"[AI] Extracted JSON length: {len(json_str)} chars")
+        _ai_log(f"[AI] JSON preview: {json_str[:300]}...")
         
         course_data = json.loads(json_str)
         
@@ -953,9 +959,9 @@ LƯU Ý:
         return course_data
         
     except (json.JSONDecodeError, ValueError, KeyError) as e:
-        print(f"❌ AI course generation error: {type(e).__name__}: {str(e)}", flush=True)
-        print(f"📝 JSON preview: {json_str[:500] if 'json_str' in locals() else 'N/A'}", flush=True)
-        print(f"🔄 Returning fallback structure...", flush=True)
+        _ai_log(f"[AI] course generation error: {type(e).__name__}: {str(e)}")
+        _ai_log(f"[AI] JSON preview: {json_str[:500] if 'json_str' in locals() else 'N/A'}")
+        _ai_log("[AI] Returning fallback structure...")
         # Fallback structure với learning_outcomes đúng format
         return {
             "title": f"Khóa học về {prompt[:50]}",
@@ -1004,10 +1010,10 @@ LƯU Ý:
             ]
         }
     except Exception as e:
-        print(f"❌ Unexpected error in course generation: {type(e).__name__}: {str(e)}")
+        _ai_log(f"[AI] Unexpected error in course generation: {type(e).__name__}: {str(e)}")
         import traceback
-        print(f"📍 Traceback: {traceback.format_exc()}")
-        print(f"🔄 Returning fallback structure...")
+        _ai_log(f"[AI] Traceback: {traceback.format_exc()}")
+        _ai_log("[AI] Returning fallback structure...")
         # Same fallback structure với learning_outcomes đúng format
         return {
             "title": f"Khóa học về {prompt[:50]}",

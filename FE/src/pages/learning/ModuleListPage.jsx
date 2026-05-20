@@ -4,6 +4,9 @@ import { motion, useReducedMotion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import learningService from '@services/learningService'
 import StateView from '@components/ui/StateView'
+import ClassLearningBanner from '@components/classes/ClassLearningBanner'
+import CourseLearningNav from './CourseLearningNav'
+import ChatWidget from '@components/chat/ChatWidget'
 import { fadeUp, staggerEditorial } from '@/styles/motion'
 import './ModuleListPage.css'
 
@@ -48,6 +51,7 @@ const ModuleListPage = () => {
 
   return (
     <div className="module-list-page">
+      <ClassLearningBanner />
       <motion.div className="module-list-page__header" variants={fadeUp} initial={shouldReduceMotion ? false : 'hidden'} animate="show">
         <div className="module-list-page__ornament" aria-hidden="true">
           <span className="module-list-page__line" />
@@ -122,6 +126,18 @@ const ModuleListPage = () => {
           onAction={() => navigate(`/dashboard/courses/${courseId}`)}
         />
       )}
+
+      <CourseLearningNav courseId={courseId} />
+
+      <ChatWidget
+        contextType="general"
+        subtitle="Hỏi về lộ trình & module khóa học"
+        suggestions={[
+          'Gợi ý thứ tự học các module trong khóa này',
+          'Module nào nên học trước nếu tôi mới bắt đầu?',
+          'Tóm tắt mục tiêu từng module',
+        ]}
+      />
     </div>
   )
 }

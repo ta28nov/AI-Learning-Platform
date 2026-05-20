@@ -8,13 +8,21 @@ from schemas.auth import (
     RegisterRequest, RegisterResponse,
     LoginRequest, LoginResponse,
     LogoutResponse,
-    RefreshTokenRequest, RefreshTokenResponse
+    RefreshTokenRequest, RefreshTokenResponse,
+    ForgotPasswordRequest, ForgotPasswordResponse,
+    ResetPasswordRequest, ResetPasswordResponse,
+    VerifyEmailRequest, VerifyEmailResponse,
+    ResendVerificationRequest, ResendVerificationResponse,
 )
 from controllers.auth_controller import (
     handle_register,
     handle_login,
     handle_logout,
-    handle_refresh_token
+    handle_refresh_token,
+    handle_forgot_password,
+    handle_reset_password,
+    handle_verify_email,
+    handle_resend_verification,
 )
 from middleware.auth import get_current_user
 
@@ -109,3 +117,43 @@ async def refresh_token(request: RefreshTokenRequest):
     - 401 Unauthorized: Refresh token không hợp lệ hoặc đã hết hạn
     """
     return await handle_refresh_token(request)
+
+
+@router.post(
+    "/forgot-password",
+    response_model=ForgotPasswordResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Quên mật khẩu",
+)
+async def forgot_password(request: ForgotPasswordRequest):
+    return await handle_forgot_password(request)
+
+
+@router.post(
+    "/reset-password",
+    response_model=ResetPasswordResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Đặt lại mật khẩu bằng token",
+)
+async def reset_password(request: ResetPasswordRequest):
+    return await handle_reset_password(request)
+
+
+@router.post(
+    "/verify-email",
+    response_model=VerifyEmailResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Xác thực email",
+)
+async def verify_email(request: VerifyEmailRequest):
+    return await handle_verify_email(request)
+
+
+@router.post(
+    "/resend-verification",
+    response_model=ResendVerificationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Gửi lại email xác thực",
+)
+async def resend_verification(request: ResendVerificationRequest):
+    return await handle_resend_verification(request)

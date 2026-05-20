@@ -230,6 +230,13 @@ const MyCoursesPage = () => {
                     )}
 
                     <div className="mc-card__actions">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/dashboard/enrollment/${eid}`)}
+                      >
+                        Chi tiết đăng ký
+                      </Button>
                       {enrollment.status === 'in-progress' && (
                         <>
                           {enrollment.next_lesson?.lesson_id ? (

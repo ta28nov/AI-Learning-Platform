@@ -1,0 +1,40 @@
+.quiz-wrong-ai {
+  margin: var(--space-6) 0;
+  padding: var(--space-5);
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+}
+
+.quiz-wrong-ai__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.quiz-wrong-ai__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.quiz-wrong-ai__error {
+  margin: 0 0 var(--space-3);
+  font-size: 0.82rem;
+  color: var(--vermilion-500, #ef4444);
+}
+
+.quiz-wrong-ai__body {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--ink-700, var(--ink-900));
+}
+
+.quiz-wrong-ai__body p {
+  margin: 0 0 var(--space-2);
+}

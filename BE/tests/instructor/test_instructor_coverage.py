@@ -97,7 +97,7 @@ async def test_student_cannot_create_class_known_bug(
         },
         headers=student_auth["headers"],
     )
-    assert response.status_code == 201
+    assert response.status_code == 403
 
 
 @pytest.mark.asyncio

@@ -124,6 +124,7 @@ const ChatPage = () => {
       return
     }
     await sendMessage(question, 'general', { courseId: fallbackCourse })
+    await loadHistory()
     setTimeout(scrollToBottom, 50)
   }
 

@@ -3,9 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import learningService from '@services/learningService'
-import Button from '@components/ui/Button'
 import Card, { CardHeader, CardBody } from '@components/ui/Card'
 import StateView from '@components/ui/StateView'
+import ClassLearningBanner from '@components/classes/ClassLearningBanner'
+import CourseLearningNav from './CourseLearningNav'
+import ChatWidget from '@components/chat/ChatWidget'
 import { fadeUp, staggerEditorial } from '@/styles/motion'
 import './ModuleDetailPage.css'
 
@@ -41,14 +43,15 @@ const ModuleDetailPage = () => {
 
   return (
     <div className="module-detail-page">
+      <ClassLearningBanner />
       {/* Breadcrumb điều hướng */}
       <div className="module-detail-breadcrumb">
-        <button className="module-detail-breadcrumb__link" onClick={() => navigate(`/dashboard/courses/${courseId}`)}>
+        <button type="button" className="module-detail-breadcrumb__link" onClick={() => navigate(`/dashboard/courses/${courseId}`)}>
           Khóa học
         </button>
         <span className="module-detail-breadcrumb__sep">/</span>
-        <button className="module-detail-breadcrumb__link" onClick={() => navigate(`/dashboard/courses/${courseId}/modules`)}>
-          Modules
+        <button type="button" className="module-detail-breadcrumb__link" onClick={() => navigate(`/dashboard/courses/${courseId}/modules`)}>
+          Danh sách module
         </button>
         <span className="module-detail-breadcrumb__sep">/</span>
         <span className="module-detail-breadcrumb__current">{module.title}</span>
@@ -193,12 +196,7 @@ const ModuleDetailPage = () => {
         </Card>
       )}
 
-      {/* Điều hướng */}
-      <div className="module-detail-actions">
-        <Button variant="outline" onClick={() => navigate(`/dashboard/courses/${courseId}/modules`)}>
-          ← Danh sách modules
-        </Button>
-      </div>
+      <CourseLearningNav courseId={courseId} moduleId={moduleId} />
       </motion.div>
       </div>
 
@@ -215,6 +213,17 @@ const ModuleDetailPage = () => {
         </Card>
       </aside>
       </div>
+
+      <ChatWidget
+        contextType="module"
+        subtitle={`Hỏi về module «${module.title}»`}
+        contextMeta={{ moduleTitle: module.title, moduleId }}
+        suggestions={[
+          `Tóm tắt module «${module.title}»`,
+          'Giải thích mục tiêu học tập của module này',
+          'Gợi ý thứ tự học các bài trong module',
+        ]}
+      />
     </div>
   )
 }
@@ -229,7 +238,14 @@ const getOutcomeText = (outcome) => {
 const getPrerequisiteText = (pre) => {
   if (!pre) return ''
   if (typeof pre === 'string') return pre
-  if (typeof pre === 'object') return pre.title || pre.name || pre.id || ''
+  if (typeof pre === 'object') {
+    const title = pre.title || pre.name
+    if (title && title !== pre.id) return title
+    if (pre.id && /^[0-9a-f-]{36}$/i.test(String(pre.id))) {
+      return 'Module tiên quyết'
+    }
+    return title || pre.id || ''
+  }
   return String(pre)
 }
 

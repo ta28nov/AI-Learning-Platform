@@ -42,6 +42,7 @@ const CourseEditorPage = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [savingAndLearn, setSavingAndLearn] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [course, setCourse] = useState({
     title: '',
     description: '',
@@ -219,6 +220,20 @@ const CourseEditorPage = () => {
     }
   }
 
+  const handleDeleteCourse = async () => {
+    if (!window.confirm('Xóa khóa học cá nhân này? Không thể hoàn tác.')) return
+    setDeleting(true)
+    try {
+      await personalCourseService.deleteCourse(courseId)
+      toast.success('Đã xóa khóa học')
+      navigate('/dashboard/personal-courses')
+    } catch (error) {
+      toast.error(error?.message || 'Không thể xóa khóa học')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const handleSave = async (e, { publishAndLearn = false } = {}) => {
     if (e) e.preventDefault()
     if (!course.title.trim()) {
@@ -286,7 +301,10 @@ const CourseEditorPage = () => {
           <h1 className="course-editor-bar__title">Chỉnh sửa khóa học</h1>
         </div>
         <div className="course-editor-bar__actions">
-          <Button variant="outline" onClick={() => navigate('/dashboard/personal-courses')} disabled={saving || savingAndLearn}>
+          <Button variant="outline" loading={deleting} onClick={handleDeleteCourse} disabled={saving || savingAndLearn || deleting}>
+            Xóa khóa học
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/dashboard/personal-courses')} disabled={saving || savingAndLearn || deleting}>
             Hủy
           </Button>
           <Button variant="outline" onClick={(e) => handleSave(e, { publishAndLearn: false })} loading={saving} disabled={saving || savingAndLearn}>

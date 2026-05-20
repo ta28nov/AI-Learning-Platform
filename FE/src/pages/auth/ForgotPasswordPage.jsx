@@ -1,55 +1,78 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
 import { motion, useReducedMotion } from 'framer-motion'
+import { toast } from 'react-hot-toast'
+import authService from '@services/authService'
 import Button from '@components/ui/Button'
+import Input from '@components/ui/Input'
 import { fadeUp, staggerEditorial } from '@/styles/motion'
 import './AuthPages.css'
 
 /**
- * ForgotPasswordPage — Editorial empty-state stub
- * BE endpoint không tồn tại; logic "throw" vẫn nằm trong authService.js (không sửa)
+ * ForgotPasswordPage — POST /auth/forgot-password
  * Route: /auth/forgot-password
  */
 const ForgotPasswordPage = () => {
+  const [loading, setLoading] = useState(false)
+  const [sent, setSent] = useState(false)
   const shouldReduceMotion = useReducedMotion()
+  const { register, handleSubmit, formState: { errors } } = useForm()
+
+  const onSubmit = async ({ email }) => {
+    setLoading(true)
+    try {
+      await authService.forgotPassword(email)
+      setSent(true)
+      toast.success('Nếu email tồn tại, bạn sẽ nhận hướng dẫn đặt lại mật khẩu.')
+    } catch (error) {
+      toast.error(error.message || 'Không thể gửi yêu cầu')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <div className="auth-stub-page">
-      <motion.div
-        className="auth-stub-card"
-        variants={staggerEditorial}
-        initial={shouldReduceMotion ? false : 'hidden'}
-        animate="show"
-      >
-        {/* Icon */}
-        <motion.div className="auth-stub-icon" variants={fadeUp} aria-hidden="true">
-          <LockIcon />
-        </motion.div>
-
-        <motion.div variants={fadeUp} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <p className="auth-stub-eyebrow">Quên mật khẩu</p>
-          <h1 className="auth-stub-title">Tính năng chưa khả dụng</h1>
+    <motion.div
+      className="auth-stub-page"
+      variants={staggerEditorial}
+      initial={shouldReduceMotion ? false : 'hidden'}
+      animate="show"
+    >
+      <div className="auth-stub-card" style={{ maxWidth: 420 }}>
+        <p className="auth-stub-eyebrow">Quên mật khẩu</p>
+        <h1 className="auth-stub-title">Khôi phục mật khẩu</h1>
+        {sent ? (
           <p className="auth-stub-desc">
-            Chức năng quên mật khẩu hiện chưa được backend hỗ trợ.
-            Vui lòng đăng nhập bằng tài khoản demo hoặc liên hệ quản trị viên.
+            Kiểm tra hộp thư (hoặc liên hệ quản trị viên). Trong môi trường dev, token có thể
+            trả về từ API khi <code>TESTING=true</code>.
           </p>
-        </motion.div>
-
-        <motion.div className="auth-stub-actions" variants={fadeUp}>
-          <Link to="/auth/login">
-            <Button variant="primary">Quay lại đăng nhập</Button>
-          </Link>
-          <Link to="/" className="auth-stub-back">← Trang chủ</Link>
-        </motion.div>
-      </motion.div>
-    </div>
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)} className="auth-form" noValidate>
+            <Input
+              type="email"
+              label="Email"
+              placeholder="Email đã đăng ký"
+              error={errors.email?.message}
+              {...register('email', {
+                required: 'Email là bắt buộc',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Email không hợp lệ',
+                },
+              })}
+            />
+            <Button type="submit" loading={loading} style={{ width: '100%' }}>
+              Gửi yêu cầu
+            </Button>
+          </form>
+        )}
+        <Link to="/auth/login" className="auth-stub-back" style={{ marginTop: '1rem' }}>
+          ← Quay lại đăng nhập
+        </Link>
+      </div>
+    </motion.div>
   )
 }
-
-const LockIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-  </svg>
-)
 
 export default ForgotPasswordPage

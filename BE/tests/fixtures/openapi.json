@@ -159,6 +159,170 @@
         }
       }
     },
+    "/api/v1/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Quên mật khẩu",
+        "operationId": "forgot_password_api_v1_auth_forgot_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForgotPasswordResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Đặt lại mật khẩu bằng token",
+        "operationId": "reset_password_api_v1_auth_reset_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetPasswordResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify-email": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Xác thực email",
+        "operationId": "verify_email_api_v1_auth_verify_email_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyEmailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/resend-verification": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Gửi lại email xác thực",
+        "operationId": "resend_verification_api_v1_auth_resend_verification_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendVerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResendVerificationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/users/me": {
       "get": {
         "tags": [
@@ -3147,8 +3311,8 @@
         "tags": [
           "Classes"
         ],
-        "summary": "3.1.2: Danh sách lớp của instructor",
-        "description": "Xem tất cả lớp học mà instructor đã tạo.\n    \n    **Features:**\n    - Filter theo status (preparing/active/completed)\n    - Sort theo created_at DESC\n    - Hiển thị student count và overall progress\n    \n    **Auth:** Bearer token (Instructor)",
+        "summary": "3.1.2: Danh sách lớp của tôi (theo role)",
+        "description": "- **Instructor:** lớp đã tạo (`instructor_id`)\n  - **Student:** lớp đã tham gia (`student_ids`)\n  - Filter `status`, sort `created_at` DESC",
         "operationId": "list_my_classes_api_v1_classes_my_classes_get",
         "security": [
           {
@@ -3205,7 +3369,7 @@
           "Classes"
         ],
         "summary": "3.1.3: Chi tiết lớp học",
-        "description": "Xem thông tin chi tiết lớp học và danh sách học viên.\n    \n    **Features:**\n    - Class info với invite_code\n    - Danh sách students với progress\n    - Statistics: lessons completed, avg quiz score\n    \n    **Auth:** Bearer token (Instructor - owner only)",
+        "description": "Xem thông tin chi tiết lớp học và danh sách học viên.\n    \n    **Features:**\n    - Class info với invite_code\n    - Danh sách students với progress\n    - Statistics: lessons completed, avg quiz score\n    \n    **Auth:** Instructor (owner), Student (đã join), Admin",
         "operationId": "get_class_detail_api_v1_classes__class_id__get",
         "security": [
           {
@@ -5062,7 +5226,6 @@
           "system"
         ],
         "summary": "Kiểm tra sức khỏe hệ thống",
-        "description": "Endpoint kiểm tra tình trạng API cho công cụ giám sát.",
         "operationId": "health_check_health_get",
         "responses": {
           "200": {
@@ -7694,8 +7857,26 @@
             "$ref": "#/components/schemas/schemas__classes__CourseInfo"
           },
           "invite_code": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Invite Code"
+          },
+          "instructor_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instructor Name"
           },
           "max_students": {
             "type": "integer",
@@ -7719,6 +7900,18 @@
             "type": "string",
             "title": "Status"
           },
+          "my_progress": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "My Progress",
+            "description": "Tiến độ cá nhân (student)"
+          },
           "recent_students": {
             "items": {
               "$ref": "#/components/schemas/StudentInfo"
@@ -7736,13 +7929,11 @@
           "name",
           "description",
           "course",
-          "invite_code",
           "max_students",
           "student_count",
           "start_date",
           "end_date",
           "status",
-          "recent_students",
           "class_stats"
         ],
         "title": "ClassDetailResponse"
@@ -8282,6 +8473,18 @@
               }
             ],
             "title": "End Date"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "preparing|active|completed"
           }
         },
         "type": "object",
@@ -9696,6 +9899,44 @@
           "points"
         ],
         "title": "Exercise"
+      },
+      "ForgotPasswordRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "ForgotPasswordRequest",
+        "description": "POST /api/v1/auth/forgot-password"
+      },
+      "ForgotPasswordResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "Nếu email tồn tại trong hệ thống, bạn sẽ nhận hướng dẫn đặt lại mật khẩu."
+          },
+          "reset_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reset Token",
+            "description": "Chỉ trả về khi TESTING=true (dev/pytest), không dùng production"
+          }
+        },
+        "type": "object",
+        "title": "ForgotPasswordResponse"
       },
       "GeneratedLesson": {
         "properties": {
@@ -14074,6 +14315,18 @@
             "type": "string",
             "title": "Message",
             "default": "Đăng ký tài khoản thành công"
+          },
+          "verification_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification Token",
+            "description": "Chỉ trả về khi TESTING=true (dev/pytest), không dùng production"
           }
         },
         "type": "object",
@@ -14121,6 +14374,77 @@
         ],
         "title": "RelatedLesson",
         "description": "Bài học liên quan được suggest"
+      },
+      "ResendVerificationRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "ResendVerificationRequest",
+        "description": "POST /api/v1/auth/resend-verification"
+      },
+      "ResendVerificationResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "Nếu email tồn tại và chưa xác thực, bạn sẽ nhận link xác thực."
+          },
+          "verification_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification Token",
+            "description": "Chỉ trả về khi TESTING=true (dev/pytest)"
+          }
+        },
+        "type": "object",
+        "title": "ResendVerificationResponse"
+      },
+      "ResetPasswordRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 16,
+            "title": "Token",
+            "description": "Token từ email/link reset"
+          },
+          "new_password": {
+            "type": "string",
+            "minLength": 8,
+            "title": "New Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "new_password"
+        ],
+        "title": "ResetPasswordRequest",
+        "description": "POST /api/v1/auth/reset-password"
+      },
+      "ResetPasswordResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "Đặt lại mật khẩu thành công"
+          }
+        },
+        "type": "object",
+        "title": "ResetPasswordResponse"
       },
       "ResourceItem": {
         "properties": {
@@ -15251,6 +15575,38 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VerifyEmailRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 16,
+            "title": "Token",
+            "description": "Token từ link xác thực"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "VerifyEmailRequest",
+        "description": "POST /api/v1/auth/verify-email"
+      },
+      "VerifyEmailResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "Xác thực email thành công"
+          },
+          "email_verified": {
+            "type": "boolean",
+            "title": "Email Verified",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "VerifyEmailResponse"
       },
       "VideoInfo": {
         "properties": {

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import DashboardLayout from '@components/layout/DashboardLayout'
-import ProtectedRoute, { AdminRoute, InstructorRoute, StudentRoute } from '@components/layout/ProtectedRoute'
+import ProtectedRoute, { AdminRoute, InstructorRoute, StudentRoute, StudentOrInstructorRoute } from '@components/layout/ProtectedRoute'
 
 // Auth pages
 import LoginPage from '@pages/auth/LoginPage'
@@ -41,6 +41,10 @@ import QuizPage from '@pages/quiz/QuizPage'
 import QuizDetailPage from '@pages/quiz/QuizDetailPage'
 import QuizAttemptPage from '@pages/quiz/QuizAttemptPage'
 import QuizResultsPage from '@pages/quiz/QuizResultsPage'
+import InstructorQuizFormPage from '@pages/quiz/InstructorQuizFormPage'
+import InstructorQuizClassResultsPage from '@pages/quiz/InstructorQuizClassResultsPage'
+import InstructorAnalyticsPage from '@pages/enrollment/InstructorAnalyticsPage'
+import LegalPage from '@pages/legal/LegalPage'
 
 // Chat pages
 import ChatPage from '@pages/chat/ChatPage'
@@ -82,6 +86,8 @@ const AppRouter = () => {
       <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
       <Route path="/auth/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/terms" element={<LegalPage type="terms" />} />
+      <Route path="/privacy" element={<LegalPage type="privacy" />} />
 
       {/* Protected routes - can dang nhap, dung DashboardLayout */}
       <Route 
@@ -139,15 +145,15 @@ const AppRouter = () => {
         {/* Chat AI */}
         <Route path="/dashboard/chat" element={<ChatPage />} />
 
-        {/* Personal Courses - khoa hoc ca nhan */}
+        {/* Personal Courses — student + instructor (link từ InstructorDashboard) */}
         <Route path="/dashboard/personal-courses" element={
-          <StudentRoute><PersonalCoursesPage /></StudentRoute>
+          <StudentOrInstructorRoute><PersonalCoursesPage /></StudentOrInstructorRoute>
         } />
         <Route path="/dashboard/personal-courses/create" element={
-          <StudentRoute><PersonalCourseCreatePage /></StudentRoute>
+          <StudentOrInstructorRoute><PersonalCourseCreatePage /></StudentOrInstructorRoute>
         } />
         <Route path="/dashboard/personal-courses/:courseId/edit" element={
-          <StudentRoute><CourseEditorPage /></StudentRoute>
+          <StudentOrInstructorRoute><CourseEditorPage /></StudentOrInstructorRoute>
         } />
 
         {/* Search */}
@@ -164,7 +170,27 @@ const AppRouter = () => {
             <InstructorDashboardPage />
           </InstructorRoute>
         } />
+        <Route path="/dashboard/instructor/analytics" element={
+          <InstructorRoute><InstructorAnalyticsPage /></InstructorRoute>
+        } />
+        <Route path="/dashboard/instructor/quizzes" element={
+          <InstructorRoute><QuizPage /></InstructorRoute>
+        } />
+        <Route path="/dashboard/instructor/quizzes/create" element={
+          <InstructorRoute><InstructorQuizFormPage /></InstructorRoute>
+        } />
+        <Route path="/dashboard/instructor/quizzes/:quizId/results" element={
+          <InstructorRoute><InstructorQuizClassResultsPage /></InstructorRoute>
+        } />
         
+        {/* Classes — student (join) + instructor (CRUD) */}
+        <Route path="/dashboard/classes" element={
+          <StudentOrInstructorRoute><ClassListPage /></StudentOrInstructorRoute>
+        } />
+        <Route path="/dashboard/classes/:classId" element={
+          <StudentOrInstructorRoute><ClassDetailPage /></StudentOrInstructorRoute>
+        } />
+
         {/* Classes (Instructor) */}
         <Route path="/dashboard/instructor/classes" element={
           <InstructorRoute><ClassListPage /></InstructorRoute>

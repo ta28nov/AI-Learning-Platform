@@ -4,6 +4,18 @@ import pytest
 
 
 @pytest.mark.asyncio
+async def test_admin_list_users_by_status_inactive(client, admin_auth):
+    """COV-003: filter inactive users."""
+    response = await client.get(
+        "/admin/users",
+        params={"status": "inactive", "limit": 20},
+        headers=admin_auth["headers"],
+    )
+    assert response.status_code == 200
+    assert "data" in response.json()
+
+
+@pytest.mark.asyncio
 async def test_admin_list_users_by_status_active(client, admin_auth, student_user):
     response = await client.get(
         "/admin/users",

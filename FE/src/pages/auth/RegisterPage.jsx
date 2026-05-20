@@ -8,6 +8,7 @@ import Input from '@components/ui/Input'
 import { toast } from 'react-hot-toast'
 import { staggerEditorial, fadeUp, fadeDown } from '@/styles/motion'
 import { AuthInkPanel } from './LoginPage'
+import SocialAuthButtons from '@components/auth/SocialAuthButtons'
 import './AuthPages.css'
 
 /* =============================================================================
@@ -29,13 +30,17 @@ const RegisterPage = () => {
   const onSubmit = async (data) => {
     setLoading(true)
     try {
-      await registerUser({
+      const result = await registerUser({
         full_name: data.fullName,
         email: data.email,
         password: data.password,
       })
-      toast.success('Đăng ký thành công! Bạn có thể đăng nhập ngay.')
-      navigate('/auth/login')
+      toast.success('Đăng ký thành công! Vui lòng xác minh email trước khi đăng nhập.')
+      const params = new URLSearchParams({ email: data.email })
+      if (result?.verification_token) {
+        params.set('token', result.verification_token)
+      }
+      navigate(`/auth/verify-email?${params.toString()}`)
     } catch (error) {
       toast.error(error.message || 'Đăng ký thất bại!')
     } finally {
@@ -75,6 +80,10 @@ const RegisterPage = () => {
             <p className="auth-form-subtitle">
               Tạo tài khoản mới để bắt đầu hành trình học tập
             </p>
+          </motion.div>
+
+          <motion.div variants={fadeUp}>
+            <SocialAuthButtons mode="register" />
           </motion.div>
 
           {/* Form — react-hook-form logic unchanged */}

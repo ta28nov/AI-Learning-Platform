@@ -82,44 +82,50 @@ export const authService = {
   },
 
   /**
-   * Gui email khoi phuc mat khau
-   * @param {string} email - Email nguoi dung
-   * @returns {Promise}
-   * @deprecated [TODO] BE chua implement route POST /auth/forgot-password → se nhan 404
+   * Yêu cầu đặt lại mật khẩu — POST /auth/forgot-password
    */
   async forgotPassword(email) {
-    throw new Error('Chức năng quên mật khẩu chưa được backend hỗ trợ trong phiên bản hiện tại.')
+    try {
+      const response = await api.post('/auth/forgot-password', { email })
+      return handleApiResponse(response)
+    } catch (error) {
+      handleApiError(error)
+    }
   },
 
   /**
-   * Dat lai mat khau
-   * @param {string} token - Reset token
-   * @param {string} password - Mat khau moi
-   * @returns {Promise}
-   * @deprecated [TODO] BE chua implement route POST /auth/reset-password → se nhan 404
+   * Đặt lại mật khẩu — POST /auth/reset-password
    */
   async resetPassword(token, password) {
-    throw new Error('Chức năng đặt lại mật khẩu chưa được backend hỗ trợ trong phiên bản hiện tại.')
+    try {
+      const response = await api.post('/auth/reset-password', {
+        token,
+        new_password: password,
+      })
+      return handleApiResponse(response)
+    } catch (error) {
+      handleApiError(error)
+    }
   },
 
-  /**
-   * Xac thuc email
-   * @param {string} token - Verification token
-   * @returns {Promise}
-   * @deprecated [TODO] BE chua implement route POST /auth/verify-email → se nhan 404
-   */
+  /** Xác thực email — POST /auth/verify-email */
   async verifyEmail(token) {
-    throw new Error('Chức năng xác thực email chưa được backend hỗ trợ trong phiên bản hiện tại.')
+    try {
+      const response = await api.post('/auth/verify-email', { token })
+      return handleApiResponse(response)
+    } catch (error) {
+      handleApiError(error)
+    }
   },
 
-  /**
-   * Gui lai email xac thuc
-   * @param {string} email - Email nguoi dung
-   * @returns {Promise}
-   * @deprecated [TODO] BE chua implement route POST /auth/resend-verification → se nhan 404
-   */
+  /** Gửi lại link xác thực — POST /auth/resend-verification */
   async resendVerificationEmail(email) {
-    throw new Error('Chức năng gửi lại email xác thực chưa được backend hỗ trợ trong phiên bản hiện tại.')
+    try {
+      const response = await api.post('/auth/resend-verification', { email })
+      return handleApiResponse(response)
+    } catch (error) {
+      handleApiError(error)
+    }
   },
 
   /**

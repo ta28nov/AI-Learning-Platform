@@ -1,0 +1,25 @@
+.course-learning-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.course-learning-nav--sticky {
+  position: sticky;
+  bottom: 8px;
+  z-index: 20;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 24px rgba(26, 26, 46, 0.08);
+}
+
+@media (min-width: 768px) {
+  .course-learning-nav {
+    gap: 10px;
+    padding: 14px 16px;
+  }
+}

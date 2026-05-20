@@ -6,6 +6,7 @@ import adminService from '@services/adminService'
 import analyticsService from '@services/analyticsService'
 import dashboardService from '@services/dashboardService'
 import Button from '@components/ui/Button'
+import Input from '@components/ui/Input'
 import StateView from '@components/ui/StateView'
 import Modal, { ModalFooter } from '@components/ui/Modal'
 import AILoadingState from '@components/ui/AILoadingState'
@@ -259,6 +260,10 @@ const AdminUsers = () => {
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [roleDialog, setRoleDialog] = useState({ isOpen: false, userId: '', currentRole: 'student', nextRole: 'student' })
   const [passwordDialog, setPasswordDialog] = useState({ isOpen: false, userId: '', name: '', value: '' })
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createForm, setCreateForm] = useState({ full_name: '', email: '', role: 'student', password: '' })
+  const [createErrors, setCreateErrors] = useState({})
+  const [creating, setCreating] = useState(false)
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -305,6 +310,37 @@ const AdminUsers = () => {
       fetchUsers()
     } catch (err) {
       toast.error(err?.message || 'Không thể đổi vai trò')
+    }
+  }
+
+  const validateCreateUser = () => {
+    const errs = {}
+    if (!createForm.full_name.trim()) errs.full_name = 'Nhập họ tên'
+    if (!createForm.email.trim()) errs.email = 'Nhập email'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(createForm.email.trim())) errs.email = 'Email không hợp lệ'
+    if (createForm.password.length < 8) errs.password = 'Mật khẩu tối thiểu 8 ký tự'
+    setCreateErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
+  const handleCreateUser = async () => {
+    if (!validateCreateUser()) return
+    setCreating(true)
+    try {
+      await adminService.createUser({
+        full_name: createForm.full_name.trim(),
+        email: createForm.email.trim(),
+        role: createForm.role,
+        password: createForm.password,
+      })
+      toast.success('Đã tạo người dùng')
+      setCreateOpen(false)
+      setCreateForm({ full_name: '', email: '', role: 'student', password: '' })
+      fetchUsers()
+    } catch (err) {
+      toast.error(err?.message || 'Không thể tạo người dùng')
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -366,7 +402,29 @@ const AdminUsers = () => {
           <option value="active">Hoạt động</option>
           <option value="inactive">Bị khóa</option>
         </select>
+        <Button onClick={() => setCreateOpen(true)}>+ Tạo người dùng</Button>
       </div>
+
+      <Modal isOpen={createOpen} onClose={() => { setCreateOpen(false); setCreateErrors({}) }} title="Tạo người dùng" size="md">
+        <p className="adm-modal-hint">Tài khoản mới có thể đăng nhập ngay bằng email và mật khẩu bạn đặt.</p>
+        <div className="adm-create-form">
+          <Input label="Họ và tên" value={createForm.full_name} error={createErrors.full_name} onChange={(e) => setCreateForm((f) => ({ ...f, full_name: e.target.value }))} placeholder="Nguyễn Văn A" />
+          <Input label="Email" type="email" value={createForm.email} error={createErrors.email} onChange={(e) => setCreateForm((f) => ({ ...f, email: e.target.value }))} placeholder="email@example.com" />
+          <label className="adm-field-label">
+            Vai trò
+            <select className="adm-select" value={createForm.role} onChange={(e) => setCreateForm((f) => ({ ...f, role: e.target.value }))}>
+              <option value="student">Học viên</option>
+              <option value="instructor">Giảng viên</option>
+              <option value="admin">Quản trị</option>
+            </select>
+          </label>
+          <Input label="Mật khẩu tạm" type="password" value={createForm.password} error={createErrors.password} onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))} placeholder="Tối thiểu 8 ký tự" helperText="Gửi mật khẩu qua kênh bảo mật; người dùng nên đổi sau lần đăng nhập đầu." />
+        </div>
+        <ModalFooter>
+          <Button variant="outline" onClick={() => { setCreateOpen(false); setCreateErrors({}) }}>Hủy</Button>
+          <Button loading={creating} onClick={handleCreateUser}>Tạo người dùng</Button>
+        </ModalFooter>
+      </Modal>
 
       {loading ? (
         <Skeleton rows={5} />
@@ -498,6 +556,16 @@ const AdminCourses = () => {
   const [error, setError]     = useState('')
   const [pagination, setPagination] = useState({ skip: 0, limit: 20, total: 0 })
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createForm, setCreateForm] = useState({
+    title: '',
+    description: '',
+    category: 'Lập trình',
+    level: 'Beginner',
+    status: 'draft',
+  })
+  const [createErrors, setCreateErrors] = useState({})
+  const [creating, setCreating] = useState(false)
 
   const fetchCourses = useCallback(async () => {
     try {
@@ -521,6 +589,38 @@ const AdminCourses = () => {
   useEffect(() => {
     setPagination(prev => ({ ...prev, skip: 0 }))
   }, [search])
+
+  const validateCreateCourse = () => {
+    const errs = {}
+    if (createForm.title.trim().length < 5) errs.title = 'Tiêu đề tối thiểu 5 ký tự'
+    if (createForm.description.trim().length < 20) errs.description = 'Mô tả tối thiểu 20 ký tự'
+    if (!createForm.category.trim()) errs.category = 'Nhập danh mục'
+    setCreateErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
+  const handleCreateCourse = async () => {
+    if (!validateCreateCourse()) return
+    setCreating(true)
+    try {
+      await adminService.createCourse({
+        title: createForm.title.trim(),
+        description: createForm.description.trim(),
+        category: createForm.category,
+        level: createForm.level,
+        status: createForm.status,
+        prerequisites: [],
+        learning_outcomes: [],
+      })
+      toast.success('Đã tạo khóa học')
+      setCreateOpen(false)
+      fetchCourses()
+    } catch (err) {
+      toast.error(err?.message || 'Không thể tạo khóa học')
+    } finally {
+      setCreating(false)
+    }
+  }
 
   const handleDelete = async () => {
     if (!confirmDelete?.courseId) return
@@ -558,7 +658,34 @@ const AdminCourses = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <Button onClick={() => setCreateOpen(true)}>+ Tạo khóa học</Button>
       </div>
+
+      <Modal isOpen={createOpen} onClose={() => { setCreateOpen(false); setCreateErrors({}) }} title="Tạo khóa học" size="md">
+        <p className="adm-modal-hint">Khóa học nháp chỉ hiển thị với quản trị; xuất bản khi nội dung đã sẵn sàng.</p>
+        <div className="adm-create-form">
+          <Input label="Tiêu đề" value={createForm.title} error={createErrors.title} onChange={(e) => setCreateForm((f) => ({ ...f, title: e.target.value }))} placeholder="VD: Python cho người mới bắt đầu" />
+          <label className="adm-field-label">
+            Mô tả
+            <textarea className="adm-input adm-textarea" rows={4} value={createForm.description} onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))} placeholder="Mô tả ngắn gọn, tối thiểu 20 ký tự…" />
+            {createErrors.description && <span className="adm-field-error">{createErrors.description}</span>}
+          </label>
+          <Input label="Danh mục" value={createForm.category} error={createErrors.category} onChange={(e) => setCreateForm((f) => ({ ...f, category: e.target.value }))} placeholder="Lập trình, AI, …" />
+          <select className="adm-select" value={createForm.level} onChange={(e) => setCreateForm((f) => ({ ...f, level: e.target.value }))}>
+            <option value="Beginner">Cơ bản</option>
+            <option value="Intermediate">Trung cấp</option>
+            <option value="Advanced">Nâng cao</option>
+          </select>
+          <select className="adm-select" value={createForm.status} onChange={(e) => setCreateForm((f) => ({ ...f, status: e.target.value }))}>
+            <option value="draft">Nháp</option>
+            <option value="published">Xuất bản</option>
+          </select>
+        </div>
+        <ModalFooter>
+          <Button variant="outline" onClick={() => { setCreateOpen(false); setCreateErrors({}) }}>Hủy</Button>
+          <Button loading={creating} onClick={handleCreateCourse}>Tạo khóa học</Button>
+        </ModalFooter>
+      </Modal>
 
       {loading ? <Skeleton rows={4} /> : error ? (
         <StateView type="error" title="Lỗi tải khóa học" message={error} actionLabel="Tải lại" onAction={fetchCourses} />

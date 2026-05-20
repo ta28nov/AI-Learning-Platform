@@ -78,14 +78,42 @@ async def get_module_detail(
             elif progress_percent > 0:
                 completion_status = "in-progress"
     
+    def _format_outcome_text(outcome: dict) -> str:
+        text = (outcome.get("description") or outcome.get("outcome") or "").strip()
+        if text:
+            return text
+        tag = (outcome.get("skill_tag") or "").strip()
+        if tag:
+            return tag.replace("_", " ").strip().capitalize()
+        return ""
+
+    module_title_by_id = {str(m.id): m.title for m in course.modules}
+
+    prereq_raw = module.prerequisites if hasattr(module, "prerequisites") else []
+    enriched_prerequisites = []
+    for pre in prereq_raw:
+        if isinstance(pre, dict):
+            pid = str(pre.get("id") or pre.get("module_id") or "")
+            title = pre.get("title") or pre.get("name") or module_title_by_id.get(pid)
+            enriched_prerequisites.append({"id": pid, "title": title or pid})
+        elif isinstance(pre, str):
+            pid = pre.strip()
+            enriched_prerequisites.append({
+                "id": pid,
+                "title": module_title_by_id.get(pid, "Module tiên quyết"),
+            })
+        else:
+            enriched_prerequisites.append(pre)
+
     # Transform learning outcomes to match schema format
     transformed_outcomes = []
     for i, outcome in enumerate(module.learning_outcomes):
+        outcome_text = _format_outcome_text(outcome if isinstance(outcome, dict) else {})
         transformed_outcome = {
-            "id": str(i + 1),  # Generate sequential ID
-            "outcome": outcome.get("description", ""),  # Map description to outcome
-            "skill_tag": outcome.get("skill_tag", ""),
-            "is_mandatory": True  # Default to mandatory
+            "id": str(i + 1),
+            "outcome": outcome_text or f"Mục tiêu {i + 1}",
+            "skill_tag": outcome.get("skill_tag", "") if isinstance(outcome, dict) else "",
+            "is_mandatory": True,
         }
         transformed_outcomes.append(transformed_outcome)
     
@@ -105,7 +133,7 @@ async def get_module_detail(
         "total_lessons": len(module.lessons),
         "progress_percent": progress_percent,
         "is_accessible": not is_locked,
-        "prerequisites": module.prerequisites if hasattr(module, 'prerequisites') else []  # Prerequisites từ module schema
+        "prerequisites": enriched_prerequisites,
     }
     
     # Build lessons list với completion status
@@ -247,12 +275,23 @@ async def get_lesson_content(
             )
             
             if progress:
-                # Tìm lesson progress
+                # Tìm lesson progress (Beanie may return LessonProgressItem models, not dicts)
                 for lp in progress.lessons_progress:
-                    if str(lp.get("lesson_id")) == str(lesson_id):
-                        time_spent_seconds = lp.get("time_spent_seconds", 0)
-                        video_progress_seconds = lp.get("video_progress_seconds", 0)
-                        break
+                    lp_lesson_id = (
+                        lp.lesson_id if hasattr(lp, "lesson_id") else lp.get("lesson_id")
+                    )
+                    if str(lp_lesson_id) != str(lesson_id):
+                        continue
+                    if hasattr(lp, "time_spent_minutes"):
+                        time_spent_seconds = int(lp.time_spent_minutes or 0) * 60
+                    else:
+                        time_spent_seconds = int(lp.get("time_spent_seconds", 0) or 0)
+                    video_progress_seconds = (
+                        lp.video_progress_seconds
+                        if hasattr(lp, "video_progress_seconds")
+                        else lp.get("video_progress_seconds", 0)
+                    )
+                    break
             
             # Check quiz status
             quiz = await Quiz.find_one(Quiz.lesson_id == str(lesson_id))
@@ -335,15 +374,20 @@ async def get_lesson_content(
                 next_lesson_title = nxt_lesson_doc.title
     
     navigation = {
-        "previous_lesson": {
-            "id": previous_lesson_id,
-            "title": previous_lesson_title
-        },
-        "next_lesson": {
-            "id": next_lesson_id,
-            "title": next_lesson_title,
-            "is_locked": is_next_locked
-        }
+        "previous_lesson": (
+            {"id": previous_lesson_id, "title": previous_lesson_title}
+            if previous_lesson_id
+            else None
+        ),
+        "next_lesson": (
+            {
+                "id": next_lesson_id,
+                "title": next_lesson_title,
+                "is_locked": is_next_locked,
+            }
+            if next_lesson_id
+            else None
+        ),
     }
     
     # Build completion_status object

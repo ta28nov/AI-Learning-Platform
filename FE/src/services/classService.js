@@ -139,6 +139,18 @@ export const classService = {
     }
   },
 
+  /**
+   * Tiến độ cá nhân HV trong lớp (student)
+   */
+  async getMyProgress(classId) {
+    try {
+      const response = await api.get(`/classes/${classId}/my-progress`)
+      return handleApiResponse(response)
+    } catch (error) {
+      handleApiError(error)
+    }
+  },
+
   // ========================
   // STUDENT ENDPOINT
   // ========================

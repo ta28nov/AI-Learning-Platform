@@ -8,6 +8,12 @@ from datetime import datetime
 from typing import List, Optional
 
 
+class ClassNextLesson(BaseModel):
+    lesson_id: Optional[str] = Field(None, description="UUID bài học tiếp theo")
+    lesson_title: Optional[str] = None
+    module_title: Optional[str] = None
+
+
 class ClassCreateRequest(BaseModel):
     name: str
     description: str
@@ -30,12 +36,15 @@ class ClassCreateResponse(BaseModel):
 class ClassListItem(BaseModel):
     id: str = Field(..., description="UUID")
     name: str
+    course_id: Optional[str] = Field(None, description="UUID khóa nền")
     course_title: str
+    instructor_name: Optional[str] = None
     student_count: str = Field(..., description="e.g. 25/30")
     status: str = Field(..., description="preparing|active|completed")
     start_date: datetime
     end_date: datetime
     progress: float = Field(..., description="0-100")
+    next_lesson: Optional[ClassNextLesson] = Field(None, description="Student: bài tiếp theo")
 
 
 class ClassListResponse(BaseModel):
@@ -69,13 +78,16 @@ class ClassDetailResponse(BaseModel):
     name: str
     description: str
     course: CourseInfo
-    invite_code: str
+    invite_code: Optional[str] = None
+    instructor_name: Optional[str] = None
     max_students: int
     student_count: int
     start_date: datetime
     end_date: datetime
     status: str
-    recent_students: List[StudentInfo]
+    my_progress: Optional[float] = Field(None, description="Tiến độ cá nhân (student)")
+    next_lesson: Optional[ClassNextLesson] = Field(None, description="Student: bài học tiếp theo")
+    recent_students: List[StudentInfo] = Field(default_factory=list)
     class_stats: ClassStats
 
 
@@ -84,6 +96,7 @@ class ClassUpdateRequest(BaseModel):
     description: Optional[str] = None
     max_students: Optional[int] = None
     end_date: Optional[datetime] = None
+    status: Optional[str] = Field(None, description="preparing|active|completed")
 
 
 class ClassUpdateResponse(BaseModel):

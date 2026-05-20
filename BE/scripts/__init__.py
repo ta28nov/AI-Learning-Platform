@@ -1,1 +1,1 @@
-"""Scripts tiện ích cho quản trị dữ liệu."""
+# BE maintenance scripts (seed, OpenAPI export, Postman generation).

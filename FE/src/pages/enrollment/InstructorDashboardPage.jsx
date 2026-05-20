@@ -73,10 +73,10 @@ const InstructorDashboardPage = () => {
   )
 
   const stats = [
-    { icon: ClassIcon, label: 'Lớp học', value: data.total_classes ?? data.classes?.length ?? 0, color: 'gold' },
+    { icon: ClassIcon, label: 'Lớp học', value: data.active_classes_count ?? data.total_classes ?? data.classes?.length ?? 0, color: 'gold' },
     { icon: StudentIcon, label: 'Tổng học viên', value: data.total_students ?? 0, color: 'copper' },
-    { icon: TrophyIcon, label: 'Tỉ lệ pass quiz', value: data.quiz_pass_rate != null ? `${Math.round(data.quiz_pass_rate)}%` : '—', color: 'jade' },
-    { icon: ScoreIcon, label: 'Điểm TB', value: data.average_score != null ? `${Math.round(data.average_score)}` : '—', color: 'ink' },
+    { icon: TrophyIcon, label: 'Hoàn thành TB', value: data.avg_completion_rate != null ? `${Math.round(data.avg_completion_rate)}%` : (data.quiz_pass_rate != null ? `${Math.round(data.quiz_pass_rate)}%` : '—'), color: 'jade' },
+    { icon: ScoreIcon, label: 'Quiz đã tạo', value: data.quizzes_created_count ?? data.average_score ?? '—', color: 'ink' },
   ]
 
   const recentClasses = data.recent_classes || data.classes?.slice(0, 5) || []
@@ -138,6 +138,12 @@ const InstructorDashboardPage = () => {
         >
           Quản lý lớp học
         </Button>
+        <Button variant="outline" onClick={() => navigate('/dashboard/instructor/quizzes')}>
+          Quản lý quiz
+        </Button>
+        <Button variant="outline" onClick={() => navigate('/dashboard/instructor/analytics')}>
+          Analytics
+        </Button>
       </motion.div>
 
       {/* Recent classes */}
@@ -151,12 +157,12 @@ const InstructorDashboardPage = () => {
           <h2 className="id-section-title">Lớp học gần đây</h2>
           {recentClasses.map((cls) => (
             <div
-              key={cls.id || cls.class_id}
+              key={cls.class_id || cls.id}
               className="id-class-row"
-              onClick={() => navigate(`/dashboard/instructor/classes/${cls.id || cls.class_id}`)}
+              onClick={() => navigate(`/dashboard/instructor/classes/${cls.class_id || cls.id}`)}
             >
               <div className="id-class-row__info">
-                <span className="id-class-row__name">{cls.name}</span>
+                <span className="id-class-row__name">{cls.class_name || cls.name}</span>
                 <span className="id-class-row__meta">
                   {cls.student_count != null && `${cls.student_count} học viên`}
                   {cls.course_title && ` · ${cls.course_title}`}

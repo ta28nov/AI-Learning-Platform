@@ -35,6 +35,14 @@ async def test_instructor_quiz_performance(client, instructor_auth):
         headers=instructor_auth["headers"],
     )
     assert response.status_code == 200
+    body = response.json()
+    assert "quizzes" in body
+    assert "overall_pass_rate" in body
+    for item in body.get("quizzes") or []:
+        assert "quiz_id" in item
+        assert "pass_rate" in item
+        for hq in item.get("hardest_questions") or []:
+            assert "correct_rate" in hq
 
 
 @pytest.mark.asyncio

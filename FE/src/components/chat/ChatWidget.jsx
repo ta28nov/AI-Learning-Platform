@@ -13,21 +13,29 @@ import './ChatWidget.css'
  * - context_type tự động = 'lesson' vì đặt trong LessonPage
  * - Dùng chung useChatLogic hook với ChatPage
  *
- * Usage: <ChatWidget /> — tự lấy courseId từ URL params
+ * Usage: <ChatWidget /> — tự lấy courseId từ URL params (hoặc prop courseId)
  */
-const ChatWidget = ({ contextMeta = {} }) => {
-  const { courseId } = useParams()
+const ChatWidget = ({
+  contextMeta = {},
+  contextType = 'lesson',
+  subtitle,
+  courseId: courseIdProp,
+  suggestions: suggestionsProp,
+}) => {
+  const { courseId: courseIdParam } = useParams()
+  const effectiveCourseId = courseIdProp || courseIdParam
   const [isOpen, setIsOpen] = useState(false)
   const [inputText, setInputText] = useState('')
   const messagesEndRef = useRef(null)
 
   // Dung chung hook logic voi ChatPage
-  const { messages, sending, sendMessage } = useChatLogic(courseId)
-  const suggestions = contextMeta.suggestions || [
+  const { messages, sending, sendMessage } = useChatLogic(effectiveCourseId)
+  const suggestions = suggestionsProp || contextMeta.suggestions || [
     'Tóm tắt nhanh phần này giúp tôi',
     'Cho tôi ví dụ thực tế cho kiến thức trong bài này',
     'Tạo 3 câu hỏi ôn tập nhanh',
   ]
+  const drawerSubtitle = subtitle || contextMeta.subtitle || 'Hỏi nhanh về bài học'
 
   // Auto scroll khi co tin moi
   useEffect(() => {
@@ -41,9 +49,9 @@ const ChatWidget = ({ contextMeta = {} }) => {
     if (!text || sending) return
     setInputText('')
     // context_type = 'lesson' vi widget dat trong LessonPage
-    await sendMessage(text, 'lesson', {
+    await sendMessage(text, contextType, {
       ...contextMeta,
-      courseId,
+      courseId: effectiveCourseId,
     })
   }
 
@@ -79,7 +87,7 @@ const ChatWidget = ({ contextMeta = {} }) => {
             <span className="chat-widget__avatar">🤖</span>
             <div>
               <div className="chat-widget__title">AI Trợ giảng</div>
-              <div className="chat-widget__subtitle">Hỏi nhanh về bài học</div>
+              <div className="chat-widget__subtitle">{drawerSubtitle}</div>
             </div>
           </div>
           <button

@@ -109,6 +109,20 @@
   color: var(--text-primary);
 }
 
+.quiz-attempt-fill-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid var(--border-color, #e5e7eb);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.quiz-attempt-fill-input:focus {
+  outline: none;
+  border-color: var(--gold-500, #c9a227);
+}
+
 /* Danh sách lựa chọn */
 .quiz-attempt-options {
   display: flex;

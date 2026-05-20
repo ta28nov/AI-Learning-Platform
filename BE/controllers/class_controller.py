@@ -49,8 +49,15 @@ async def handle_create_class(
         HTTPException 404: Course not found
         HTTPException 500: Server error
     """
+    role = current_user.get("role")
+    if role not in ("instructor", "admin"):
+        raise HTTPException(
+            status_code=403,
+            detail="Chỉ giảng viên mới có quyền tạo lớp học",
+        )
+
     instructor_id = current_user.get("user_id")
-    
+
     try:
         result = await class_service.create_class(
             instructor_id=instructor_id,
@@ -90,12 +97,14 @@ async def handle_list_my_classes(
     Returns:
         ClassListResponse
     """
-    instructor_id = current_user.get("user_id")
-    
+    user_id = current_user.get("user_id")
+    role = current_user.get("role", "student")
+
     try:
         result = await class_service.list_my_classes(
-            instructor_id=instructor_id,
-            status_filter=status
+            user_id=user_id,
+            role=role,
+            status_filter=status,
         )
         
         return ClassListResponse(**result)
@@ -127,12 +136,14 @@ async def handle_get_class_detail(
     Raises:
         HTTPException 404: Class not found or unauthorized
     """
-    instructor_id = current_user.get("user_id")
-    
+    user_id = current_user.get("user_id")
+    role = current_user.get("role", "student")
+
     try:
         result = await class_service.get_class_detail(
             class_id=class_id,
-            instructor_id=instructor_id
+            user_id=user_id,
+            role=role,
         )
         
         return ClassDetailResponse(**result)
@@ -401,6 +412,27 @@ async def handle_remove_student(
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi khi xóa học viên: {str(e)}")
+
+
+async def handle_get_my_class_progress(
+    class_id: str,
+    current_user: dict
+) -> ClassStudentDetailResponse:
+    """
+    GET /classes/{class_id}/my-progress — Tiến độ cá nhân HV trong lớp.
+    """
+    user_id = current_user.get("user_id")
+    role = current_user.get("role")
+    if role not in ("student", "admin"):
+        raise HTTPException(status_code=403, detail="Chỉ học viên mới xem tiến độ cá nhân trong lớp")
+
+    try:
+        result = await class_service.get_my_class_progress(class_id, user_id)
+        return ClassStudentDetailResponse(**result)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi khi lấy tiến độ cá nhân: {str(e)}")
 
 
 async def handle_get_class_progress(

@@ -6,6 +6,8 @@ import quizService from '@services/quizService'
 import Button from '@components/ui/Button'
 import Card, { CardBody } from '@components/ui/Card'
 import StateView from '@components/ui/StateView'
+import ClassLearningBanner from '@components/classes/ClassLearningBanner'
+import ChatWidget from '@components/chat/ChatWidget'
 import { pageTurn, pageFade } from '@/styles/motion'
 import './QuizAttemptPage.css'
 
@@ -84,8 +86,8 @@ const QuizAttemptPage = () => {
       const formattedAnswers = (quiz.questions || []).map((q) => ({
         question_id: q.question_id || q.id,
         selected_option: typeof answers[q.question_id || q.id] === 'number'
-          ? String.fromCharCode(65 + answers[q.question_id || q.id])  // 0→"A", 1→"B", 2→"C", 3→"D"
-          : (answers[q.question_id || q.id] || '')
+          ? String.fromCharCode(65 + answers[q.question_id || q.id])
+          : String(answers[q.question_id || q.id] ?? '')
       }))
 
       await quizService.submitAttempt(quizId, {
@@ -113,6 +115,7 @@ const QuizAttemptPage = () => {
 
   return (
     <div className="quiz-attempt-page">
+      <ClassLearningBanner courseId={quiz.course_id} />
       {/* Header: timer + thanh tiến trình */}
       <div className="quiz-attempt-header">
         <div className="quiz-attempt-header__progress">
@@ -162,8 +165,18 @@ const QuizAttemptPage = () => {
             {currentQuestion.question_text}
           </h3>
 
+          {(!currentQuestion.options || currentQuestion.options.length === 0) && (
+            <input
+              type="text"
+              className="quiz-attempt-fill-input"
+              placeholder="Nhập câu trả lời của bạn"
+              value={answers[questionId] || ''}
+              onChange={(e) => handleAnswer(questionId, e.target.value)}
+            />
+          )}
+
           {/* Danh sách lựa chọn */}
-          {currentQuestion.options && (
+          {currentQuestion.options && currentQuestion.options.length > 0 && (
             <div className="quiz-attempt-options">
               {currentQuestion.options.map((option, idx) => {
                 const isSelected = answers[questionId] === idx
@@ -215,6 +228,20 @@ const QuizAttemptPage = () => {
           </Button>
         )}
       </div>
+
+      {quiz?.course_id && (
+        <ChatWidget
+          courseId={quiz.course_id}
+          contextType="general"
+          subtitle="Hỏi AI khi làm quiz (không tiết lộ đáp án)"
+          contextMeta={{ quizId, quizTitle: quiz.title }}
+          suggestions={[
+            'Giải thích khái niệm trong câu hỏi này',
+            'Gợi ý cách suy luận (không cho đáp án trực tiếp)',
+            'Nhắc lại lý thuyết liên quan câu hỏi hiện tại',
+          ]}
+        />
+      )}
     </div>
   )
 }

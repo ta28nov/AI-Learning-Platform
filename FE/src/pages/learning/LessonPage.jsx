@@ -3,10 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion, useScroll, useSpring } from 'framer-motion'
 import toast from 'react-hot-toast'
 import learningService from '@services/learningService'
+import { useAuthStore } from '@stores/authStore'
 import Button from '@components/ui/Button'
 import Card, { CardHeader, CardBody } from '@components/ui/Card'
 import StateView from '@components/ui/StateView'
 import ChatWidget from '@components/chat/ChatWidget'
+import ClassLearningBanner from '@components/classes/ClassLearningBanner'
+import CourseLearningNav from './CourseLearningNav'
 import './LessonPage.css'
 
 /**
@@ -18,15 +21,33 @@ import './LessonPage.css'
 const LessonPage = () => {
   const { courseId, lessonId } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuthStore()
+  const isInstructor = user?.role === 'instructor' || user?.role === 'admin'
   const [lesson, setLesson] = useState(null)
   const [loading, setLoading] = useState(true)
   const [completing, setCompleting] = useState(false)
+  const [completionInfo, setCompletionInfo] = useState(null)
   const shouldReduceMotion = useReducedMotion()
   const { scrollYProgress } = useScroll()
   const progress = useSpring(scrollYProgress, { stiffness: 100, damping: 25 })
 
+  const isInvalidLessonId = !lessonId || lessonId === 'null' || lessonId === 'undefined'
+
+  useEffect(() => {
+    setCompletionInfo(null)
+  }, [lessonId])
+
+  useEffect(() => {
+    if (isInvalidLessonId) {
+      toast.error('Không có bài học tiếp theo')
+      navigate(`/dashboard/courses/${courseId}/modules`, { replace: true })
+    }
+  }, [isInvalidLessonId, courseId, navigate])
+
   // Lấy nội dung bài học khi mount hoặc khi lessonId thay đổi
   useEffect(() => {
+    if (isInvalidLessonId) return
+
     const fetchLesson = async () => {
       try {
         setLoading(true)
@@ -39,7 +60,7 @@ const LessonPage = () => {
       }
     }
     fetchLesson()
-  }, [courseId, lessonId])
+  }, [courseId, lessonId, isInvalidLessonId])
 
   const refetchLesson = async () => {
     const data = await learningService.getLessonContent(courseId, lessonId)
@@ -50,6 +71,7 @@ const LessonPage = () => {
     try {
       setCompleting(true)
       const result = await learningService.completeLesson(courseId, lessonId)
+      setCompletionInfo(result)
       toast.success(result?.message || 'Đã đánh dấu hoàn thành bài học')
       await refetchLesson()
     } catch (error) {
@@ -59,11 +81,25 @@ const LessonPage = () => {
     }
   }
 
-  if (loading) return <div className="loading-spinner">Đang tải bài học...</div>
+  if (isInvalidLessonId) {
+    return <motion.div className="loading-spinner">Đang chuyển hướng...</motion.div>
+  }
+
+  const previousLesson = getNavLesson(lesson?.navigation?.previous_lesson)
+  const nextLesson = getNavLesson(lesson?.navigation?.next_lesson)
+  const progressPercent = completionInfo?.progress_percent ?? null
+  const isCourseComplete =
+    completionInfo?.enrollment_status === 'completed' ||
+    (progressPercent != null && progressPercent >= 100)
+  const showCompletionPanel =
+    lesson?.completion_status?.is_completed && !nextLesson
+
+  if (loading) return <motion.div className="loading-spinner">Đang tải bài học...</motion.div>
   if (!lesson) return <StateView type="empty" title="Không tìm thấy bài học" message="Bài học không tồn tại hoặc đã bị xóa." actionLabel="Quay lại modules" onAction={() => navigate(`/dashboard/courses/${courseId}/modules`)} />
 
   return (
     <div className="lesson-page">
+      <ClassLearningBanner />
       {!shouldReduceMotion && (
         <motion.div className="lesson-scroll-progress" style={{ scaleX: progress }} />
       )}
@@ -80,7 +116,11 @@ const LessonPage = () => {
             <span className="breadcrumb-sep">/</span>
             <span
               className="breadcrumb-link"
-              onClick={() => navigate(`/dashboard/courses/${courseId}/modules`)}
+              onClick={() => navigate(
+                lesson.module_id
+                  ? `/dashboard/courses/${courseId}/modules/${lesson.module_id}`
+                  : `/dashboard/courses/${courseId}/modules`
+              )}
             >
               {lesson.module_title}
             </span>
@@ -186,6 +226,53 @@ const LessonPage = () => {
         </Card>
       )}
 
+      {isInstructor && (
+        <Card className="quiz-prompt-card quiz-instructor-card">
+          <CardBody>
+            <motion.div className="quiz-prompt quiz-prompt--instructor">
+              <div className="quiz-prompt__info">
+                <span className="quiz-instructor-eyebrow">Giảng viên</span>
+                <h3>Quiz cho bài học này</h3>
+                <p className="lesson-instructor-hint">
+                  {lesson.has_quiz
+                    ? `Đã gắn quiz · ${lesson.quiz_info?.question_count || 0} câu hỏi`
+                    : 'Chưa có quiz — tạo để học viên kiểm tra sau bài học'}
+                </p>
+              </div>
+              <div className="quiz-instructor-actions">
+                <Button
+                  onClick={() =>
+                    navigate(
+                      `/dashboard/instructor/quizzes/create?lessonId=${lessonId}&courseId=${courseId}`
+                    )
+                  }
+                >
+                  {lesson.has_quiz ? 'Tạo quiz mới' : 'Tạo quiz'}
+                </Button>
+                {lesson.has_quiz && lesson.quiz_info?.quiz_id && (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate(`/dashboard/quiz/${lesson.quiz_info.quiz_id}`)}
+                    >
+                      Xem trước
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        navigate(`/dashboard/instructor/quizzes/${lesson.quiz_info.quiz_id}/results`)
+                      }
+                    >
+                      Kết quả lớp
+                    </Button>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </CardBody>
+        </Card>
+      )}
+
       {/* Quiz prompt */}
       {lesson.has_quiz && lesson.quiz_info && (
         <Card className="quiz-prompt-card">
@@ -207,32 +294,62 @@ const LessonPage = () => {
         </Card>
       )}
 
+      {showCompletionPanel && (
+        <Card className="lesson-complete-card">
+          <CardBody>
+            <div className="lesson-complete-card__inner">
+              <p className="lesson-complete-card__eyebrow">
+                {isCourseComplete ? 'Hoàn thành khóa học' : 'Hết bài trong module'}
+              </p>
+              <h2 className="lesson-complete-card__title">
+                {isCourseComplete
+                  ? 'Chúc mừng! Bạn đã hoàn thành khóa học'
+                  : 'Bạn đã hoàn thành bài học cuối trong module này'}
+              </h2>
+              <p className="lesson-complete-card__message">
+                {isCourseComplete
+                  ? progressPercent != null
+                    ? `Tiến độ khóa học: ${Math.round(progressPercent)}%. Hãy xem lại nội dung hoặc khám phá khóa học khác.`
+                    : 'Hãy xem lại nội dung hoặc khám phá khóa học khác.'
+                  : 'Các bài học tiếp theo có thể nằm ở module khác. Quay lại danh sách module để tiếp tục.'}
+              </p>
+              <CourseLearningNav
+                courseId={courseId}
+                moduleId={lesson.module_id}
+                sticky={false}
+                className="lesson-complete-card__nav"
+              />
+            </div>
+          </CardBody>
+        </Card>
+      )}
+
       {/* Navigation: bai truoc / bai tiep */}
       <div className="lesson-navigation">
-        {lesson.navigation?.previous_lesson ? (
+        {previousLesson ? (
           <Button
             variant="outline"
             onClick={() => navigate(
-              `/dashboard/courses/${courseId}/lessons/${lesson.navigation.previous_lesson.id}`
+              `/dashboard/courses/${courseId}/lessons/${previousLesson.id}`
             )}
           >
-            ← {lesson.navigation.previous_lesson.title}
+            ← {previousLesson.title || 'Bài trước'}
           </Button>
         ) : (
           <div />
         )}
 
-        {lesson.navigation?.next_lesson && (
+        {nextLesson ? (
           <Button
-            disabled={lesson.navigation.next_lesson.is_locked}
+            disabled={nextLesson.is_locked}
             onClick={() => navigate(
-              `/dashboard/courses/${courseId}/lessons/${lesson.navigation.next_lesson.id}`
+              `/dashboard/courses/${courseId}/lessons/${nextLesson.id}`
             )}
           >
-            {lesson.navigation.next_lesson.title} →
-            {lesson.navigation.next_lesson.is_locked && ' (Khóa)'}
+            {nextLesson.title || 'Bài tiếp'} →
+            {nextLesson.is_locked && ' (Khóa)'}
           </Button>
-        )}
+        ) : null}
       </div>
 
       {!lesson.completion_status?.is_completed && (
@@ -246,6 +363,10 @@ const LessonPage = () => {
             Đánh dấu đã học xong
           </Button>
         </div>
+      )}
+
+      {!showCompletionPanel && (
+        <CourseLearningNav courseId={courseId} moduleId={lesson.module_id} />
       )}
 
       {/* AI Chat Widget (Vị trí 2 Dual-UI) */}
@@ -263,6 +384,14 @@ const LessonPage = () => {
       />
     </div>
   )
+}
+
+/** Chỉ dùng navigation khi có id hợp lệ (tránh /lessons/null). */
+const getNavLesson = (navLesson) => {
+  if (!navLesson?.id || navLesson.id === 'null' || navLesson.id === 'undefined') {
+    return null
+  }
+  return navLesson
 }
 
 const contentTypeLabel = (type) => {

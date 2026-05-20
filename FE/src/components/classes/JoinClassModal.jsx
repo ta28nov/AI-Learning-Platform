@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import classService from '@services/classService'
 import Button from '@components/ui/Button'
 import Modal from '@components/ui/Modal'
+import { buildClassNavigateState } from '@utils/classLearningContext'
 import './JoinClassModal.css'
 
 /**
@@ -46,8 +47,13 @@ const JoinClassModal = ({ isOpen, onClose, onSuccess }) => {
       // Callback cho parent component (reload danh sach, ...)
       if (onSuccess) onSuccess(data)
 
-      // Sau 1.5s tự chuyển đến khóa học nếu có
-      if (data.course_id) {
+      // Sau join: vào trang lớp trước để học viên thấy ngữ cảnh + CTA «Tiếp tục học»
+      if (data.class_id) {
+        setTimeout(() => {
+          handleClose()
+          navigate(`/dashboard/classes/${data.class_id}`)
+        }, 1500)
+      } else if (data.course_id) {
         setTimeout(() => {
           handleClose()
           navigate(`/dashboard/courses/${data.course_id}`)
@@ -140,19 +146,37 @@ const JoinClassModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
 
           <p className="join-class-success__redirect">
-            Đang chuyển đến khóa học...
+            Đang chuyển đến trang lớp học...
           </p>
 
           <div className="join-class-success__actions">
-            {preview.course_id && (
+            {preview.class_id && (
               <Button
                 variant="primary"
                 onClick={() => {
                   handleClose()
-                  navigate(`/dashboard/courses/${preview.course_id}`)
+                  navigate(`/dashboard/classes/${preview.class_id}`)
                 }}
               >
-                Xem khóa học ngay
+                Vào lớp học ngay
+              </Button>
+            )}
+            {preview.course_id && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  handleClose()
+                  navigate(`/dashboard/courses/${preview.course_id}/modules`, {
+                    state: buildClassNavigateState({
+                      courseId: preview.course_id,
+                      classId: preview.class_id,
+                      className: preview.class_name,
+                      instructorName: preview.instructor_name,
+                    }),
+                  })
+                }}
+              >
+                Bắt đầu học luôn
               </Button>
             )}
             <Button variant="outline" onClick={handleClose}>

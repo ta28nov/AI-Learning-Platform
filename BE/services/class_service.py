@@ -5,10 +5,171 @@ Tuân thủ: CHUCNANG.md Section 3.1, 3.2
 """
 
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 import random
 import string
-from models.models import Class, User, Course, Enrollment, Progress, QuizAttempt
+from beanie.operators import In
+from models.models import Class, User, Course, Enrollment, Progress, QuizAttempt, Quiz
+
+
+def _lesson_progress_id(lp: Any) -> Optional[str]:
+    if hasattr(lp, "lesson_id"):
+        return lp.lesson_id
+    if isinstance(lp, dict):
+        return lp.get("lesson_id")
+    return None
+
+
+def _lesson_progress_status(lp: Any) -> Optional[str]:
+    if hasattr(lp, "status"):
+        return lp.status
+    if isinstance(lp, dict):
+        return lp.get("status")
+    return None
+
+
+async def _quiz_attempts_for_course(student_ids: List[str], course_id: str) -> List[QuizAttempt]:
+    if not student_ids:
+        return []
+    quizzes = await Quiz.find(Quiz.course_id == course_id).to_list()
+    quiz_ids = [q.id for q in quizzes]
+    if not quiz_ids:
+        return []
+    return await QuizAttempt.find(
+        In(QuizAttempt.quiz_id, quiz_ids),
+        In(QuizAttempt.user_id, [str(s) for s in student_ids]),
+    ).to_list()
+
+
+async def _find_next_lesson(user_id: str, course_id: str) -> Optional[Dict]:
+    """Bài học đầu tiên chưa hoàn thành — cùng logic enrollment/my-courses."""
+    enrollment = await Enrollment.find_one(
+        Enrollment.user_id == user_id,
+        Enrollment.course_id == course_id,
+    )
+    if not enrollment or enrollment.status == "cancelled":
+        return None
+
+    course = await Course.get(course_id)
+    if not course or not getattr(course, "modules", None):
+        return None
+
+    completed = {str(lid) for lid in (enrollment.completed_lessons or [])}
+    for module in course.modules:
+        for lesson in module.lessons:
+            if str(lesson.id) not in completed:
+                return {
+                    "lesson_id": str(lesson.id),
+                    "lesson_title": lesson.title,
+                    "module_title": module.title,
+                }
+    return None
+
+
+async def _build_student_class_profile(cls: Class, student_id: str) -> Dict:
+    """Hồ sơ tiến độ HV trong lớp — dùng cho instructor drill-down và student my-progress."""
+    student_id = str(student_id)
+    user = await User.get(student_id)
+    if not user:
+        raise ValueError("Học viên không tồn tại")
+
+    progress = await Progress.find_one(
+        Progress.user_id == student_id,
+        Progress.course_id == cls.course_id,
+    )
+
+    quiz_attempts = await _quiz_attempts_for_course([student_id], cls.course_id)
+    quiz_attempts.sort(key=lambda a: a.started_at or datetime.utcnow(), reverse=True)
+
+    course = await Course.get(cls.course_id)
+
+    quiz_scores = []
+    for attempt in quiz_attempts:
+        quiz_title = f"Quiz {attempt.quiz_id[:8]}"
+        if course:
+            for module in course.modules:
+                module_quiz_id = getattr(module, "default_quiz_id", None)
+                if not module_quiz_id:
+                    for lesson in module.lessons:
+                        if getattr(lesson, "quiz_id", None):
+                            module_quiz_id = lesson.quiz_id
+                            break
+                if module_quiz_id == attempt.quiz_id:
+                    quiz_title = f"Quiz {module.title}"
+                    break
+
+        quiz_scores.append({
+            "quiz_id": attempt.quiz_id,
+            "quiz_title": quiz_title,
+            "score": attempt.score,
+            "attempt_date": attempt.started_at,
+        })
+
+    modules_detail = []
+    if course and progress:
+        for module in course.modules:
+            module_lessons = [l.id for l in module.lessons]
+            completed_in_module = sum(
+                1
+                for lp in progress.lessons_progress
+                if _lesson_progress_id(lp) in module_lessons
+                and _lesson_progress_status(lp) == "completed"
+            )
+            module_progress = (
+                (completed_in_module / len(module.lessons) * 100) if module.lessons else 0.0
+            )
+
+            module_quiz_id = getattr(module, "default_quiz_id", None)
+            if not module_quiz_id and module.lessons:
+                for lesson in module.lessons:
+                    if getattr(lesson, "quiz_id", None):
+                        module_quiz_id = lesson.quiz_id
+                        break
+
+            module_quiz_scores = [
+                qs for qs in quiz_scores
+                if module_quiz_id and module_quiz_id == qs["quiz_id"]
+            ]
+
+            modules_detail.append({
+                "module_id": module.id,
+                "module_title": module.title,
+                "progress": round(module_progress, 2),
+                "completed_lessons": completed_in_module,
+                "quiz_scores": module_quiz_scores,
+            })
+
+    progress_summary = {
+        "overall_progress": progress.overall_progress_percent if progress else 0.0,
+        "completed_modules": sum(1 for m in modules_detail if m["progress"] == 100.0),
+        "total_modules": len(modules_detail),
+        "study_streak_days": progress.study_streak_days if progress else 0,
+        "total_study_time": progress.total_time_spent_minutes / 60.0 if progress else 0.0,
+    }
+
+    return {
+        "student_id": user.id,
+        "student_name": user.full_name,
+        "email": user.email,
+        "avatar_url": user.avatar_url if hasattr(user, "avatar_url") else None,
+        "quiz_scores": quiz_scores,
+        "modules_detail": modules_detail,
+        "progress": progress_summary,
+    }
+
+
+async def get_my_class_progress(class_id: str, user_id: str) -> Dict:
+    """Tiến độ cá nhân của HV trong lớp (student self-service)."""
+    cls = await Class.get(class_id)
+    if not cls:
+        raise ValueError("Lớp học không tồn tại hoặc bạn không có quyền truy cập")
+
+    user_id = str(user_id)
+    student_ids = [str(s) for s in cls.student_ids]
+    if user_id not in student_ids:
+        raise ValueError("Lớp học không tồn tại hoặc bạn không có quyền truy cập")
+
+    return await _build_student_class_profile(cls, user_id)
 
 
 # ============================================================================
@@ -56,7 +217,10 @@ async def create_class(
     # Generate unique invite code
     invite_code = await generate_unique_invite_code()
     
-    # Create class
+    now = datetime.utcnow()
+    start_cmp = start_date.replace(tzinfo=None) if start_date.tzinfo else start_date
+    initial_status = "active" if start_cmp <= now else "preparing"
+
     new_class = Class(
         name=name,
         description=description,
@@ -66,8 +230,8 @@ async def create_class(
         max_students=max_students,
         start_date=start_date,
         end_date=end_date,
-        status="preparing",
-        student_ids=[]
+        status=initial_status,
+        student_ids=[],
     )
     
     await new_class.insert()
@@ -106,102 +270,96 @@ async def generate_unique_invite_code() -> str:
 
 
 async def list_my_classes(
-    instructor_id: str,
-    status_filter: Optional[str] = None
+    user_id: str,
+    role: str,
+    status_filter: Optional[str] = None,
 ) -> Dict:
     """
-    3.1.2: Xem danh sách lớp học của instructor
-    
-    Business Logic:
-    1. Query Class với instructor_id
-    2. Optional filter theo status
-    3. Lấy course_title cho mỗi lớp
-    4. Tính student_count và overall progress
-    5. Sort theo created_at DESC
-    
-    Args:
-        instructor_id: ID giảng viên
-        status_filter: Optional filter (preparing/active/completed)
-        
-    Returns:
-        Dict chứa classes list và total
+    3.1.2: Danh sách lớp theo vai trò JWT.
+
+    - instructor/admin: lớp do instructor tạo (instructor_id)
+    - student: lớp đã tham gia (student_ids)
     """
-    # Build query
-    query = {"instructor_id": instructor_id}
+    if role == "student":
+        query: dict = {"student_ids": user_id}
+    else:
+        query = {"instructor_id": user_id}
+
     if status_filter:
         query["status"] = status_filter
-    
-    classes = await Class.find(query).sort(-Class.created_at).to_list()
-    
-    # Format response
+
+    classes = await Class.find(query).sort("-created_at").to_list()
+
     classes_list = []
     for cls in classes:
-        # Get course
         course = await Course.get(cls.course_id)
-        
-        # Calculate student count
         student_count = len(cls.student_ids)
-        
-        # Calculate overall progress
-        if student_count > 0:
-            # Query Progress for students in class
-            progress_list = await Progress.find(
-                Progress.user_id.in_(cls.student_ids),
-                Progress.course_id == cls.course_id
-            ).to_list()
-            
-            if progress_list:
-                avg_progress = sum(p.overall_progress_percent for p in progress_list) / len(progress_list)
-            else:
-                avg_progress = 0.0
+
+        if role == "student":
+            progress_doc = await Progress.find_one(
+                Progress.user_id == user_id,
+                Progress.course_id == cls.course_id,
+            )
+            progress_value = (
+                progress_doc.overall_progress_percent if progress_doc else 0.0
+            )
+            student_count_label = str(student_count)
         else:
-            avg_progress = 0.0
-        
-        classes_list.append({
+            if student_count > 0:
+                progress_list = await Progress.find(
+                    In(Progress.user_id, [str(s) for s in cls.student_ids]),
+                    Progress.course_id == cls.course_id,
+                ).to_list()
+                progress_value = (
+                    sum(p.overall_progress_percent for p in progress_list)
+                    / len(progress_list)
+                    if progress_list
+                    else 0.0
+                )
+            else:
+                progress_value = 0.0
+            student_count_label = f"{student_count}/{cls.max_students}"
+
+        instructor = await User.get(cls.instructor_id)
+        item = {
             "id": cls.id,
             "name": cls.name,
+            "course_id": cls.course_id,
             "course_title": course.title if course else "Unknown",
-            "student_count": f"{student_count}/{cls.max_students}",
+            "instructor_name": instructor.full_name if instructor else "Giảng viên",
+            "student_count": student_count_label,
             "status": cls.status,
             "start_date": cls.start_date,
             "end_date": cls.end_date,
-            "progress": round(avg_progress, 2)
-        })
-    
+            "progress": round(progress_value, 2),
+        }
+        if role == "student":
+            item["next_lesson"] = await _find_next_lesson(user_id, cls.course_id)
+        classes_list.append(item)
+
     return {
         "classes": classes_list,
-        "total": len(classes_list)
+        "total": len(classes_list),
     }
 
 
-async def get_class_detail(class_id: str, instructor_id: str) -> Dict:
+async def get_class_detail(class_id: str, user_id: str, role: str) -> Dict:
     """
-    3.1.3: Xem chi tiết lớp học
-    
-    Business Logic:
-    1. Tìm Class theo class_id và instructor_id (ownership check)
-    2. Lấy course information
-    3. Query students info với progress
-    4. Tính statistics: lessons completed, avg quiz score
-    5. Return full detail
-    
-    Args:
-        class_id: ID lớp học
-        instructor_id: ID giảng viên (ownership)
-        
-    Returns:
-        Dict chứa class detail, students, stats
-        
-    Raises:
-        ValueError: Nếu class không tồn tại hoặc không phải owner
+    3.1.3: Chi tiết lớp — instructor (owner) hoặc student (đã join).
+
+    Student: không trả invite_code; không trả recent_students.
     """
-    # Find class with ownership check
-    cls = await Class.find_one(
-        Class.id == class_id,
-        Class.instructor_id == instructor_id
-    )
-    
+    cls = await Class.get(class_id)
     if not cls:
+        raise ValueError("Lớp học không tồn tại hoặc bạn không có quyền truy cập")
+
+    is_student_view = role == "student"
+    if is_student_view:
+        if user_id not in cls.student_ids:
+            raise ValueError("Lớp học không tồn tại hoặc bạn không có quyền truy cập")
+    elif role == "admin":
+        pass
+    elif cls.instructor_id != user_id:
         raise ValueError("Lớp học không tồn tại hoặc bạn không có quyền truy cập")
     
     # Get course
@@ -210,12 +368,48 @@ async def get_class_detail(class_id: str, instructor_id: str) -> Dict:
     # Count modules
     module_count = len(course.modules) if course else 0
     
-    # Get students info
+    instructor = await User.get(cls.instructor_id)
+    instructor_name = instructor.full_name if instructor else "Giảng viên"
+
     students_info = []
     total_lessons_completed = 0
     total_quiz_score = 0.0
     quiz_count = 0
-    
+
+    if is_student_view:
+        progress = await Progress.find_one(
+            Progress.user_id == user_id,
+            Progress.course_id == cls.course_id,
+        )
+        my_progress = progress.overall_progress_percent if progress else 0.0
+        next_lesson = await _find_next_lesson(user_id, cls.course_id)
+        stats = {
+            "total_students": len(cls.student_ids),
+            "lessons_completed": progress.completed_lessons_count if progress else 0,
+            "avg_quiz_score": 0.0,
+        }
+        return {
+            "id": cls.id,
+            "name": cls.name,
+            "description": cls.description,
+            "course": {
+                "id": cls.course_id,
+                "title": course.title if course else "Unknown",
+                "module_count": module_count,
+            },
+            "invite_code": None,
+            "instructor_name": instructor_name,
+            "max_students": cls.max_students,
+            "student_count": len(cls.student_ids),
+            "start_date": cls.start_date,
+            "end_date": cls.end_date,
+            "status": cls.status,
+            "my_progress": round(my_progress, 2),
+            "next_lesson": next_lesson,
+            "recent_students": [],
+            "class_stats": stats,
+        }
+
     for student_id in cls.student_ids:
         user = await User.get(student_id)
         if not user:
@@ -239,18 +433,18 @@ async def get_class_detail(class_id: str, instructor_id: str) -> Dict:
             "email": user.email,
             "avatar_url": user.avatar_url if hasattr(user, 'avatar_url') else None,
             "progress": progress.overall_progress_percent if progress else 0.0,
-            "joined_at": enrollment.created_at if enrollment else cls.created_at
+            "joined_at": enrollment.enrolled_at if enrollment else cls.created_at
         })
         
         # Accumulate stats
         if progress:
             total_lessons_completed += progress.completed_lessons_count
         
-        # Get quiz scores
-        quiz_attempts = await QuizAttempt.find(
-            QuizAttempt.user_id == student_id,
-            QuizAttempt.course_id == cls.course_id
-        ).to_list()
+        # Get quiz scores (QuizAttempt has no course_id — join via Quiz)
+        quiz_attempts = [
+            a for a in await _quiz_attempts_for_course([student_id], cls.course_id)
+            if str(a.user_id) == str(student_id)
+        ]
         
         for attempt in quiz_attempts:
             total_quiz_score += attempt.score
@@ -270,16 +464,17 @@ async def get_class_detail(class_id: str, instructor_id: str) -> Dict:
         "course": {
             "id": cls.course_id,
             "title": course.title if course else "Unknown",
-            "module_count": module_count
+            "module_count": module_count,
         },
         "invite_code": cls.invite_code,
+        "instructor_name": instructor_name,
         "max_students": cls.max_students,
         "student_count": len(cls.student_ids),
         "start_date": cls.start_date,
         "end_date": cls.end_date,
         "status": cls.status,
         "recent_students": students_info,
-        "class_stats": stats
+        "class_stats": stats,
     }
 
 
@@ -438,12 +633,14 @@ async def join_class_with_code(user_id: str, invite_code: str) -> Dict:
     if len(cls.student_ids) >= cls.max_students:
         raise ValueError("Lớp học đã đầy")
     
-    # Check if already joined
-    if user_id in cls.student_ids:
+    user_id = str(user_id)
+    student_ids = [str(s) for s in cls.student_ids]
+
+    if user_id in student_ids:
         raise ValueError("Bạn đã tham gia lớp học này")
-    
-    # Add student to class
-    cls.student_ids.append(user_id)
+
+    student_ids.append(user_id)
+    cls.student_ids = student_ids
     cls.updated_at = datetime.utcnow()
     await cls.save()
     
@@ -542,11 +739,11 @@ async def get_class_students(
             Progress.course_id == cls.course_id
         )
         
-        # Get quiz attempts
-        quiz_attempts = await QuizAttempt.find(
-            QuizAttempt.user_id == student_id,
-            QuizAttempt.course_id == cls.course_id
-        ).to_list()
+        # Get quiz attempts (QuizAttempt has no course_id — join via Quiz)
+        quiz_attempts = [
+            a for a in await _quiz_attempts_for_course([student_id], cls.course_id)
+            if str(a.user_id) == str(student_id)
+        ]
         
         # Calculate quiz average
         if quiz_attempts:
@@ -554,24 +751,38 @@ async def get_class_students(
         else:
             quiz_avg = 0.0
         
-        # Calculate completed modules
-        if progress:
-            completed_modules = sum(
-                1 for lp in progress.lessons_progress
-                if lp.get("status") == "completed"
-            )
-        else:
-            completed_modules = 0
+        completed_lesson_ids: set[str] = set()
+        if enrollment and enrollment.completed_lessons:
+            completed_lesson_ids = {str(lid) for lid in enrollment.completed_lessons}
+        elif progress:
+            completed_lesson_ids = {
+                str(_lesson_progress_id(lp))
+                for lp in (progress.lessons_progress or [])
+                if _lesson_progress_status(lp) == "completed" and _lesson_progress_id(lp)
+            }
+
+        completed_modules = 0
+        if course and getattr(course, "modules", None):
+            for module in course.modules:
+                module_lesson_ids = {str(lesson.id) for lesson in module.lessons}
+                if module_lesson_ids and module_lesson_ids.issubset(completed_lesson_ids):
+                    completed_modules += 1
         
         students_list.append({
             "student_id": user.id,
             "student_name": user.full_name,
             "email": user.email,
-            "join_date": enrollment.created_at if enrollment else cls.created_at,
+            "join_date": enrollment.enrolled_at if enrollment else cls.created_at,
             "progress": progress.overall_progress_percent if progress else 0.0,
             "completed_modules": completed_modules,
             "total_modules": total_modules,
-            "last_activity": progress.last_accessed_at if progress and progress.last_accessed_at else enrollment.updated_at if enrollment else cls.created_at,
+            "last_activity": (
+                progress.last_accessed_at
+                if progress and progress.last_accessed_at
+                else enrollment.last_accessed_at if enrollment and enrollment.last_accessed_at
+                else enrollment.enrolled_at if enrollment
+                else cls.created_at
+            ),
             "quiz_average": round(quiz_avg, 2)
         })
     
@@ -617,91 +828,14 @@ async def get_student_detail(
     
     if not cls:
         raise ValueError("Lớp học không tồn tại")
-    
+
+    student_id = str(student_id)
+    cls.student_ids = [str(s) for s in cls.student_ids]
+
     if student_id not in cls.student_ids:
         raise ValueError("Học viên không thuộc lớp này")
-    
-    # Get user
-    user = await User.get(student_id)
-    
-    # Get progress
-    progress = await Progress.find_one(
-        Progress.user_id == student_id,
-        Progress.course_id == cls.course_id
-    )
-    
-    # Get quiz attempts
-    quiz_attempts = await QuizAttempt.find(
-        QuizAttempt.user_id == student_id,
-        QuizAttempt.course_id == cls.course_id
-    ).sort(-QuizAttempt.created_at).to_list()
-    
-    # Get course
-    course = await Course.get(cls.course_id)
-    
-    # Format quiz scores
-    quiz_scores = []
-    for attempt in quiz_attempts:
-        # Get quiz info from modules
-        quiz_title = f"Quiz {attempt.quiz_id[:8]}"
-        if course:
-            for module in course.modules:
-                if module.default_quiz_id == attempt.quiz_id:
-                    quiz_title = f"Quiz {module.title}"
-                    break
-        
-        quiz_scores.append({
-            "quiz_id": attempt.quiz_id,
-            "quiz_title": quiz_title,
-            "score": attempt.score,
-            "attempt_date": attempt.created_at
-        })
-    
-    # Format modules detail
-    modules_detail = []
-    if course and progress:
-        for module in course.modules:
-            # Count completed lessons in this module
-            module_lessons = [l.id for l in module.lessons]
-            completed_in_module = sum(
-                1 for lp in progress.lessons_progress
-                if lp.get("lesson_id") in module_lessons and lp.get("status") == "completed"
-            )
-            
-            module_progress = (completed_in_module / len(module.lessons) * 100) if len(module.lessons) > 0 else 0.0
-            
-            # Get quiz scores for this module
-            module_quiz_scores = [
-                qs for qs in quiz_scores
-                if module.default_quiz_id and module.default_quiz_id == qs["quiz_id"]
-            ]
-            
-            modules_detail.append({
-                "module_id": module.id,
-                "module_title": module.title,
-                "progress": round(module_progress, 2),
-                "completed_lessons": completed_in_module,
-                "quiz_scores": module_quiz_scores
-            })
-    
-    # Student progress summary
-    progress_summary = {
-        "overall_progress": progress.overall_progress_percent if progress else 0.0,
-        "completed_modules": sum(1 for m in modules_detail if m["progress"] == 100.0),
-        "total_modules": len(modules_detail),
-        "study_streak_days": progress.study_streak_days if progress else 0,
-        "total_study_time": progress.total_time_spent_minutes / 60.0 if progress else 0.0
-    }
-    
-    return {
-        "student_id": user.id,
-        "student_name": user.full_name,
-        "email": user.email,
-        "avatar_url": user.avatar_url if hasattr(user, 'avatar_url') else None,
-        "quiz_scores": quiz_scores,
-        "modules_detail": modules_detail,
-        "progress": progress_summary
-    }
+
+    return await _build_student_class_profile(cls, student_id)
 
 
 async def remove_student(
@@ -736,10 +870,12 @@ async def remove_student(
     if not cls:
         raise ValueError("Lớp học không tồn tại")
     
+    student_id = str(student_id)
+    cls.student_ids = [str(s) for s in cls.student_ids]
+
     if student_id not in cls.student_ids:
         raise ValueError("Học viên không thuộc lớp này")
-    
-    # Remove from class
+
     cls.student_ids.remove(student_id)
     cls.updated_at = datetime.utcnow()
     await cls.save()
@@ -751,8 +887,7 @@ async def remove_student(
     )
     
     if enrollment:
-        enrollment.status = "removed"
-        enrollment.updated_at = datetime.utcnow()
+        enrollment.status = "cancelled"
         await enrollment.save()
     
     return {
@@ -788,91 +923,38 @@ async def get_class_progress(class_id: str, instructor_id: str) -> Dict:
     
     if not cls:
         raise ValueError("Lớp học không tồn tại")
-    
-    # Get course
-    course = await Course.get(cls.course_id)
-    
-    # Query all students' progress
-    progress_list = await Progress.find(
-        Progress.user_id.in_(cls.student_ids),
-        Progress.course_id == cls.course_id
-    ).to_list()
-    
-    # Query all quiz attempts
-    quiz_attempts = await QuizAttempt.find(
-        QuizAttempt.user_id.in_(cls.student_ids),
-        QuizAttempt.course_id == cls.course_id
-    ).to_list()
-    
-    # Score histogram (group by score ranges)
-    score_ranges = {
-        "0-20": 0,
-        "21-40": 0,
-        "41-60": 0,
-        "61-80": 0,
-        "81-100": 0
-    }
-    
-    for attempt in quiz_attempts:
-        score = attempt.score
-        if score <= 20:
-            score_ranges["0-20"] += 1
-        elif score <= 40:
-            score_ranges["21-40"] += 1
-        elif score <= 60:
-            score_ranges["41-60"] += 1
-        elif score <= 80:
-            score_ranges["61-80"] += 1
-        else:
-            score_ranges["81-100"] += 1
-    
-    # Module completion rates
-    module_completion = []
-    if course:
-        for module in course.modules:
-            module_lessons = [l.id for l in module.lessons]
-            
-            # Count students who completed this module
-            completed_students = 0
-            for progress in progress_list:
-                completed_in_module = sum(
-                    1 for lp in progress.lessons_progress
-                    if lp.get("lesson_id") in module_lessons and lp.get("status") == "completed"
-                )
-                if completed_in_module == len(module_lessons):
-                    completed_students += 1
-            
-            module_completion.append({
-                "module_id": module.id,
-                "module_title": module.title,
-                "completed_students": completed_students,
-                "total_students": len(cls.student_ids),
-                "completion_rate": round(completed_students / len(cls.student_ids) * 100, 2) if len(cls.student_ids) > 0 else 0.0
-            })
-    
-    # Lessons completion stats
-    lesson_stats = {}
-    for progress in progress_list:
-        for lp in progress.lessons_progress:
-            lesson_id = lp.get("lesson_id")
-            if lesson_id:
-                if lesson_id not in lesson_stats:
-                    lesson_stats[lesson_id] = 0
-                if lp.get("status") == "completed":
-                    lesson_stats[lesson_id] += 1
-    
-    # Sort to find most/least completed
-    sorted_lessons = sorted(lesson_stats.items(), key=lambda x: x[1], reverse=True)
-    
-    most_completed = sorted_lessons[:3] if sorted_lessons else []
-    least_completed = sorted_lessons[-3:] if sorted_lessons else []
-    
+
+    student_ids = [str(s) for s in cls.student_ids]
+    total_students = len(student_ids)
+
+    if student_ids:
+        progress_list = await Progress.find(
+            In(Progress.user_id, student_ids),
+            Progress.course_id == cls.course_id,
+        ).to_list()
+    else:
+        progress_list = []
+
+    quiz_attempts = await _quiz_attempts_for_course(student_ids, cls.course_id)
+
+    if progress_list:
+        average_progress = sum(p.overall_progress_percent for p in progress_list) / len(progress_list)
+        completed_count = sum(1 for p in progress_list if p.overall_progress_percent >= 100)
+        completion_rate = (completed_count / total_students * 100) if total_students else 0.0
+    else:
+        average_progress = 0.0
+        completion_rate = 0.0
+
+    if quiz_attempts:
+        average_quiz_score = sum(a.score for a in quiz_attempts) / len(quiz_attempts)
+    else:
+        average_quiz_score = 0.0
+
     return {
         "class_id": cls.id,
         "class_name": cls.name,
-        "total_students": len(cls.student_ids),
-        "score_distribution": score_ranges,
-        "module_completion": module_completion,
-        "most_completed_lessons": most_completed,
-        "least_completed_lessons": least_completed
+        "total_students": total_students,
+        "average_progress": round(average_progress, 2),
+        "completion_rate": round(completion_rate, 2),
+        "average_quiz_score": round(average_quiz_score, 2),
     }

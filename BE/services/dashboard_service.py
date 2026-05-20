@@ -18,6 +18,43 @@ def _read_field(item, key: str, default=None):
     return getattr(item, key, default)
 
 
+def _course_lesson_module_totals(course) -> tuple[int, int]:
+    """Return (total_lessons, total_modules) from a Course document."""
+    if not course or not getattr(course, "modules", None):
+        return 0, 0
+    total_lessons = sum(len(m.lessons) for m in course.modules)
+    return total_lessons, len(course.modules)
+
+
+def _count_completed_modules(course, completed_lesson_ids: set[str]) -> int:
+    """Count modules where every lesson is in completed_lesson_ids."""
+    if not course or not getattr(course, "modules", None):
+        return 0
+    completed_modules = 0
+    for module in course.modules:
+        if not module.lessons:
+            continue
+        module_lesson_ids = {str(lesson.id) for lesson in module.lessons}
+        if module_lesson_ids and module_lesson_ids.issubset(completed_lesson_ids):
+            completed_modules += 1
+    return completed_modules
+
+
+def _answer_from_attempt_item(ans):
+    """Align with quiz_service: seed/API may use student_answer, answer, or selected_option."""
+    if hasattr(ans, "selected_option") and ans.selected_option is not None:
+        return ans.selected_option
+    if hasattr(ans, "answer") and ans.answer is not None:
+        return ans.answer
+    if hasattr(ans, "student_answer") and ans.student_answer is not None:
+        return ans.student_answer
+    return (
+        _read_field(ans, "answer")
+        or _read_field(ans, "student_answer")
+        or _read_field(ans, "selected_option")
+    )
+
+
 # ============================================================================
 # Section 2.7.1: DASHBOARD TỔNG QUAN HỌC VIÊN
 # ============================================================================
@@ -112,10 +149,10 @@ async def get_student_dashboard(user_id: str) -> Dict:
                     latest_attempt = await QuizAttempt.find(
                         QuizAttempt.user_id == user_id,
                         QuizAttempt.quiz_id == lesson.quiz_id
-                    ).sort(-QuizAttempt.created_at).first_or_none()
+                    ).sort(-QuizAttempt.started_at).first_or_none()
                     
-                    # Nếu chưa attempt hoặc chưa pass
-                    if not latest_attempt or latest_attempt.status != "passed":
+                    # Nếu chưa attempt hoặc chưa pass (QuizAttempt.passed / status Pass|Fail)
+                    if not latest_attempt or not latest_attempt.passed:
                         # Get course title
                         course = await Course.get(lesson.course_id)
                         course_title = course.title if course else "Unknown Course"
@@ -296,10 +333,25 @@ async def get_learning_stats(user_id: str) -> Dict:
         )
         
         if progress:
-            total_lessons_completed += progress.completed_lessons_count
-            
+            total_lessons = progress.total_lessons_count or 0
+            completed_lessons = progress.completed_lessons_count
+            progress_percent = progress.overall_progress_percent
+
             # Get course
             course = await Course.get(enrollment.course_id)
+            if total_lessons == 0 and course:
+                total_lessons, total_modules = _course_lesson_module_totals(course)
+            else:
+                _, total_modules = _course_lesson_module_totals(course) if course else (0, 0)
+
+            completed_lesson_ids = {
+                _read_field(entry, "lesson_id")
+                for entry in (progress.lessons_progress or [])
+                if _read_field(entry, "status") == "completed" and _read_field(entry, "lesson_id")
+            }
+            if not completed_lesson_ids and enrollment.completed_lessons:
+                completed_lesson_ids = set(enrollment.completed_lessons)
+            completed_modules = _count_completed_modules(course, completed_lesson_ids)
             
             # QuizAttempt has no course_id; join through Quiz collection
             course_quizzes = await Quiz.find(Quiz.course_id == enrollment.course_id).to_list()
@@ -321,10 +373,15 @@ async def get_learning_stats(user_id: str) -> Dict:
             course_stats_list.append({
                 "course_id": enrollment.course_id,
                 "course_title": course.title if course else "Unknown",
-                "lessons_completed": progress.completed_lessons_count,
+                "lessons_completed": completed_lessons,
+                "total_lessons": total_lessons,
+                "completed_modules": completed_modules,
+                "total_modules": total_modules,
+                "progress_percent": round(progress_percent, 2),
                 "quiz_score": round(course_quiz_score, 2),
                 "status": enrollment.status
             })
+            total_lessons_completed += completed_lessons
     
     # Lấy tất cả quiz attempts của user (qua Quiz.course_id join)
     enrolled_course_ids = [e.course_id for e in enrollments if e.status == "active"]
@@ -524,7 +581,6 @@ async def get_instructor_dashboard(instructor_id: str) -> Dict:
     completion_rates = []
     
     for cls in active_classes:
-        # Count enrollments for this class
         enrollments = await Enrollment.find(
             Enrollment.course_id == cls.course_id,
             Enrollment.status == "active"
@@ -532,11 +588,15 @@ async def get_instructor_dashboard(instructor_id: str) -> Dict:
         
         total_students += len(enrollments)
         
-        # Calculate completion rate for this class
         if enrollments:
-            completed = sum(1 for e in enrollments if e.completion_rate >= 100)
-            completion_rate = (completed / len(enrollments) * 100)
-            completion_rates.append(completion_rate)
+            enrollment_user_ids = [e.user_id for e in enrollments]
+            progress_list = await Progress.find(
+                Progress.course_id == cls.course_id,
+                In(Progress.user_id, enrollment_user_ids)
+            ).to_list()
+            if progress_list:
+                avg_progress = sum(p.overall_progress_percent for p in progress_list) / len(progress_list)
+                completion_rates.append(avg_progress)
     
     avg_completion_rate = sum(completion_rates) / len(completion_rates) if completion_rates else 0
     
@@ -943,7 +1003,12 @@ async def get_instructor_quiz_performance(instructor_id: str) -> Dict:
         question_stats = {}
         
         for attempt in attempts:
-            answer_map = {ans["question_id"]: ans["answer"] for ans in attempt.answers}
+            answer_map = {}
+            for ans in attempt.answers or []:
+                qid = _read_field(ans, "question_id")
+                if not qid:
+                    continue
+                answer_map[qid] = _answer_from_attempt_item(ans)
             
             for question in quiz.questions:
                 q_id = question.get("question_id") or question.get("id") or question.get("order")
@@ -959,7 +1024,11 @@ async def get_instructor_quiz_performance(instructor_id: str) -> Dict:
                 correct_answer = question.get("correct_answer")
                 
                 question_stats[q_id]["total_count"] += 1
-                if user_answer == correct_answer:
+                if (
+                    user_answer is not None
+                    and correct_answer is not None
+                    and str(user_answer).strip().lower() == str(correct_answer).strip().lower()
+                ):
                     question_stats[q_id]["correct_count"] += 1
         
         hardest_questions = []
@@ -1425,7 +1494,7 @@ async def get_system_health() -> Dict:
     last_24h = now - timedelta(hours=24)
     recent_users = await User.find(User.created_at >= last_24h).count()
     recent_enrollments = await Enrollment.find(Enrollment.enrolled_at >= last_24h).count()
-    recent_quiz_attempts = await QuizAttempt.find(QuizAttempt.created_at >= last_24h).count()
+    recent_quiz_attempts = await QuizAttempt.find(QuizAttempt.started_at >= last_24h).count()
 
     last_7d = now - timedelta(days=7)
     active_users = await User.find(User.last_login_at >= last_7d).count()

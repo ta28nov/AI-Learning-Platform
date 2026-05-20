@@ -35,9 +35,9 @@ const StudentDashboard = ({ data }) => {
                   </div>
                   <div className="dash-course-card__progress">
                     <div className="dash-course-card__bar">
-                      <div className="dash-course-card__fill" style={{ width: `${course.progress_percent || 0}%` }} />
+                      <div className="dash-course-card__fill" style={{ width: `${Math.round(course.progress_percent || 0)}%` }} />
                     </div>
-                    <span className="dash-course-card__percent">{course.progress_percent || 0}%</span>
+                    <span className="dash-course-card__percent">{Math.round(course.progress_percent || 0)}%</span>
                   </div>
                 </button>
               ))

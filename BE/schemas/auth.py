@@ -57,7 +57,11 @@ class RegisterResponse(BaseModel):
     status: str = Field(default="active", description="Trạng thái tài khoản")
     created_at: datetime = Field(..., description="Thời gian tạo tài khoản (ISO 8601)")
     message: str = Field(default="Đăng ký tài khoản thành công")
-    
+    verification_token: Optional[str] = Field(
+        None,
+        description="Chỉ trả về khi TESTING=true (dev/pytest), không dùng production",
+    )
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -145,3 +149,64 @@ class RefreshTokenResponse(BaseModel):
     """Schema response cho refresh token thành công"""
     access_token: str = Field(..., description="JWT token mới, thời hạn 15 phút")
     token_type: str = Field(default="Bearer")
+
+
+class ForgotPasswordRequest(BaseModel):
+    """POST /api/v1/auth/forgot-password"""
+    email: EmailStr
+
+
+class ForgotPasswordResponse(BaseModel):
+    message: str = Field(
+        default="Nếu email tồn tại trong hệ thống, bạn sẽ nhận hướng dẫn đặt lại mật khẩu.",
+    )
+    reset_token: Optional[str] = Field(
+        None,
+        description="Chỉ trả về khi TESTING=true (dev/pytest), không dùng production",
+    )
+
+
+class ResetPasswordRequest(BaseModel):
+    """POST /api/v1/auth/reset-password"""
+    token: str = Field(..., min_length=16, description="Token từ email/link reset")
+    new_password: str = Field(..., min_length=8)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_password_strength(cls, v: str) -> str:
+        if not any(char.isdigit() for char in v):
+            raise ValueError("Password must contain at least one digit")
+        if not any(char.isupper() for char in v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(char in "!@#$%^&*()_+-=[]{}|;:,.<>?" for char in v):
+            raise ValueError("Password must contain at least one special character")
+        return v
+
+
+class ResetPasswordResponse(BaseModel):
+    message: str = Field(default="Đặt lại mật khẩu thành công")
+
+
+class VerifyEmailRequest(BaseModel):
+    """POST /api/v1/auth/verify-email"""
+    token: str = Field(..., min_length=16, description="Token từ link xác thực")
+
+
+class VerifyEmailResponse(BaseModel):
+    message: str = Field(default="Xác thực email thành công")
+    email_verified: bool = Field(default=True)
+
+
+class ResendVerificationRequest(BaseModel):
+    """POST /api/v1/auth/resend-verification"""
+    email: EmailStr
+
+
+class ResendVerificationResponse(BaseModel):
+    message: str = Field(
+        default="Nếu email tồn tại và chưa xác thực, bạn sẽ nhận link xác thực.",
+    )
+    verification_token: Optional[str] = Field(
+        None,
+        description="Chỉ trả về khi TESTING=true (dev/pytest)",
+    )

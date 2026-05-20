@@ -4,12 +4,13 @@ Sử dụng: bcrypt (passlib), JWT (python-jose), MongoDB (Beanie)
 Tuân thủ: CHUCNANG.md Section 2.1 (Login/Register/Token Management)
 """
 
+import secrets
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Dict, Any
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from config.config import get_settings
-from models.models import User, RefreshToken
+from models.models import User, RefreshToken, PasswordResetTokenDocument, EmailVerificationTokenDocument
 
 settings = get_settings()
 
@@ -298,3 +299,122 @@ async def get_current_user_from_token(token: str) -> Optional[User]:
         return None
     
     return user
+
+
+# ============================================================================
+# PASSWORD RESET (forgot / reset)
+# ============================================================================
+
+async def request_password_reset(email: str) -> Dict[str, Any]:
+    """
+    Tạo token reset (1 giờ). Luôn trả message chung — không lộ email có tồn tại hay không.
+    """
+    message = "Nếu email tồn tại trong hệ thống, bạn sẽ nhận hướng dẫn đặt lại mật khẩu."
+    user = await User.find_one(User.email == email)
+    if not user:
+        return {"message": message}
+
+    await PasswordResetTokenDocument.find(
+        PasswordResetTokenDocument.user_id == user.id,
+        PasswordResetTokenDocument.used == False,
+    ).update({"$set": {"used": True}})
+
+    token = secrets.token_urlsafe(32)
+    doc = PasswordResetTokenDocument(
+        user_id=user.id,
+        token=token,
+        expires_at=datetime.utcnow() + timedelta(hours=1),
+        used=False,
+    )
+    await doc.insert()
+
+    result: Dict[str, Any] = {"message": message}
+    if settings.testing:
+        result["reset_token"] = token
+    return result
+
+
+async def reset_password_with_token(token: str, new_password: str) -> Dict[str, str]:
+    """Đổi mật khẩu bằng token; vô hiệu refresh tokens."""
+    doc = await PasswordResetTokenDocument.find_one(
+        PasswordResetTokenDocument.token == token,
+        PasswordResetTokenDocument.used == False,
+    )
+    if not doc or doc.expires_at < datetime.utcnow():
+        raise ValueError("Token không hợp lệ hoặc đã hết hạn")
+
+    user = await User.get(doc.user_id)
+    if not user:
+        raise ValueError("Token không hợp lệ")
+
+    user.hashed_password = hash_password(new_password)
+    user.updated_at = datetime.utcnow()
+    await user.save()
+
+    doc.used = True
+    await doc.save()
+    await delete_all_user_tokens(user.id)
+
+    return {"message": "Đặt lại mật khẩu thành công"}
+
+
+# ============================================================================
+# EMAIL VERIFICATION
+# ============================================================================
+
+async def issue_email_verification(user_id: str) -> Optional[str]:
+    """Tạo token xác thực (24h). Trả token khi TESTING để pytest/E2E."""
+    user = await User.get(user_id)
+    if not user or user.email_verified:
+        return None
+
+    await EmailVerificationTokenDocument.find(
+        EmailVerificationTokenDocument.user_id == user_id,
+        EmailVerificationTokenDocument.used == False,
+    ).update({"$set": {"used": True}})
+
+    token = secrets.token_urlsafe(32)
+    doc = EmailVerificationTokenDocument(
+        user_id=user_id,
+        token=token,
+        expires_at=datetime.utcnow() + timedelta(hours=24),
+        used=False,
+    )
+    await doc.insert()
+    return token if settings.testing else None
+
+
+async def request_email_verification(email: str) -> Dict[str, Any]:
+    """Gửi lại link xác thực — message chung, không lộ email."""
+    message = "Nếu email tồn tại và chưa xác thực, bạn sẽ nhận link xác thực."
+    user = await User.find_one(User.email == email)
+    if not user or user.email_verified:
+        return {"message": message}
+
+    token = await issue_email_verification(user.id)
+    result: Dict[str, Any] = {"message": message}
+    if settings.testing and token:
+        result["verification_token"] = token
+    return result
+
+
+async def verify_email_with_token(token: str) -> Dict[str, Any]:
+    doc = await EmailVerificationTokenDocument.find_one(
+        EmailVerificationTokenDocument.token == token,
+        EmailVerificationTokenDocument.used == False,
+    )
+    if not doc or doc.expires_at < datetime.utcnow():
+        raise ValueError("Token không hợp lệ hoặc đã hết hạn")
+
+    user = await User.get(doc.user_id)
+    if not user:
+        raise ValueError("Token không hợp lệ")
+
+    user.email_verified = True
+    user.updated_at = datetime.utcnow()
+    await user.save()
+
+    doc.used = True
+    await doc.save()
+
+    return {"message": "Xác thực email thành công", "email_verified": True}

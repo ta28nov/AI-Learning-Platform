@@ -4,11 +4,22 @@ Sử dụng: Beanie ODM
 Tuân thủ: CHUCNANG.md Section 4.1-4.3, API_SCHEMA.md
 """
 
+import re
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from fastapi import HTTPException, status
+from beanie.operators import In
 from models.models import User, Course, Class, Enrollment, Progress
 from utils.security import hash_password, generate_random_password
+
+
+def _regex_or_clause(search: str, field_names: List[str]) -> Optional[Dict[str, Any]]:
+    """MongoDB $or regex filter — avoids Beanie ExpressionField issues with .contains()."""
+    term = (search or "").strip()
+    if not term:
+        return None
+    pattern = re.escape(term)
+    return {"$or": [{name: {"$regex": pattern, "$options": "i"}} for name in field_names]}
 
 
 # ============================================================================
@@ -45,31 +56,18 @@ async def get_users_list_admin(
     Returns:
         Dict chứa users list và pagination info
     """
-    # Build base query
-    query_conditions = []
-    
-    # Apply role filter
+    mongo_filters: List[Dict[str, Any]] = []
     if role_filter:
-        query_conditions.append(User.role == role_filter)
-    
-    # Apply status filter 
+        mongo_filters.append({"role": role_filter})
     if status_filter:
-        query_conditions.append(User.status == status_filter)
-    
-    # Apply search
-    if search:
-        search_conditions = [
-            User.full_name.contains(search, case_insensitive=True),
-            User.email.contains(search, case_insensitive=True)
-        ]
-        # Add OR condition for search
-        from beanie.operators import Or
-        query_conditions.append(Or(*search_conditions))
-    
-    # Build final query
-    if query_conditions:
-        from beanie.operators import And
-        query = User.find(And(*query_conditions))
+        mongo_filters.append({"status": status_filter})
+    text_or = _regex_or_clause(search, ["full_name", "email"])
+    if text_or:
+        mongo_filters.append(text_or)
+
+    if mongo_filters:
+        filter_doc = mongo_filters[0] if len(mongo_filters) == 1 else {"$and": mongo_filters}
+        query = User.find(filter_doc)
     else:
         query = User.find()
     
@@ -157,101 +155,19 @@ async def get_user_detail_admin(user_id: str) -> Dict:
             detail="User không tồn tại"
         )
     
-    # Get enrollments if student
-    enrollments_data = []
-    if user.role == "student":
-        enrollments = await Enrollment.find(
-            Enrollment.user_id == user.id
-        ).sort(-Enrollment.created_at).to_list()
-        
-        for enrollment in enrollments:
-            course = await Course.get(enrollment.course_id)
-            if course:
-                enrollments_data.append({
-                    "enrollment_id": str(enrollment.id),
-                    "course_id": str(course.id),
-                    "course_title": course.title,
-                    "status": enrollment.status,
-                    "progress": enrollment.progress,
-                    "enrolled_at": enrollment.created_at.isoformat(),
-                    "completed_at": enrollment.completed_at.isoformat() if enrollment.completed_at else None
-                })
-    
-    # Get courses if instructor
-    courses_data = []
-    if user.role == "instructor":
-        courses = await Course.find(
-            Course.instructor_id == user.id
-        ).sort(-Course.created_at).to_list()
-        
-        for course in courses:
-            enrollment_count = await Enrollment.find(
-                Enrollment.course_id == course.id
-            ).count()
-            
-            courses_data.append({
-                "course_id": str(course.id),
-                "title": course.title,
-                "status": course.status,
-                "category": course.category,
-                "enrollment_count": enrollment_count,
-                "created_at": course.created_at.isoformat()
-            })
-    
-    # Activity stats (last 30 days)
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-    
-    # Get recent activity based on role
-    recent_activity = []
-    if user.role == "student":
-        recent_enrollments = await Enrollment.find(
-            Enrollment.user_id == user.id,
-            Enrollment.created_at >= thirty_days_ago
-        ).sort(-Enrollment.created_at).limit(5).to_list()
-        
-        for enrollment in recent_enrollments:
-            course = await Course.get(enrollment.course_id)
-            if course:
-                recent_activity.append({
-                    "type": "enrollment",
-                    "description": f"Đăng ký khóa học: {course.title}",
-                    "timestamp": enrollment.created_at.isoformat()
-                })
-    
-    elif user.role == "instructor":
-        recent_courses = await Course.find(
-            Course.instructor_id == user.id,
-            Course.created_at >= thirty_days_ago
-        ).sort(-Course.created_at).limit(5).to_list()
-        
-        for course in recent_courses:
-            recent_activity.append({
-                "type": "course_creation",
-                "description": f"Tạo khóa học: {course.title}",
-                "timestamp": course.created_at.isoformat()
-            })
-    
     return {
         "user_id": str(user.id),
         "full_name": user.full_name,
         "email": user.email,
         "role": user.role,
         "status": user.status,
-        "created_at": user.created_at.isoformat(),
-        "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
+        "created_at": user.created_at,
+        "last_login_at": user.last_login_at,
         "profile": {
-            # "phone": user.phone,
+            "phone": user.contact_info,
             "bio": user.bio,
-            #"profile_image": user.profile_image
+            "avatar_url": user.avatar_url,
         },
-        "enrollments": enrollments_data if user.role == "student" else None,
-        "courses": courses_data if user.role == "instructor" else None,
-        "recent_activity": recent_activity,
-        "statistics": {
-            "total_enrollments": len(enrollments_data) if user.role == "student" else None,
-            "total_courses_created": len(courses_data) if user.role == "instructor" else None,
-            "activity_last_30d": len(recent_activity)
-        }
     }
 
 
@@ -506,32 +422,20 @@ async def get_courses_list_admin(
     Returns:
         Dict chứa courses list và pagination
     """
-    # Build query conditions
-    query_conditions = []
-    
-    # Apply filters
+    mongo_filters: List[Dict[str, Any]] = []
     if category_filter:
-        query_conditions.append(Course.category == category_filter)
-    
+        mongo_filters.append({"category": category_filter})
     if status_filter:
-        query_conditions.append(Course.status == status_filter)
-    
+        mongo_filters.append({"status": status_filter})
     if instructor_filter:
-        query_conditions.append(Course.instructor_id == instructor_filter)
-    
-    # Apply search
-    if search:
-        search_conditions = [
-            Course.title.contains(search, case_insensitive=True),
-            Course.description.contains(search, case_insensitive=True)
-        ]
-        from beanie.operators import Or
-        query_conditions.append(Or(*search_conditions))
-    
-    # Build final query
-    if query_conditions:
-        from beanie.operators import And
-        query = Course.find(And(*query_conditions))
+        mongo_filters.append({"instructor_id": instructor_filter})
+    text_or = _regex_or_clause(search, ["title", "description"])
+    if text_or:
+        mongo_filters.append(text_or)
+
+    if mongo_filters:
+        filter_doc = mongo_filters[0] if len(mongo_filters) == 1 else {"$and": mongo_filters}
+        query = Course.find(filter_doc)
     else:
         query = Course.find()
     
@@ -697,29 +601,18 @@ async def get_classes_list_admin(
     3. Apply filters và pagination
     4. Return formatted class data
     """
-    # Build query conditions
-    query_conditions = []
-    
-    # Apply filters
+    mongo_filters: List[Dict[str, Any]] = []
     if instructor_filter:
-        query_conditions.append(Class.instructor_id == instructor_filter)
-    
+        mongo_filters.append({"instructor_id": instructor_filter})
     if status_filter:
-        query_conditions.append(Class.status == status_filter)
-    
-    # Apply search — Class model uses 'name' not 'class_name'
-    if search:
-        search_conditions = [
-            Class.name.contains(search, case_insensitive=True),
-            Class.description.contains(search, case_insensitive=True)
-        ]
-        from beanie.operators import Or as BeanieOr
-        query_conditions.append(BeanieOr(*search_conditions))
-    
-    # Build final query
-    if query_conditions:
-        from beanie.operators import And as BeanieAnd
-        query = Class.find(BeanieAnd(*query_conditions))
+        mongo_filters.append({"status": status_filter})
+    text_or = _regex_or_clause(search, ["name", "description"])
+    if text_or:
+        mongo_filters.append(text_or)
+
+    if mongo_filters:
+        filter_doc = mongo_filters[0] if len(mongo_filters) == 1 else {"$and": mongo_filters}
+        query = Class.find(filter_doc)
     else:
         query = Class.find()
     
@@ -957,42 +850,38 @@ async def reset_user_password_admin(user_id: str, new_password: str) -> Dict:
         )
 
 
-async def create_course_admin(course_data: Dict) -> Dict:
+async def create_course_admin(course_data: Dict, admin_id: str) -> Dict:
     """
     Tạo khóa học chính thức (Section 4.2.3)
-    
-    Args:
-        course_data: Dict chứa thông tin khóa học
-        
-    Returns:
-        Dict chứa thông tin khóa học mới
     """
-    # Create course
+    instructor_id = course_data.get("instructor_id") or course_data.get("creator_id")
+    owner_id = instructor_id or admin_id
+
     course = Course(
         title=course_data["title"],
         description=course_data["description"],
-        instructor_id=course_data.get("creator_id", course_data.get("instructor_id")),
         category=course_data["category"],
         level=course_data["level"],
+        language=course_data.get("language", "vi"),
         status=course_data.get("status", "draft"),
+        owner_id=owner_id,
+        owner_type="admin",
+        instructor_id=instructor_id,
+        course_type="public",
         created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+        updated_at=datetime.utcnow(),
     )
-    
+
     try:
         await course.save()
-        
-        # Get instructor info
-        instructor = await User.get(course.instructor_id)
-        instructor_name = instructor.full_name if instructor else "Unknown"
-        
         return {
             "course_id": str(course.id),
             "title": course.title,
-            "creator_name": instructor_name,
             "status": course.status,
-            "created_at": course.created_at.isoformat(),
-            "message": "Khóa học đã được tạo thành công"
+            "course_type": course.course_type,
+            "created_by": admin_id,
+            "created_at": course.created_at,
+            "message": "Khóa học đã được tạo thành công",
         }
     except Exception as e:
         raise HTTPException(
@@ -1034,8 +923,10 @@ async def update_course_admin(course_id: str, update_data: Dict) -> Dict:
         
         return {
             "course_id": str(course.id),
+            "title": course.title,
+            "status": course.status,
             "message": "Khóa học đã được cập nhật",
-            "updated_at": course.updated_at.isoformat()
+            "updated_at": course.updated_at,
         }
     except Exception as e:
         raise HTTPException(
@@ -1062,34 +953,39 @@ async def delete_course_admin(course_id: str) -> Dict:
             detail="Khóa học không tồn tại"
         )
     
-    # Check for active enrollments
     active_enrollments = await Enrollment.find(
         Enrollment.course_id == course_id,
-        Enrollment.status.in_(["active", "completed"])
+        In(Enrollment.status, ["active", "completed"]),
     ).count()
-    
+
     if active_enrollments > 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Không thể xóa khóa học có {active_enrollments} học viên đang học"
+            detail=f"Không thể xóa khóa học có {active_enrollments} học viên đang học",
         )
-    
-    # Check for classes using this course
-    classes_using_course = await Class.find(
-        Class.course_id == course_id
-    ).count()
-    
+
+    classes_using_course = await Class.find(Class.course_id == course_id).count()
+
     if classes_using_course > 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Không thể xóa khóa học được sử dụng bởi {classes_using_course} lớp học"
+            detail=f"Không thể xóa khóa học được sử dụng bởi {classes_using_course} lớp học",
         )
-    
+
+    course_title = course.title
     try:
         await course.delete()
-        
+
         return {
-            "message": "Khóa học đã được xóa vĩnh viễn"
+            "course_id": str(course_id),
+            "title": course_title,
+            "impact": {
+                "enrolled_students": active_enrollments,
+                "active_classes": classes_using_course,
+                "personal_courses_derived": 0,
+                "warning": "Khóa học đã bị xóa vĩnh viễn",
+            },
+            "message": "Khóa học đã được xóa vĩnh viễn",
         }
     except Exception as e:
         raise HTTPException(

@@ -19,6 +19,7 @@ python -m venv venv
 venv\Scripts\activate  # Windows
 # source venv/bin/activate  # Linux/Mac
 
+
 # Install dependencies
 pip install -r requirements.txt
 ```
@@ -36,13 +37,15 @@ notepad .env  # Windows
 # nano .env   # Linux
 ```
 
-**Minimum required:**
+**Minimum required** (tên biến khớp `BE/config/config.py`):
 ```env
 MONGODB_URL=mongodb://localhost:27017
-MONGODB_DATABASE=belearning_db
+MONGODB_DATABASE=ai_learning_app
 GOOGLE_API_KEY=your-google-ai-api-key-here
-JWT_SECRET_KEY=any-random-string-for-development
+SECRET_KEY=any-random-string-for-development-min-32-chars
 ```
+
+> **Lưu ý:** JWT dùng biến **`SECRET_KEY`**, không phải `JWT_SECRET_KEY`. Sinh key: `python -c "import secrets; print(secrets.token_hex(32))"`.
 
 **Get Google AI API Key:**
 1. Visit: https://aistudio.google.com/app/apikey

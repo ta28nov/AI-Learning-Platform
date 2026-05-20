@@ -241,9 +241,63 @@ ROLE_PERMISSIONS: Dict[str, Set[str]] = {
 # RBAC MIDDLEWARE FUNCTIONS
 # ============================================================================
 
-async def require_role(required_role: str):
+ROLE_HIERARCHY: Dict[str, int] = {
+    Role.STUDENT: 1,
+    Role.INSTRUCTOR: 2,
+    Role.ADMIN: 3,
+}
+
+
+def role_level(role: Optional[str]) -> int:
+    if not role:
+        return 0
+    return ROLE_HIERARCHY.get(role, 0)
+
+
+def has_minimum_role(user_role: Optional[str], required_role: str) -> bool:
+    """admin >= instructor >= student (see ROLE_PERMISSIONS / BE/README §9.2)."""
+    return role_level(user_role) >= role_level(required_role)
+
+
+def ensure_student_only(current_user: Dict, detail: str = "Chỉ học viên mới có quyền truy cập") -> None:
+    if current_user.get("role") != Role.STUDENT:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
+
+
+def ensure_minimum_role(
+    current_user: Dict,
+    required_role: str,
+    detail: Optional[str] = None,
+) -> None:
+    user_role = current_user.get("role")
+    if not has_minimum_role(user_role, required_role):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=detail
+            or f"Yêu cầu quyền {required_role} trở lên. Bạn hiện có quyền {user_role}",
+        )
+
+
+def require_exact_role(required_role: str):
     """
-    Dependency để kiểm tra user có role yêu cầu
+    Dependency: user phải đúng role (không dùng hierarchy).
+    Dùng cho /dashboard/student, /analytics/learning-stats (chỉ student).
+    """
+    async def role_checker(current_user: dict = Depends(get_current_user)):
+        user_role = current_user.get("role")
+        if user_role != required_role:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Yêu cầu quyền {required_role}. Bạn hiện có quyền {user_role}",
+            )
+        return current_user
+
+    return role_checker
+
+
+def require_role(required_role: str):
+    """
+    Dependency để kiểm tra user có role yêu cầu (hierarchy: admin >= instructor >= student)
     
     Args:
         required_role: Role cần thiết (student|instructor|admin)
@@ -263,17 +317,7 @@ async def require_role(required_role: str):
                 detail="Thiếu thông tin vai trò người dùng"
             )
         
-        # Kiểm tra role hierarchy: admin > instructor > student
-        role_hierarchy = {
-            Role.STUDENT: 1,
-            Role.INSTRUCTOR: 2, 
-            Role.ADMIN: 3
-        }
-        
-        user_level = role_hierarchy.get(user_role, 0)
-        required_level = role_hierarchy.get(required_role, 999)
-        
-        if user_level < required_level:
+        if not has_minimum_role(user_role, required_role):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Yêu cầu quyền {required_role}. Bạn hiện có quyền {user_role}"
@@ -284,7 +328,7 @@ async def require_role(required_role: str):
     return role_checker
 
 
-async def require_permission(permission: str):
+def require_permission(permission: str):
     """
     Dependency để kiểm tra user có permission cụ thể
     
@@ -320,7 +364,7 @@ async def require_permission(permission: str):
     return permission_checker
 
 
-async def require_any_role(allowed_roles: List[str]):
+def require_any_role(allowed_roles: List[str]):
     """
     Dependency để kiểm tra user có ít nhất một trong các roles được phép
     
@@ -354,7 +398,7 @@ async def require_any_role(allowed_roles: List[str]):
     return any_role_checker
 
 
-async def require_ownership_or_admin(resource_owner_id: str):
+def require_ownership_or_admin(resource_owner_id: str):
     """
     Dependency để kiểm tra user là owner của resource hoặc là admin
     
@@ -441,10 +485,12 @@ def get_user_permissions(user_role: str) -> Set[str]:
 # CONVENIENT ROLE DEPENDENCIES - Direct usage in routers
 # ============================================================================
 
-# Shorthand dependencies cho từng role
-require_student = require_role(Role.STUDENT)
-require_instructor = require_role(Role.INSTRUCTOR) 
+# Shorthand dependencies cho routers (FastAPI Depends)
+require_student_only = require_exact_role(Role.STUDENT)
+require_instructor = require_role(Role.INSTRUCTOR)
 require_admin = require_role(Role.ADMIN)
+# Hierarchy: student+ (ít dùng; ưu tiên require_student_only cho route chỉ student)
+require_student = require_role(Role.STUDENT)
 
 # Mixed role dependencies
 require_instructor_or_admin = require_any_role([Role.INSTRUCTOR, Role.ADMIN])

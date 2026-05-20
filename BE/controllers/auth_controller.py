@@ -14,7 +14,15 @@ from schemas.auth import (
     LogoutResponse,
     UserInfo,
     RefreshTokenRequest,
-    RefreshTokenResponse
+    RefreshTokenResponse,
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
+    VerifyEmailRequest,
+    VerifyEmailResponse,
+    ResendVerificationRequest,
+    ResendVerificationResponse,
 )
 from services import auth_service, user_service
 from models.models import User
@@ -43,6 +51,7 @@ async def handle_register(request: RegisterRequest) -> RegisterResponse:
         )
         
         # Trả về response theo API_SCHEMA.md
+        verification_token = await auth_service.issue_email_verification(str(user.id))
         return RegisterResponse(
             id=str(user.id),
             full_name=user.full_name,
@@ -50,7 +59,8 @@ async def handle_register(request: RegisterRequest) -> RegisterResponse:
             role=user.role,
             status=user.status,
             created_at=user.created_at,
-            message="Đăng ký tài khoản thành công"
+            message="Đăng ký tài khoản thành công",
+            verification_token=verification_token,
         )
     
     except ValueError as e:
@@ -216,3 +226,56 @@ async def handle_refresh_token(request: RefreshTokenRequest) -> RefreshTokenResp
         access_token=new_access_token,
         token_type="Bearer"
     )
+
+
+async def handle_forgot_password(request: ForgotPasswordRequest) -> ForgotPasswordResponse:
+    """POST /auth/forgot-password — luôn 200 với message chung."""
+    try:
+        result = await auth_service.request_password_reset(request.email)
+        return ForgotPasswordResponse(**result)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Không thể xử lý yêu cầu quên mật khẩu",
+        )
+
+
+async def handle_verify_email(request: VerifyEmailRequest) -> VerifyEmailResponse:
+    try:
+        result = await auth_service.verify_email_with_token(request.token)
+        return VerifyEmailResponse(**result)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Không thể xác thực email",
+        )
+
+
+async def handle_resend_verification(request: ResendVerificationRequest) -> ResendVerificationResponse:
+    try:
+        result = await auth_service.request_email_verification(request.email)
+        return ResendVerificationResponse(**result)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Không thể gửi lại email xác thực",
+        )
+
+
+async def handle_reset_password(request: ResetPasswordRequest) -> ResetPasswordResponse:
+    """POST /auth/reset-password"""
+    try:
+        result = await auth_service.reset_password_with_token(
+            request.token,
+            request.new_password,
+        )
+        return ResetPasswordResponse(**result)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Không thể đặt lại mật khẩu",
+        )

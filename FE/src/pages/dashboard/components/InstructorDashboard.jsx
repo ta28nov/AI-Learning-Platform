@@ -23,7 +23,7 @@ const InstructorDashboard = ({ data }) => {
         <div className="dash-courses">
           {(data?.recent_classes || []).length > 0 ? (
             data.recent_classes.map((cls) => (
-              <button key={cls.class_id} className="dash-class-card" onClick={() => navigate(`/dashboard/classes/${cls.class_id}`)}>
+              <button key={cls.class_id} className="dash-class-card" onClick={() => navigate(`/dashboard/instructor/classes/${cls.class_id}`)}>
                 <h4>{cls.name}</h4>
                 <div className="dash-class-card__meta">
                   <span>{cls.student_count || 0} học viên</span>

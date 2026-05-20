@@ -12,6 +12,7 @@ from models.models import (
     UserDocument,
     RefreshTokenDocument,
     PasswordResetTokenDocument,
+    EmailVerificationTokenDocument,
     
     # Course & Learning content
     CourseDocument,
@@ -52,6 +53,7 @@ async def init_database() -> None:
             UserDocument,
             RefreshTokenDocument,
             PasswordResetTokenDocument,
+    EmailVerificationTokenDocument,
             
             # Course & Learning content
             CourseDocument,

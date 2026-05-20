@@ -11,6 +11,29 @@ import random
 from models.models import Quiz, QuizAttempt, Class, User, Lesson, Course, Enrollment
 
 
+def _answer_value_from_item(ans) -> tuple[str, str]:
+    """Extract (question_id, answer) from stored attempt answer (dict or model)."""
+    if hasattr(ans, "question_id"):
+        qid = str(getattr(ans, "question_id", "") or "")
+        val = (
+            getattr(ans, "selected_option", None)
+            or getattr(ans, "answer", None)
+            or getattr(ans, "student_answer", None)
+            or ""
+        )
+        return qid, str(val)
+    if isinstance(ans, dict):
+        qid = str(ans.get("question_id", "") or "")
+        val = (
+            ans.get("answer")
+            or ans.get("selected_option")
+            or ans.get("student_answer")
+            or ""
+        )
+        return qid, str(val)
+    return "", ""
+
+
 # ============================================================================
 # QUIZ CRUD
 # ============================================================================
@@ -317,10 +340,14 @@ async def submit_quiz_attempt(
     correct_count = 0
     total_count = len(quiz.questions)
     
-    answer_map = {ans["question_id"]: ans["answer"] for ans in answers}
-    
+    answer_map = {}
+    for ans in answers:
+        qid, val = _answer_value_from_item(ans)
+        if qid:
+            answer_map[qid] = val
+
     for question in quiz.questions:
-        q_id = question.get("question_id") or question.get("id")
+        q_id = str(question.get("question_id") or question.get("id") or "")
         user_answer = answer_map.get(q_id)
         correct_answer = question.get("correct_answer")
         
@@ -1078,14 +1105,12 @@ async def get_class_quiz_results(quiz_id: str, class_id: str) -> Dict:
     
     if not quiz:
         raise Exception("Quiz không tồn tại")
-    
-    # Get students in class (enrolled in course with class_id)
-    enrollments = await Enrollment.find(
-        Enrollment.course_id == quiz.course_id,
-        Enrollment.status == "active"
-    ).to_list()
-    
-    student_ids = [e.user_id for e in enrollments]
+
+    class_obj = await Class.get(class_id)
+    if not class_obj:
+        raise Exception("Lớp học không tồn tại")
+
+    student_ids = list(class_obj.student_ids or [])
     
     # Get quiz attempts from these students
     attempts = await QuizAttempt.find(
@@ -1181,8 +1206,12 @@ async def get_class_quiz_results(quiz_id: str, class_id: str) -> Dict:
     question_stats = {}
     
     for attempt in class_attempts:
-        answer_map = {ans["question_id"]: ans["answer"] for ans in attempt.answers}
-        
+        answer_map = {}
+        for ans in attempt.answers or []:
+            qid, val = _answer_value_from_item(ans)
+            if qid:
+                answer_map[qid] = val
+
         for question in quiz.questions:
             q_id = question.get("question_id") or question.get("id") or question.get("order")
             
@@ -1219,8 +1248,6 @@ async def get_class_quiz_results(quiz_id: str, class_id: str) -> Dict:
     difficult_questions.sort(key=lambda q: q["correct_rate"])
     difficult_questions = difficult_questions[:3]  # Top 3 hardest
     
-    # Get class name
-    class_obj = await Class.get(class_id)
     class_name = class_obj.name if class_obj else f"Class {class_id}"
     
     return {

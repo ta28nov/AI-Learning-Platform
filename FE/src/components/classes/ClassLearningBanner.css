@@ -1,0 +1,31 @@
+.class-learning-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
+  background: rgba(var(--gold-500-rgb, 212, 175, 55), 0.08);
+  border: 1px solid rgba(var(--gold-500-rgb, 212, 175, 55), 0.35);
+  border-radius: var(--radius-lg);
+  font-size: 0.82rem;
+  color: var(--ink-700, var(--ink-900));
+}
+
+.class-learning-banner__text strong {
+  color: var(--ink-900);
+  font-weight: 600;
+}
+
+.class-learning-banner__link {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gold-600, var(--gold-500));
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.class-learning-banner__link:hover {
+  text-decoration: underline;
+}

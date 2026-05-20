@@ -5,6 +5,9 @@ import toast from 'react-hot-toast'
 import quizService from '@services/quizService'
 import Button from '@components/ui/Button'
 import StateView from '@components/ui/StateView'
+import ClassLearningBanner from '@components/classes/ClassLearningBanner'
+import QuizWrongAnswerExplainer from '@components/quiz/QuizWrongAnswerExplainer'
+import ChatWidget from '@components/chat/ChatWidget'
 import './QuizResultsPage.css'
 
 const CheckIcon = () => (
@@ -65,13 +68,16 @@ const QuizResultsPage = () => {
   if (loading) return <div className="qr-page"><StateView type="loading" message="Đang tải kết quả…" /></div>
   if (!results) return <div className="qr-page"><StateView type="empty" message="Không tìm thấy kết quả" action={{ label: 'Quay lại', onClick: () => navigate(-1) }} /></div>
 
-  const isPassed = results.status === 'Pass'
+  const isPassed = results.status === 'Pass' || results.status === 'pass'
   const score = Math.round(results.total_score || 0)
+  const wrongItems = (results.results || []).filter((item) => !item.is_correct)
+  const courseId = results.course_id
   const circumference = 2 * Math.PI * 44
   const dashOffset = circumference - (score / 100) * circumference
 
   return (
     <div className="qr-page">
+      <ClassLearningBanner courseId={courseId} />
       {/* Score hero */}
       <motion.div
         className="qr-hero"
@@ -186,6 +192,24 @@ const QuizResultsPage = () => {
             )
           })}
         </motion.div>
+      )}
+
+      <QuizWrongAnswerExplainer
+        courseId={courseId}
+        quizTitle={results.quiz_title}
+        wrongItems={wrongItems}
+      />
+
+      {courseId && (
+        <ChatWidget
+          courseId={courseId}
+          contextType="general"
+          subtitle="Hỏi thêm về kết quả quiz"
+          suggestions={[
+            'Tóm tắt các lỗi sai chính trong bài vừa làm',
+            'Gợi ý cách ôn lại phần kiến thức liên quan',
+          ]}
+        />
       )}
 
       {/* Actions */}

@@ -22,8 +22,11 @@ from typing import Dict, Optional, List
 from fastapi import HTTPException, status
 from datetime import datetime
 
+from middleware.rbac import Role, ensure_minimum_role
+
 # Import schemas
 from schemas.quiz import (
+    QuestionForAttempt,
     QuizDetailResponse,
     QuizAttemptRequest,
     QuizAttemptResponse,
@@ -50,6 +53,29 @@ from services import quiz_service, enrollment_service, course_service, ai_servic
 # ============================================================================
 # Section 2.4.3: XEM THÔNG TIN QUIZ
 # ============================================================================
+
+def _questions_for_attempt(raw_questions: List[dict]) -> List[QuestionForAttempt]:
+    """Strip answers from quiz questions for the attempt UI."""
+    items: List[QuestionForAttempt] = []
+    for q in raw_questions or []:
+        qid = str(q.get("id") or q.get("question_id") or "")
+        if not qid:
+            continue
+        items.append(
+            QuestionForAttempt(
+                id=qid,
+                question_id=qid,
+                type=q.get("type", "multiple_choice"),
+                question_text=q.get("question_text", ""),
+                options=q.get("options"),
+                points=int(q.get("points", 1) or 1),
+                is_mandatory=bool(q.get("is_mandatory", False)),
+                order=int(q.get("order", 0) or 0),
+            )
+        )
+    items.sort(key=lambda x: x.order)
+    return items
+
 
 async def handle_get_quiz_detail(
     quiz_id: str,
@@ -80,6 +106,7 @@ async def handle_get_quiz_detail(
     Endpoint: GET /api/v1/quizzes/{id}
     """
     user_id = current_user.get("user_id")
+    role = current_user.get("role")
     
     # Lấy quiz
     quiz = await quiz_service.get_quiz_by_id(quiz_id)
@@ -89,29 +116,37 @@ async def handle_get_quiz_detail(
             detail="Quiz không tồn tại"
         )
     
-    # Kiểm tra enrollment nếu quiz thuộc course
-    if quiz.course_id:
+    # Học viên cần enrollment; giảng viên/admin xem quiz của mình hoặc preview
+    if quiz.course_id and role == "student":
         enrollment = await enrollment_service.get_user_enrollment(user_id, quiz.course_id)
         if not enrollment or enrollment.status == "cancelled":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Bạn cần đăng ký khóa học để xem quiz"
             )
+    elif role in ("instructor", "admin") and quiz.created_by != user_id and role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Không có quyền xem quiz này"
+        )
     
     # Lấy attempts của user
     attempts = await quiz_service.get_user_quiz_attempts(user_id, quiz_id)
     
+    attempt_questions = _questions_for_attempt(quiz.questions)
+
     return QuizDetailResponse(
         id=str(quiz.id),
         title=quiz.title,
         description=quiz.description,
-        question_count=len(quiz.questions),  # Fix: add missing field
-        time_limit=quiz.time_limit_minutes,  # Fix: correct field name
-        pass_threshold=int(quiz.passing_score),  # Fix: correct field name and type
-        mandatory_question_count=sum(1 for q in quiz.questions if q.get("is_mandatory", False)),  # Fix: calculate
-        user_attempts=len(attempts),  # Fix: should be int, not list
+        question_count=len(quiz.questions),
+        time_limit=quiz.time_limit_minutes or 0,
+        pass_threshold=int(quiz.passing_score),
+        mandatory_question_count=sum(1 for q in quiz.questions if q.get("is_mandatory", False)),
+        user_attempts=len(attempts),
         best_score=max([a.score for a in attempts]) if attempts else None,
-        last_attempt_at=attempts[0].started_at if attempts else None
+        last_attempt_at=attempts[0].started_at if attempts else None,
+        questions=attempt_questions,
     )
 
 
@@ -283,6 +318,8 @@ async def handle_get_quiz_results(
     return QuizResultsResponse(
         attempt_id=str(attempt.id),
         quiz_id=str(quiz.id),
+        course_id=str(quiz.course_id) if quiz.course_id else None,
+        quiz_title=quiz.title,
         total_score=attempt.score,
         status=attempt.status,
         pass_threshold=quiz.passing_score,
@@ -573,15 +610,12 @@ async def handle_create_quiz(
     from models.models import Lesson
     from schemas.quiz import QuizCreateResponse
     
+    ensure_minimum_role(
+        current_user,
+        Role.INSTRUCTOR,
+        "Chỉ giảng viên hoặc admin mới có quyền tạo quiz",
+    )
     user_id = current_user.get("user_id")
-    role = current_user.get("role")
-    
-    # Check instructor role
-    if role != "instructor":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Chỉ instructor mới có quyền tạo quiz"
-        )
     
     # Validate lesson exists
     lesson = await Lesson.get(lesson_id)
@@ -768,15 +802,12 @@ async def handle_update_quiz(
     """
     from schemas.quiz import QuizUpdateResponse
     
+    ensure_minimum_role(
+        current_user,
+        Role.INSTRUCTOR,
+        "Chỉ giảng viên hoặc admin mới có quyền update quiz",
+    )
     instructor_id = current_user.get("user_id")
-    role = current_user.get("role")
-    
-    # Check instructor role
-    if role != "instructor":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Chỉ instructor mới có quyền update quiz"
-        )
     
     # Build update dict from request
     update_data = {}
@@ -907,15 +938,12 @@ async def handle_delete_quiz(
     """
     from schemas.quiz import QuizDeleteResponse
     
+    ensure_minimum_role(
+        current_user,
+        Role.INSTRUCTOR,
+        "Chỉ giảng viên hoặc admin mới có quyền xóa quiz",
+    )
     instructor_id = current_user.get("user_id")
-    role = current_user.get("role")
-    
-    # Check instructor role
-    if role != "instructor":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Chỉ instructor mới có quyền xóa quiz"
-        )
     
     try:
         result = await quiz_service.delete_quiz_instructor(
@@ -985,14 +1013,11 @@ async def handle_get_class_quiz_results(
     """
     from schemas.quiz import QuizClassResultsResponse
     
-    role = current_user.get("role")
-    
-    # Check instructor role
-    if role != "instructor":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Chỉ instructor mới có quyền xem kết quả lớp"
-        )
+    ensure_minimum_role(
+        current_user,
+        Role.INSTRUCTOR,
+        "Chỉ giảng viên hoặc admin mới có quyền xem kết quả lớp",
+    )
     
     try:
         result = await quiz_service.get_class_quiz_results(

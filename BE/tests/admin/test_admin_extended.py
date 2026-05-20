@@ -9,18 +9,20 @@ from datetime import datetime
 
 @pytest.mark.asyncio
 async def test_admin_get_user_detail_known_bug(client, admin_auth, student_user):
-    """BUG-001: service returns ISO strings; schema expects datetime."""
+    """BUG-001: GET /admin/users/{id} returns valid AdminUserDetailResponse."""
     response = await client.get(
         f"/admin/users/{student_user.id}",
         headers=admin_auth["headers"],
     )
-    assert response.status_code == 500
-    assert "created_at" in response.json().get("detail", "")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["user_id"] == student_user.id
+    assert body["email"] == student_user.email
 
 
 @pytest.mark.asyncio
 async def test_admin_create_course_known_bug(client, admin_auth):
-    """BUG-002: create_course_admin omits required Course.owner_id."""
+    """BUG-002: POST /admin/courses creates course with owner_id."""
     response = await client.post(
         "/admin/courses",
         json={
@@ -32,19 +34,21 @@ async def test_admin_create_course_known_bug(client, admin_auth):
         },
         headers=admin_auth["headers"],
     )
-    assert response.status_code == 500
-    assert "owner_id" in response.json().get("detail", "")
+    assert response.status_code in (200, 201)
+    body = response.json()
+    assert body["course_id"]
+    assert body["title"] == "Admin Bug Repro Course"
 
 
 @pytest.mark.asyncio
 async def test_admin_get_course_detail_known_bug(client, admin_auth, published_catalog_course):
-    """BUG-004: calls non-existent course_service.get_course_detail."""
+    """BUG-004: GET /admin/courses/{id} uses get_course_detail_admin."""
     response = await client.get(
         f"/admin/courses/{published_catalog_course.id}",
         headers=admin_auth["headers"],
     )
-    assert response.status_code == 500
-    assert "get_course_detail" in response.json().get("detail", "")
+    assert response.status_code == 200
+    assert response.json()["course_id"] == published_catalog_course.id
 
 
 @pytest.mark.asyncio
@@ -70,19 +74,20 @@ async def test_admin_update_course_response_known_bug(client, admin_auth, studen
         json={"title": "Admin Update Bug Course Renamed"},
         headers=admin_auth["headers"],
     )
-    assert response.status_code == 500
-    assert "AdminCourseUpdateResponse" in response.json().get("detail", "")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["title"] == "Admin Update Bug Course Renamed"
 
 
 @pytest.mark.asyncio
 async def test_admin_system_health_known_bug(client, admin_auth):
-    """BUG-006: system health analytics datetime serialization."""
+    """BUG-006: GET /admin/analytics/system-health returns 200."""
     response = await client.get(
         "/admin/analytics/system-health",
         headers=admin_auth["headers"],
     )
-    assert response.status_code == 500
-    assert "created_at" in response.json().get("detail", "") or "health" in response.json().get("detail", "").lower()
+    assert response.status_code == 200
+    assert response.json()["status"] in ("healthy", "warning", "critical")
 
 
 # --- Working admin endpoints ---

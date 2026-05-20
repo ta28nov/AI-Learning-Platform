@@ -1,0 +1,112 @@
+.legal-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--space-8) var(--space-6) var(--space-10);
+  background: var(--cream-100, #faf8f5);
+}
+
+.legal-card {
+  max-width: 640px;
+  width: 100%;
+}
+
+.legal-intro {
+  margin: 0 0 1.25rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-secondary, #6b7280);
+}
+
+.legal-toc {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: rgba(201, 162, 39, 0.06);
+  border: 1px solid rgba(201, 162, 39, 0.2);
+  border-radius: 12px;
+}
+
+.legal-toc__label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-600, #a8841a);
+  margin-bottom: 0.5rem;
+}
+
+.legal-toc ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  list-style: none;
+}
+
+.legal-toc li {
+  margin: 0.35rem 0;
+}
+
+.legal-toc a {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.legal-toc a:hover {
+  color: var(--gold-600, #a8841a);
+  border-bottom-color: var(--gold-500);
+}
+
+.legal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.legal-section {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border-subtle, #e8e4dc);
+  scroll-margin-top: 1.5rem;
+}
+
+.legal-section:last-of-type {
+  border-bottom: none;
+}
+
+.legal-section__title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: var(--text-primary);
+}
+
+.legal-section p {
+  margin: 0;
+  line-height: 1.65;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #4b5563);
+}
+
+.legal-updated {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  margin-top: 1.5rem !important;
+  color: var(--text-secondary);
+}
+
+.legal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle, #e8e4dc);
+}
+
+.legal-home {
+  margin-left: 0;
+}

@@ -66,6 +66,10 @@ class CourseStats(BaseModel):
     course_id: str = Field(..., description="UUID")
     course_title: str
     lessons_completed: int
+    total_lessons: int = Field(default=0, description="Tổng số bài học trong khóa")
+    completed_modules: int = Field(default=0, description="Số module đã hoàn thành")
+    total_modules: int = Field(default=0, description="Tổng số module trong khóa")
+    progress_percent: float = Field(default=0.0, description="Tiến độ 0-100")
     quiz_score: float
     status: str
 

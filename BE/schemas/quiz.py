@@ -9,6 +9,18 @@ from datetime import datetime
 from typing import List, Optional
 
 
+class QuestionForAttempt(BaseModel):
+    """Câu hỏi cho màn làm bài — không trả correct_answer / explanation."""
+    id: str = Field(..., description="UUID câu hỏi")
+    question_id: str = Field(..., description="UUID câu hỏi (alias cho FE)")
+    type: str = Field(default="multiple_choice")
+    question_text: str
+    options: Optional[List[str]] = None
+    points: int = Field(default=1, ge=1)
+    is_mandatory: bool = False
+    order: int = 0
+
+
 class QuizDetailResponse(BaseModel):
     id: str = Field(..., description="UUID quiz")
     title: str
@@ -20,6 +32,7 @@ class QuizDetailResponse(BaseModel):
     user_attempts: int
     best_score: Optional[float] = Field(None, description="0-100")
     last_attempt_at: Optional[datetime] = None
+    questions: List[QuestionForAttempt] = Field(default_factory=list)
 
 
 class AnswerItem(BaseModel):
@@ -60,6 +73,8 @@ class QuestionResult(BaseModel):
 class QuizResultsResponse(BaseModel):
     attempt_id: str = Field(..., description="UUID")
     quiz_id: str = Field(..., description="UUID")
+    course_id: Optional[str] = Field(None, description="UUID khóa học (cho AI chat context)")
+    quiz_title: Optional[str] = None
     total_score: float = Field(..., description="0-100")
     status: str = Field(..., description="Pass|Fail")
     pass_threshold: float

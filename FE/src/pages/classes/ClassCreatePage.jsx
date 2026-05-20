@@ -38,8 +38,8 @@ const ClassCreatePage = () => {
     try {
       setLoadingCourses(true)
       setCoursesError('')
-      const res = await courseService.getPublicCourses({ skip: 0, limit: 200 })
-      setCourses(res?.data || [])
+      const res = await courseService.getPublicCourses({ skip: 0, limit: 50 })
+      setCourses(res?.courses || res?.data || [])
     } catch (error) {
       setCoursesError(error.message || 'Không thể tải danh sách khóa học')
     } finally {

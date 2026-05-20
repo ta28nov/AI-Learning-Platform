@@ -69,7 +69,10 @@ async def test_class_progress_known_bug(client, instructor_auth, instructor_with
         f"/classes/{class_id}/progress",
         headers=instructor_auth["headers"],
     )
-    assert response.status_code == 500
+    assert response.status_code == 200
+    body = response.json()
+    assert body["class_id"] == class_id
+    assert "average_progress" in body
 
 
 @pytest.mark.asyncio
@@ -90,8 +93,7 @@ async def test_class_student_detail_known_bug(
         f"/classes/{class_id}/students/{student_id}",
         headers=instructor_auth["headers"],
     )
-    assert response.status_code == 500
-    assert "course_id" in response.json().get("detail", "")
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -112,7 +114,7 @@ async def test_remove_student_from_class_known_bug(
         f"/classes/{class_id}/students/{student_id}",
         headers=instructor_auth["headers"],
     )
-    assert response.status_code in (200, 204, 404)
+    assert response.status_code in (200, 204)
 
 
 @pytest.mark.asyncio
@@ -123,6 +125,63 @@ async def test_student_join_class(client, student_auth, instructor_with_class):
         headers=student_auth["headers"],
     )
     assert response.status_code in (200, 201)
+
+
+@pytest.mark.asyncio
+async def test_student_lists_joined_classes(client, student_auth, instructor_with_class):
+    join = await client.post(
+        "/classes/join",
+        json={"invite_code": instructor_with_class["invite_code"]},
+        headers=student_auth["headers"],
+    )
+    assert join.status_code in (200, 201)
+
+    listed = await client.get("/classes/my-classes", headers=student_auth["headers"])
+    assert listed.status_code == 200
+    body = listed.json()
+    class_ids = [c["id"] for c in body.get("classes", [])]
+    assert instructor_with_class["class_id"] in class_ids
+
+
+@pytest.mark.asyncio
+async def test_student_get_class_detail(client, student_auth, instructor_with_class):
+    join = await client.post(
+        "/classes/join",
+        json={"invite_code": instructor_with_class["invite_code"]},
+        headers=student_auth["headers"],
+    )
+    assert join.status_code in (200, 201)
+    class_id = instructor_with_class["class_id"]
+
+    detail = await client.get(f"/classes/{class_id}", headers=student_auth["headers"])
+    assert detail.status_code == 200
+    data = detail.json()
+    assert data["id"] == class_id
+    assert data.get("invite_code") in (None, "")
+    assert data.get("course", {}).get("id")
+
+
+@pytest.mark.asyncio
+async def test_student_cannot_view_unjoined_class(
+    client, student_auth, instructor_auth, published_catalog_course
+):
+    now = datetime.now(timezone.utc)
+    created = await client.post(
+        "/classes",
+        json={
+            "name": "Private Class No Join",
+            "description": "Student should not access",
+            "course_id": published_catalog_course.id,
+            "start_date": now.isoformat(),
+            "end_date": (now + timedelta(days=30)).isoformat(),
+            "max_students": 10,
+        },
+        headers=instructor_auth["headers"],
+    )
+    assert created.status_code == 201
+    class_id = created.json().get("class_id") or created.json().get("id")
+    response = await client.get(f"/classes/{class_id}", headers=student_auth["headers"])
+    assert response.status_code == 404
 
 
 @pytest.mark.asyncio

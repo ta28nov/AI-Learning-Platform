@@ -31,6 +31,13 @@ const PRIMARY_NAV = [
     isActive: (p) => p.startsWith('/dashboard/my-courses') || p.startsWith('/dashboard/enrollment'),
   },
   {
+    to: '/dashboard/classes',
+    label: 'Lớp học',
+    Icon: ClassesIcon,
+    isActive: (p) => p.startsWith('/dashboard/classes'),
+    roles: ['student'],
+  },
+  {
     to: '/dashboard/assessment',
     label: 'Đánh giá năng lực',
     Icon: AssessmentIcon,
@@ -109,9 +116,10 @@ const Sidebar = ({ onLogout }) => {
   const isAdmin = user?.role === 'admin'
   const role = user?.role || 'student'
 
-  const visiblePrimaryNav = role === 'student'
+  const visiblePrimaryNav = (role === 'student'
     ? PRIMARY_NAV
     : PRIMARY_NAV.filter((item) => !['/dashboard/my-courses', '/dashboard/assessment'].includes(item.to))
+  ).filter((item) => !item.roles || item.roles.includes(role))
 
   const visibleSecondaryNav = role === 'student'
     ? SECONDARY_NAV
@@ -263,6 +271,15 @@ function CoursesIcon() {
     </svg>
   )
 }
+function ClassesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+  )
+}
+
 function MyCoursesIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

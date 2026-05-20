@@ -470,7 +470,7 @@ async def handle_get_course_detail_admin(
             )
         
         from services import course_service
-        course_detail = await course_service.get_course_detail(course_id, current_user.get("user_id"))
+        course_detail = await course_service.get_course_detail_admin(course_id)
         return AdminCourseDetailResponse(**course_detail)
         
     except HTTPException:
@@ -503,7 +503,10 @@ async def handle_create_course_admin(
                 detail="Chỉ admin mới có quyền tạo khóa học chính thức"
             )
         
-        created_course = await admin_service.create_course_admin(course_data.dict())
+        created_course = await admin_service.create_course_admin(
+            course_data.dict(),
+            admin_id=current_user.get("user_id"),
+        )
         return AdminCourseCreateResponse(**created_course)
         
     except HTTPException:

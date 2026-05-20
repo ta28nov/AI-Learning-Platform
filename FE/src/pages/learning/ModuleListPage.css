@@ -2,6 +2,40 @@
 
 .module-list-page {
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.module-list-page__breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.module-list-page__breadcrumb-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-primary, #6366f1);
+  font: inherit;
+}
+
+.module-list-page__breadcrumb-link:hover {
+  opacity: 0.75;
+}
+
+.module-list-page__breadcrumb-sep {
+  color: var(--border-color, #d1d5db);
+}
+
+.module-list-page__breadcrumb-current {
+  color: var(--text-primary, #1a1a2e);
+  font-weight: 500;
 }
 
 @media (min-width: 768px) { .module-list-page { padding: 24px; } }

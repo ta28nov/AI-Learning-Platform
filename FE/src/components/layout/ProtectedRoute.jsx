@@ -87,4 +87,15 @@ export const StudentRoute = ({ children }) => {
   )
 }
 
+/**
+ * Student hoặc instructor — personal-courses (InstructorDashboard có link tạo khóa AI)
+ */
+export const StudentOrInstructorRoute = ({ children }) => {
+  return (
+    <ProtectedRoute allowedRoles={['student', 'instructor']}>
+      {children}
+    </ProtectedRoute>
+  )
+}
+
 export default ProtectedRoute

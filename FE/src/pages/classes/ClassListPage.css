@@ -68,3 +68,5 @@
 .cls-card__progress-bar { flex: 1; height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; }
 .cls-card__progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold-500), var(--copper-600)); border-radius: 2px; }
 .cls-card__progress-pct { font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-400); min-width: 28px; text-align: right; }
+
+.cls-card__actions { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border-subtle); }

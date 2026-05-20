@@ -748,7 +748,8 @@ class Class(Document):
             "instructor_id",
             "course_id",
             "invite_code",
-            "status"
+            "status",
+            "student_ids",
         ]
 
 
@@ -857,3 +858,16 @@ class PasswordResetTokenDocument(Document):
     
     class Settings:
         name = "password_reset_tokens"
+
+
+class EmailVerificationTokenDocument(Document):
+    """Token xác thực email sau đăng ký."""
+    id: str = Field(default_factory=generate_uuid, alias="_id")
+    user_id: str
+    token: str
+    expires_at: datetime
+    used: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    class Settings:
+        name = "email_verification_tokens"

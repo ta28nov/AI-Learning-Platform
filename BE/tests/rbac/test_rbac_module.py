@@ -1,7 +1,5 @@
 """Unit tests for middleware.rbac permission maps and helpers."""
 
-import inspect
-
 import pytest
 from fastapi import HTTPException
 
@@ -12,8 +10,10 @@ from middleware.rbac import (
     Permission,
     Role,
     get_user_permissions,
+    has_minimum_role,
     has_permission,
     require_role,
+    require_student_only,
 )
 
 
@@ -49,10 +49,16 @@ def test_get_user_permissions_matches_role_sets():
     assert get_user_permissions(Role.ADMIN) == ADMIN_PERMISSIONS
 
 
+def test_has_minimum_role_hierarchy():
+    assert has_minimum_role(Role.ADMIN, Role.INSTRUCTOR) is True
+    assert has_minimum_role(Role.INSTRUCTOR, Role.INSTRUCTOR) is True
+    assert has_minimum_role(Role.STUDENT, Role.INSTRUCTOR) is False
+
+
 @pytest.mark.asyncio
 async def test_require_role_hierarchy_allows_higher_roles():
     """rbac.require_role uses level >= required (admin may access instructor gate)."""
-    checker = await require_role(Role.INSTRUCTOR)
+    checker = require_role(Role.INSTRUCTOR)
 
     admin_user = {"user_id": "a1", "role": Role.ADMIN}
     instructor_user = {"user_id": "i1", "role": Role.INSTRUCTOR}
@@ -68,7 +74,7 @@ async def test_require_role_hierarchy_allows_higher_roles():
 
 @pytest.mark.asyncio
 async def test_require_role_exact_admin_gate():
-    checker = await require_role(Role.ADMIN)
+    checker = require_role(Role.ADMIN)
     assert (await checker({"user_id": "a1", "role": Role.ADMIN}))["role"] == Role.ADMIN
 
     with pytest.raises(HTTPException) as exc:
@@ -76,29 +82,32 @@ async def test_require_role_exact_admin_gate():
     assert exc.value.status_code == 403
 
 
-def test_rbac_shorthand_dependencies_are_broken_coroutines():
-    """
-    require_admin = require_role(Role.ADMIN) assigns a coroutine (missing await),
-    so these cannot be used as FastAPI Depends() today.
-    """
+@pytest.mark.asyncio
+async def test_require_student_only_rejects_instructor_and_admin():
+    checker = require_student_only
+    student_user = {"user_id": "s1", "role": Role.STUDENT}
+    assert (await checker(student_user)) == student_user
+
+    with pytest.raises(HTTPException) as exc:
+        await checker({"user_id": "i1", "role": Role.INSTRUCTOR})
+    assert exc.value.status_code == 403
+
+
+def test_rbac_shorthand_dependencies_are_callable_for_fastapi():
     from middleware import rbac as rbac_mod
 
-    for name in ("require_student", "require_instructor", "require_admin"):
+    for name in ("require_student_only", "require_instructor", "require_admin"):
         dep = getattr(rbac_mod, name)
-        assert inspect.iscoroutine(dep), (
-            f"rbac.{name} should be awaited require_role(...); got {type(dep)}"
-        )
+        assert callable(dep), f"rbac.{name} must be Depends()-ready; got {type(dep)}"
 
 
-def test_routers_do_not_import_rbac_dependencies():
-    """RBAC middleware exists but is not wired on routers (controllers use string checks)."""
+def test_dashboard_and_analytics_routers_import_rbac():
     import pathlib
 
     root = pathlib.Path(__file__).resolve().parents[2]
-    router_dir = root / "routers"
-    hits = []
-    for path in router_dir.glob("*.py"):
-        text = path.read_text(encoding="utf-8")
-        if "middleware.rbac" in text or "from middleware import rbac" in text:
-            hits.append(path.name)
-    assert hits == [], f"Expected no router RBAC imports, found: {hits}"
+    wired = []
+    for name in ("dashboard_router.py", "analytics_router.py"):
+        text = (root / "routers" / name).read_text(encoding="utf-8")
+        if "middleware.rbac" in text:
+            wired.append(name)
+    assert wired == ["dashboard_router.py", "analytics_router.py"]

@@ -1,13 +1,25 @@
 # Báo cáo lỗi phát hiện qua pytest & phần chưa cover
 
-**Ngày:** 2026-05-19  
-**Ngữ cảnh:** Phase 2 test coverage — chạy `pytest` với MongoDB local, mock Gemini (`TESTING=true`).
+**Ngày:** 2026-05-19 (cập nhật sau P1–P6)  
+**Ngữ cảnh:** Phase 2 test coverage — chạy `pytest` với MongoDB local, mock Gemini (`TESTING=true`). **173 passed** (full suite).
 
 **Danh sách API + flow + log coverage:** [`API_COVERAGE_LOG.md`](API_COVERAGE_LOG.md) (bảng đầy đủ ~88 operations, bug registry, luồng chưa E2E).
 
+### Trạng thái sửa (2026-05-19)
+
+| Nhóm | ID | Trạng thái |
+|------|-----|------------|
+| Admin 500 | BUG-001–002, 004–006, 009–013 | ✅ Đã sửa — `tests/admin/` assert 200/201 |
+| Classes | BUG-003, 007–008, 011, 014 | ✅ Đã sửa — `tests/classes/` |
+| RBAC | RBAC-R1, R3–R5 (R2 = BUG-011) | ✅ `middleware/rbac` + `tests/rbac/` (31 tests) |
+| Docs/FE gap | GAP-002, GAP-005, GAP-006 | ✅ QUICKSTART `SECRET_KEY`, `StudentOrInstructorRoute`, `SEED_SCHEMA_MATRIX.md` |
+| By design | GAP-004 ProgressPage | ✅ FE dùng analytics (không đổi wire `progress_router`) |
+| Đã xong | KNOWN-005 / GAP-001 forgot-reset password | ✅ BE + FE + `tests/auth/test_password_reset.py` |
+| P7 E2E | E2E-001–004, `run_tests.py` | ✅ `admin`, `instructor`, `route-guards`, `personal-courses` specs |
+
 ---
 
-## 1. Lỗi backend (HTTP 500) — đã tái hiện
+## 1. Lỗi backend (HTTP 500) — **đã sửa** (lưu lại để tra cứu)
 
 ### BUG-001: `GET /api/v1/admin/users/{user_id}` → 500
 
@@ -64,35 +76,34 @@
 | **KNOWN-002** | `POST /lessons/{id}/quizzes` (instructor) | Cần document `Lesson` trong collection `lessons`, không chỉ `EmbeddedLesson` trong `Course`. Fixture test đã insert `LessonDocument`. |
 | **KNOWN-003** | `POST /ai/generate-practice` với `lesson_id` embedded-only | **404** nếu không có bản ghi `lessons`. Test dùng `course_id` + `topic_prompt`. |
 | **KNOWN-004** | E2E assessment / chat | Cần `GOOGLE_API_KEY` thật; spec `test.skip` nếu thiếu. |
-| **KNOWN-005** | Forgot / reset password | Không có router BE — không test (theo plan). |
+| **KNOWN-005** | Forgot / reset / verify email | ✅ `forgot-password`, `reset-password`, `verify-email`, `resend-verification`. |
+| **KNOWN-006** | OAuth Google/Facebook | **By design** — FE placeholder (`SocialAuthButtons`, toast); không có BE. |
 
 ---
 
 ## 2b. Kiểm tra RBAC (`BE/tests/rbac/`)
 
-**Module `BE/middleware/rbac.py`:** có `Permission`, `ROLE_PERMISSIONS`, `require_role` (hierarchy admin ≥ instructor ≥ student), `has_permission()` — **đúng về mặt map quyền**.
+**Module `BE/middleware/rbac.py`:** hierarchy `admin ≥ instructor ≥ student`; `require_student_only` (exact student); factory `def` + `Depends()` (không còn coroutine shorthand lỗi).
 
-**Không gắn router:** không file nào trong `BE/routers/` import `middleware.rbac`. Shorthand `require_admin = require_role(Role.ADMIN)` **sai** (gán coroutine, thiếu `await`) — không dùng được với `Depends()`.
+**Router đã gắn:** `dashboard_router.py`, `analytics_router.py` (`require_student_only`, `require_instructor`).
 
-**Thực tế runtime:** controllers so sánh chuỗi `current_user.get("role")`.
+**Controller:** `dashboard_controller`, `quiz_controller` dùng `ensure_student_only` / `ensure_minimum_role(INSTRUCTOR)`; admin vẫn `role == "admin"` trong `admin_controller`.
 
 | Vùng | Cơ chế | Student | Instructor | Admin |
 |------|--------|---------|------------|-------|
-| `/admin/*` (17 route) | `!= "admin"` trong `admin_controller` | 403 | 403 | không 403 (có thể 500 data) |
-| `/dashboard/admin`, `/search/analytics` | `!= "admin"` | 403 | 403 | không 403 |
-| `/dashboard/instructor`, `/analytics/instructor/*` | `!= "instructor"` **exact** | 403 | 200 | **403** (lệch với rbac hierarchy) |
-| `GET /quizzes` (list) | `instructor` hoặc `admin` branch | 200 (student list) | 200 | 200 |
-| `POST/PUT/DELETE` quiz instructor | `!= "instructor"` exact | 403 | 200 | **403** |
-| `/classes/*` (CRUD) | **không check role**; ownership qua `instructor_id` JWT | **201** tạo lớp (BUG-011) | 200 owner | có thể tạo lớp nếu gọi API |
-| `/dashboard/student`, `/analytics/learning-stats` | **không check role** | 200 | **200** (gap) | **200** (gap) |
+| `/admin/*` | `admin_controller` | 403 | 403 | 200 (data OK sau BUG fix) |
+| `/dashboard/instructor`, `/analytics/instructor/*` | `require_instructor` + hierarchy | 403 | 200 | **200** |
+| `/dashboard/student`, learning-stats, progress-chart | `require_student_only` | 200 | **403** | **403** |
+| `POST/PUT/DELETE` quiz instructor | `ensure_minimum_role(INSTRUCTOR)` | 403 | 200 | **200** |
+| `POST /classes` | instructor/admin only (BUG-011) | **403** | 201 | 201 |
 
-**Test mới:** `test_rbac_module.py` (unit map + hierarchy), `test_admin_rbac_matrix.py` (mọi route admin × student/instructor), `test_instructor_rbac_matrix.py` (dashboard, quiz, classes).
+**Test:** 31 cases — `test_rbac_module.py`, `test_admin_rbac_matrix.py`, `test_instructor_rbac_matrix.py`.
 
 ---
 
 ## 3. Ma trận coverage (pytest + E2E)
 
-**Cập nhật:** sau `tests/rbac/` + edge §3.3 — **171** pytest, **74** path trong OpenAPI snapshot (`BE/tests/fixtures/openapi.json`).
+**Cập nhật:** sau P5 RBAC + admin/classes fix — **173** pytest, **74** path trong OpenAPI snapshot (`BE/tests/fixtures/openapi.json`).
 
 | Ký hiệu | Ý nghĩa |
 |---------|---------|
@@ -206,7 +217,7 @@
 | `admin.spec.js` 🔶 | 1 màn users tab | courses, classes, analytics UI |
 | `instructor.spec.js` 🔶 | dashboard + classes list | tạo lớp, quiz UI, analytics chart |
 
-**Không nằm trong pytest:** toàn bộ **FE routing/guards** (`StudentRoute`, `InstructorRoute`), forgot password, `BE/scripts/smoke_test.py` (script tay, không phải CI pytest).
+**E2E guards:** `e2e/tests/route-guards.spec.js`. **Smoke tay:** `BE/scripts/smoke_test.py` (health + login, không thay pytest). **Auth reset:** forgot/reset password đã có BE+FE; verify-email chưa.
 
 ---
 

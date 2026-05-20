@@ -6,7 +6,7 @@ Nền tảng học tập **cá nhân hóa bằng AI** (assessment → lộ trìn
 - **Backend (BE)**: FastAPI + MongoDB (Beanie ODM), tích hợp **Google Gemini** cho assessment / AI tutor / sinh quiz.
 - **Tài liệu**: README cấp phân hệ (FE, BE), API reference (`docs/API.md`), QUICKSTART đã có sẵn cho BE.
 
-> Đây là tài liệu **gốc** mô tả toàn cảnh hệ thống. Setup chi tiết xem [`FE/README.md`](FE/README.md) và [`BE/README.md`](BE/README.md). API reference đầy đủ xem [`docs/API.md`](docs/API.md).
+> Đây là tài liệu **gốc** mô tả toàn cảnh hệ thống. Setup chi tiết xem [`FE/README.md`](FE/README.md) và [`BE/README.md`](BE/README.md). API reference đầy đủ xem [`docs/API.md`](docs/API.md). Quy trình plan FE/BE/DB: [`docs/process/IMPLEMENTATION_PLAN_TEMPLATE.md`](docs/process/IMPLEMENTATION_PLAN_TEMPLATE.md).
 
 ---
 
@@ -54,7 +54,7 @@ Tên role lấy chính xác từ model `User` (`BE/models/models.py`) và RBAC (
 | **`instructor`** | Giảng viên. Quản lý lớp (`classes`), theo dõi học viên, tạo / sửa quiz, xem analytics lớp. | `/dashboard/instructor`, `/dashboard/instructor/classes` | `dashboard/instructor`, `analytics/instructor/*`, `classes/*`, `quizzes` (CRUD), `lessons/{id}/quizzes` |
 | **`admin`** | Quản trị viên. CRUD user (đổi role, reset password), CRUD khóa học toàn cục, giám sát lớp, analytics hệ thống. | `/dashboard/admin/{users,courses,classes,analytics}` | `admin/*`, `dashboard/admin`, `search/analytics` |
 
-Phân quyền hiện được kiểm trong **controller** (so sánh chuỗi `current_user["role"]`), chưa gắn qua `Depends` của `BE/middleware/rbac.py`. Chi tiết: [`BE/README.md`](BE/README.md).
+Phân quyền: **`BE/middleware/rbac.py`** đã gắn `Depends` trên `dashboard_router` và `analytics_router`; admin/classes/search vẫn check trong controller. Chi tiết: [`BE/README.md`](BE/README.md) §9.2.
 
 ---
 
@@ -306,10 +306,10 @@ Mục này tổng hợp những điểm code thực tế **lệch** với tài l
 - [ ] **Forgot / reset / verify password** — page tồn tại (`FE/src/pages/auth/{ForgotPassword,ResetPassword,VerifyEmail}Page.jsx`) nhưng service throw vì BE chưa có endpoint (`FE/src/services/authService.js`). `auth_router.py` chỉ có `register / login / logout / refresh`.
 - [x] **Seed script** — có sẵn [`BE/scripts/init_data.py`](BE/scripts/init_data.py): `cd BE && python -m scripts.init_data` (full reset DB + seed lớn). Sau khi chạy, script in demo accounts (ví dụ `admin1@ailearning.vn / Admin@123456`, `instructor1@ailearning.vn / Instructor@123`, `student1@gmail.com / Student@123`). Có thể dùng kèm smoke test [`BE/scripts/smoke_test.py`](BE/scripts/smoke_test.py).
 - [x] **Tests** — Integration tests (`BE/tests/`, pytest + httpx) và E2E Playwright (`e2e/`, JavaScript). Xem [Chạy tests](#11-chạy-tests) bên dưới.
-- [ ] **`SECRET_KEY` vs `JWT_SECRET_KEY`** — `BE/QUICKSTART.md` viết `JWT_SECRET_KEY`, nhưng `BE/config/config.py` đọc biến tên **`SECRET_KEY`**. Dùng `SECRET_KEY` trong `.env`.
-- [ ] **RBAC helpers chưa gắn router** — `BE/middleware/rbac.py` có `require_admin / require_instructor / require_student`, hierarchy đầy đủ, nhưng các router hiện kiểm `role` bằng cách so chuỗi trong controller (xem `BE/controllers/{admin,dashboard,quiz,search}_controller.py`).
-- [ ] **Progress page chưa wire BE** — `BE/routers/progress_router.py` expose `GET /progress/course/{id}` và `FE/src/services/progressService.js` đã có hàm gọi, nhưng **không page nào import**. `ProgressPage` đang dùng `analyticsService` (`/analytics/learning-stats`, `/analytics/progress-chart`).
-- [ ] **Instructor bị chặn personal-courses** — `FE/src/AppRouter.jsx` bọc `/dashboard/personal-courses*` trong `<StudentRoute>` ⇒ role `instructor` sẽ rơi vào `/unauthorized`. Nếu muốn instructor cũng dùng course editor, cần đổi guard.
+- [x] **`SECRET_KEY` vs `JWT_SECRET_KEY`** — đã sửa `BE/QUICKSTART.md`; `config.py` đọc **`SECRET_KEY`**.
+- [x] **RBAC** — `dashboard_router` / `analytics_router` dùng `middleware/rbac`; admin/search vẫn check trong controller (`BE/README.md` §9.2).
+- [x] **Progress page** — `ProgressPage` cố ý dùng `analyticsService` (learning-stats + progress-chart); `progress_router` dành cho tích hợp sau (`docs/API.md`).
+- [x] **Instructor personal-courses** — `StudentOrInstructorRoute` trên `/dashboard/personal-courses*` (khớp link `InstructorDashboard`).
 
 ---
 
@@ -319,9 +319,9 @@ Mục này tổng hợp những điểm code thực tế **lệch** với tài l
 
 | Metric | Phase 1 | Phase 2 |
 |--------|---------|---------|
-| pytest cases | 38 | **171** |
+| pytest cases | 38 | **173** |
 | API routes có test (ước lượng) | ~22 | **~68/74** path OpenAPI |
-| E2E specs (Playwright JS) | 9 | **~17** |
+| E2E specs (Playwright JS) | 9 | **12** files (~24 tests) |
 | Student FLOW_STEPS (pytest) | một phần | happy path (`integration/test_flow_steps.py`) |
 | Student FLOW_STEPS (E2E) | generate only | generate + enroll/lesson + quiz (seed); assessment/chat cần `GOOGLE_API_KEY` |
 
@@ -332,7 +332,8 @@ Yêu cầu MongoDB đang chạy (`docker compose up -d mongodb` trong `BE/`).
 ```powershell
 cd BE
 pip install -r requirements.txt
-pytest -q
+python tests/run_tests.py
+# hoặc: pytest -q
 pytest tests/recommendations -v
 pytest tests/integration -v -m integration
 python scripts/export_openapi.py      # refresh OpenAPI snapshot
@@ -364,7 +365,7 @@ npm test
 npm run test:ui
 ```
 
-Specs: `auth`, `student-flow`, `assessment-flow`, `recommendations`, `enrollment-lesson`, `chat`, `quiz`, `instructor`, `admin`. Page objects trong `e2e/pages/`.
+Specs: `auth`, `student-flow`, `assessment-flow`, `recommendations`, `enrollment-lesson`, `chat`, `quiz`, `instructor`, `admin`, `route-guards`, `personal-courses`. Page objects trong `e2e/pages/`.
 
 Biến môi trường tùy chọn: `E2E_BASE_URL`, `E2E_SKIP_WEB_SERVER=true` (khi BE/FE đã chạy sẵn).
 

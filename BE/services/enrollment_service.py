@@ -205,6 +205,7 @@ async def update_enrollment_progress(
     
     if progress_percent is not None:
         enrollment.progress_percent = progress_percent
+        enrollment.completion_rate = progress_percent
     
     if completed_lessons is not None:
         enrollment.completed_lessons = completed_lessons

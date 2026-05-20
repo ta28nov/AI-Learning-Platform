@@ -7,6 +7,7 @@ Section 2.7.1, 3.4.1, 4.4.1
 
 from fastapi import APIRouter, Depends, status
 from middleware.auth import get_current_user
+from middleware.rbac import require_instructor, require_student_only
 from controllers.dashboard_controller import (
     handle_get_student_dashboard,
     handle_get_instructor_dashboard,
@@ -30,7 +31,7 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
     description="Hiển thị khóa học đang học (3-5 gần nhất), quiz pending, lessons completed, điểm TB"
 )
 async def get_student_dashboard(
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_student_only),
 ):
     """Section 2.7.1 - Dashboard học viên"""
     return await handle_get_student_dashboard(current_user)
@@ -44,7 +45,7 @@ async def get_student_dashboard(
     description="Hiển thị active classes, total students, quizzes created, avg completion rate, recent classes, quick actions"
 )
 async def get_instructor_dashboard(
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_instructor),
 ):
     """Section 3.4.1 - Dashboard giảng viên"""
     return await handle_get_instructor_dashboard(current_user)

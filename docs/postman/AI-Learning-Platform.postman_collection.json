@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "AI Learning Platform API",
-    "description": "Auto-generated from OpenAPI. Import fresh copy when API changes.",
+    "description": "Auto-generated from OpenAPI. Regenerate with BE/scripts/generate_postman.py.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -19,7 +19,7 @@
       "name": "Admin",
       "item": [
         {
-          "name": "Xem danh sách người dùng",
+          "name": "Chi tiết lớp học",
           "request": {
             "method": "GET",
             "header": [
@@ -29,183 +29,8 @@
               }
             ],
             "body": null,
-            "url": "{{base_url}}/admin/users",
-            "description": "Hiển thị tất cả users với filter (role, status), search (tên/email), sort"
-          }
-        },
-        {
-          "name": "Tạo tài khoản người dùng",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{base_url}}/admin/users",
-            "description": "Admin tạo user mới. Student: status pending, Instructor/Admin: nhập password và active ngay"
-          }
-        },
-        {
-          "name": "Xem hồ sơ người dùng chi tiết",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/admin/users/{user_id}",
-            "description": "Xem thông tin đầy đủ user: personal info, statistics, enrollments/classes"
-          }
-        },
-        {
-          "name": "Cập nhật thông tin người dùng",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{base_url}}/admin/users/{user_id}",
-            "description": "Admin có thể update bất kỳ field nào của user"
-          }
-        },
-        {
-          "name": "Xóa người dùng",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/admin/users/{user_id}",
-            "description": "Xóa vĩnh viễn user. Kiểm tra dependencies (classes, enrollments, personal courses)"
-          }
-        },
-        {
-          "name": "Thay đổi vai trò người dùng",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{base_url}}/admin/users/{user_id}/role",
-            "description": "Nâng/hạ role (Student ↔ Instructor ↔ Admin). Check impact trước khi thay đổi"
-          }
-        },
-        {
-          "name": "Reset mật khẩu người dùng",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{base_url}}/admin/users/{user_id}/reset-password",
-            "description": "Force reset password cho user. Admin gửi password mới qua kênh khác"
-          }
-        },
-        {
-          "name": "Xem tất cả khóa học",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/admin/courses",
-            "description": "List all courses (public + personal) với filter (author, status, category, type), search"
-          }
-        },
-        {
-          "name": "Tạo khóa học chính thức",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{base_url}}/admin/courses",
-            "description": "Admin tạo official course (public). Có thể thiết kế modules, lessons, publish ngay"
-          }
-        },
-        {
-          "name": "Xem chi tiết khóa học",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/admin/courses/{course_id}",
-            "description": "Xem thông tin đầy đủ course: metadata, modules/lessons structure, analytics"
+            "url": "{{base_url}}/admin/classes/{class_id}",
+            "description": "Xem thông tin đầy đủ class: instructor, students, progress, statistics"
           }
         },
         {
@@ -232,18 +57,26 @@
           }
         },
         {
-          "name": "Xóa khóa học",
+          "name": "Cập nhật thông tin người dùng",
           "request": {
-            "method": "DELETE",
+            "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
-            "body": null,
-            "url": "{{base_url}}/admin/courses/{course_id}",
-            "description": "Xóa vĩnh viễn course. Kiểm tra impact (enrollments, classes) trước khi xóa"
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/users/{user_id}",
+            "description": "Admin có thể update bất kỳ field nào của user"
           }
         },
         {
@@ -262,7 +95,7 @@
           }
         },
         {
-          "name": "Chi tiết lớp học",
+          "name": "Giám sát sức khỏe hệ thống",
           "request": {
             "method": "GET",
             "header": [
@@ -272,23 +105,8 @@
               }
             ],
             "body": null,
-            "url": "{{base_url}}/admin/classes/{class_id}",
-            "description": "Xem thông tin đầy đủ class: instructor, students, progress, statistics"
-          }
-        },
-        {
-          "name": "Thống kê tăng trưởng người dùng",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/admin/analytics/users-growth",
-            "description": "Phân tích tăng trưởng người dùng theo thời gian với breakdown theo role"
+            "url": "{{base_url}}/admin/analytics/system-health",
+            "description": "Metrics hệ thống: database, performance, alerts, utilization"
           }
         },
         {
@@ -307,7 +125,53 @@
           }
         },
         {
-          "name": "Giám sát sức khỏe hệ thống",
+          "name": "Reset mật khẩu người dùng",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/users/{user_id}/reset-password",
+            "description": "Force reset password cho user. Admin gửi password mới qua kênh khác"
+          }
+        },
+        {
+          "name": "Thay đổi vai trò người dùng",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/users/{user_id}/role",
+            "description": "Nâng/hạ role (Student ↔ Instructor ↔ Admin). Check impact trước khi thay đổi"
+          }
+        },
+        {
+          "name": "Thống kê tăng trưởng người dùng",
           "request": {
             "method": "GET",
             "header": [
@@ -317,8 +181,144 @@
               }
             ],
             "body": null,
-            "url": "{{base_url}}/admin/analytics/system-health",
-            "description": "Metrics hệ thống: database, performance, alerts, utilization"
+            "url": "{{base_url}}/admin/analytics/users-growth",
+            "description": "Phân tích tăng trưởng người dùng theo thời gian với breakdown theo role"
+          }
+        },
+        {
+          "name": "Tạo khóa học chính thức",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/courses",
+            "description": "Admin tạo official course (public). Có thể thiết kế modules, lessons, publish ngay"
+          }
+        },
+        {
+          "name": "Tạo tài khoản người dùng",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/admin/users",
+            "description": "Admin tạo user mới. Student: status pending, Instructor/Admin: nhập password và active ngay"
+          }
+        },
+        {
+          "name": "Xem chi tiết khóa học",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/admin/courses/{course_id}",
+            "description": "Xem thông tin đầy đủ course: metadata, modules/lessons structure, analytics"
+          }
+        },
+        {
+          "name": "Xem danh sách người dùng",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/admin/users",
+            "description": "Hiển thị tất cả users với filter (role, status), search (tên/email), sort"
+          }
+        },
+        {
+          "name": "Xem hồ sơ người dùng chi tiết",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/admin/users/{user_id}",
+            "description": "Xem thông tin đầy đủ user: personal info, statistics, enrollments/classes"
+          }
+        },
+        {
+          "name": "Xem tất cả khóa học",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/admin/courses",
+            "description": "List all courses (public + personal) với filter (author, status, category, type), search"
+          }
+        },
+        {
+          "name": "Xóa khóa học",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/admin/courses/{course_id}",
+            "description": "Xóa vĩnh viễn course. Kiểm tra impact (enrollments, classes) trước khi xóa"
+          }
+        },
+        {
+          "name": "Xóa người dùng",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/admin/users/{user_id}",
+            "description": "Xóa vĩnh viễn user. Kiểm tra dependencies (classes, enrollments, personal courses)"
           }
         }
       ]
@@ -327,7 +327,7 @@
       "name": "Analytics",
       "item": [
         {
-          "name": "Thống kê học tập chi tiết",
+          "name": "Analytics hiệu quả quiz của giảng viên",
           "request": {
             "method": "GET",
             "header": [
@@ -337,8 +337,23 @@
               }
             ],
             "body": null,
-            "url": "{{base_url}}/analytics/learning-stats",
-            "description": "Metrics đầy đủ: lessons completed, quizzes passed/failed, avg score, courses breakdown"
+            "url": "{{base_url}}/analytics/instructor/quiz-performance",
+            "description": "Quiz performance: attempts, pass/fail rates, avg scores, hardest questions, score distribution"
+          }
+        },
+        {
+          "name": "Biểu đồ tiến độ lớp học theo thời gian",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/analytics/instructor/progress-chart",
+            "description": "Line/bar charts showing lessons_completed, quizzes_completed, active_students over time"
           }
         },
         {
@@ -372,7 +387,7 @@
           }
         },
         {
-          "name": "Biểu đồ tiến độ lớp học theo thời gian",
+          "name": "Thống kê học tập chi tiết",
           "request": {
             "method": "GET",
             "header": [
@@ -382,23 +397,8 @@
               }
             ],
             "body": null,
-            "url": "{{base_url}}/analytics/instructor/progress-chart",
-            "description": "Line/bar charts showing lessons_completed, quizzes_completed, active_students over time"
-          }
-        },
-        {
-          "name": "Analytics hiệu quả quiz của giảng viên",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/analytics/instructor/quiz-performance",
-            "description": "Quiz performance: attempts, pass/fail rates, avg scores, hardest questions, score distribution"
+            "url": "{{base_url}}/analytics/learning-stats",
+            "description": "Metrics đầy đủ: lessons completed, quizzes passed/failed, avg score, courses breakdown"
           }
         }
       ]
@@ -406,29 +406,6 @@
     {
       "name": "Assessments - AI Dynamic Assessment",
       "item": [
-        {
-          "name": "Sinh bộ câu hỏi đánh giá năng lực",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{base_url}}/assessments/generate",
-            "description": "Tạo phiên đánh giá năng lực mới với câu hỏi được AI tự động sinh ra.\n    \n    **Phân bổ số lượng theo mức độ:**\n    - **Beginner**: 15 câu (3 easy + 8 medium + 4 hard) - 15 phút\n    - **Intermediate**: 25 câu (5 easy + 13 medium + 7 hard) - 22 phút\n    - **Advanced**: 35 câu (7 easy + 18 medium + 10 hard) - 30 phút\n    \n    **Cơ chế:** Google Gemini API sinh câu hỏi bám sát nội dung khóa học có sẵn trong hệ thống.\n    Mỗi lần làm bài sẽ có bộ câu hỏi khác nhau (không dùng ngân hàng câu hỏi).\n    \n    **Section:** 2.2.1 - CHUCNANG.md"
-          }
-        },
         {
           "name": "Lịch sử các phiên đánh giá của tôi",
           "request": {
@@ -468,6 +445,29 @@
           }
         },
         {
+          "name": "Sinh bộ câu hỏi đánh giá năng lực",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/assessments/generate",
+            "description": "Tạo phiên đánh giá năng lực mới với câu hỏi được AI tự động sinh ra.\n    \n    **Phân bổ số lượng theo mức độ:**\n    - **Beginner**: 15 câu (3 easy + 8 medium + 4 hard) - 15 phút\n    - **Intermediate**: 25 câu (5 easy + 13 medium + 7 hard) - 22 phút\n    - **Advanced**: 35 câu (7 easy + 18 medium + 10 hard) - 30 phút\n    \n    **Cơ chế:** Google Gemini API sinh câu hỏi bám sát nội dung khóa học có sẵn trong hệ thống.\n    Mỗi lần làm bài sẽ có bộ câu hỏi khác nhau (không dùng ngân hàng câu hỏi).\n    \n    **Section:** 2.2.1 - CHUCNANG.md"
+          }
+        },
+        {
           "name": "Xem kết quả và phân tích năng lực chi tiết",
           "request": {
             "method": "GET",
@@ -502,6 +502,98 @@
     {
       "name": "Authentication",
       "item": [
+        {
+          "name": "Gửi lại email xác thực",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/auth/resend-verification",
+            "description": ""
+          }
+        },
+        {
+          "name": "Làm mới access token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/auth/refresh",
+            "description": "Dùng refresh token để lấy access token mới khi token cũ hết hạn (15 phút)."
+          }
+        },
+        {
+          "name": "Quên mật khẩu",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/auth/forgot-password",
+            "description": ""
+          }
+        },
+        {
+          "name": "Xác thực email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/auth/verify-email",
+            "description": ""
+          }
+        },
         {
           "name": "Đăng ký tài khoản mới",
           "request": {
@@ -564,7 +656,7 @@
           }
         },
         {
-          "name": "Làm mới access token",
+          "name": "Đặt lại mật khẩu bằng token",
           "request": {
             "method": "POST",
             "header": [
@@ -582,8 +674,8 @@
                 }
               }
             },
-            "url": "{{base_url}}/auth/refresh",
-            "description": "Dùng refresh token để lấy access token mới khi token cũ hết hạn (15 phút)."
+            "url": "{{base_url}}/auth/reset-password",
+            "description": ""
           }
         }
       ]
@@ -591,6 +683,21 @@
     {
       "name": "Chat AI",
       "item": [
+        {
+          "name": "Chi tiết conversation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/chat/conversations/{conversation_id}",
+            "description": "Hiển thị toàn bộ messages trong conversation với AI summary"
+          }
+        },
         {
           "name": "Gửi câu hỏi cho AI chatbot",
           "request": {
@@ -630,9 +737,9 @@
           }
         },
         {
-          "name": "Chi tiết conversation",
+          "name": "Xóa một conversation",
           "request": {
-            "method": "GET",
+            "method": "DELETE",
             "header": [
               {
                 "key": "Content-Type",
@@ -640,8 +747,8 @@
               }
             ],
             "body": null,
-            "url": "{{base_url}}/chat/conversations/{conversation_id}",
-            "description": "Hiển thị toàn bộ messages trong conversation với AI summary"
+            "url": "{{base_url}}/chat/history/{conversation_id}",
+            "description": "Xóa conversation cụ thể"
           }
         },
         {
@@ -657,21 +764,6 @@
             "body": null,
             "url": "{{base_url}}/chat/conversations",
             "description": "Xóa tất cả conversations của user"
-          }
-        },
-        {
-          "name": "Xóa một conversation",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/chat/history/{conversation_id}",
-            "description": "Xóa conversation cụ thể"
           }
         }
       ]
@@ -703,7 +795,7 @@
           }
         },
         {
-          "name": "3.1.2: Danh sách lớp của instructor",
+          "name": "3.1.2: Danh sách lớp của tôi (theo role)",
           "request": {
             "method": "GET",
             "header": [
@@ -714,7 +806,7 @@
             ],
             "body": null,
             "url": "{{base_url}}/classes/my-classes",
-            "description": "Xem tất cả lớp học mà instructor đã tạo.\n    \n    **Features:**\n    - Filter theo status (preparing/active/completed)\n    - Sort theo created_at DESC\n    - Hiển thị student count và overall progress\n    \n    **Auth:** Bearer token (Instructor)"
+            "description": "- **Instructor:** lớp đã tạo (`instructor_id`)\n  - **Student:** lớp đã tham gia (`student_ids`)\n  - Filter `status`, sort `created_at` DESC"
           }
         },
         {
@@ -729,7 +821,7 @@
             ],
             "body": null,
             "url": "{{base_url}}/classes/{class_id}",
-            "description": "Xem thông tin chi tiết lớp học và danh sách học viên.\n    \n    **Features:**\n    - Class info với invite_code\n    - Danh sách students với progress\n    - Statistics: lessons completed, avg quiz score\n    \n    **Auth:** Bearer token (Instructor - owner only)"
+            "description": "Xem thông tin chi tiết lớp học và danh sách học viên.\n    \n    **Features:**\n    - Class info với invite_code\n    - Danh sách students với progress\n    - Statistics: lessons completed, avg quiz score\n    \n    **Auth:** Instructor (owner), Student (đã join), Admin"
           }
         },
         {
@@ -859,7 +951,7 @@
       "name": "Courses - Khám phá khóa học",
       "item": [
         {
-          "name": "Tìm kiếm khóa học",
+          "name": "Kiểm tra trạng thái đăng ký khóa học",
           "request": {
             "method": "GET",
             "header": [
@@ -869,8 +961,8 @@
               }
             ],
             "body": null,
-            "url": "{{base_url}}/courses/search",
-            "description": "Tìm kiếm khóa học theo từ khóa và filters.\n    \n    **Filters hỗ trợ:**\n    - keyword: Tìm trong title và description\n    - category: Programming, Math, Business, Languages\n    - level: Beginner, Intermediate, Advanced\n    \n    **Pagination:**\n    - skip: Bỏ qua bao nhiêu kết quả\n    - limit: Số lượng kết quả tối đa (mặc định 12)\n    \n    **Trả về:**\n    - Danh sách courses matching filters\n    - Metadata: thời gian search, tổng số kết quả, filters applied\n    - is_enrolled: true nếu user hiện tại đã đăng ký (yêu cầu đăng nhập)"
+            "url": "{{base_url}}/courses/{course_id}/enrollment-status",
+            "description": "Kiểm tra xem user hiện tại đã đăng ký khóa học chưa.\n    \n    **Yêu cầu:** Đăng nhập\n    \n    **Trả về:**\n    - is_enrolled: true nếu đã đăng ký và status != 'cancelled'\n    - enrollment_id: ID của enrollment (nếu có)\n    - status: active, completed, hoặc cancelled\n    - progress_percent: Tiến độ học (0-100)\n    - can_access_content: true nếu được phép truy cập nội dung\n    \n    **Sử dụng:**\n    Endpoint này được gọi trước khi cho phép user truy cập\n    nội dung lesson/module để kiểm tra quyền."
           }
         },
         {
@@ -889,6 +981,21 @@
           }
         },
         {
+          "name": "Tìm kiếm khóa học",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/courses/search",
+            "description": "Tìm kiếm khóa học theo từ khóa và filters.\n    \n    **Filters hỗ trợ:**\n    - keyword: Tìm trong title và description\n    - category: Programming, Math, Business, Languages\n    - level: Beginner, Intermediate, Advanced\n    \n    **Pagination:**\n    - skip: Bỏ qua bao nhiêu kết quả\n    - limit: Số lượng kết quả tối đa (mặc định 12)\n    \n    **Trả về:**\n    - Danh sách courses matching filters\n    - Metadata: thời gian search, tổng số kết quả, filters applied\n    - is_enrolled: true nếu user hiện tại đã đăng ký (yêu cầu đăng nhập)"
+          }
+        },
+        {
           "name": "Xem chi tiết khóa học",
           "request": {
             "method": "GET",
@@ -902,42 +1009,12 @@
             "url": "{{base_url}}/courses/{course_id}",
             "description": "Lấy thông tin chi tiết của một khóa học.\n    \n    **Thông tin bao gồm:**\n    - Thông tin cơ bản: title, description, category, level\n    - Thông tin giảng viên: name, avatar\n    - Cấu trúc khóa học: modules và lessons\n    - Thống kê: enrollment_count, avg_rating, completion_rate\n    - is_enrolled: trạng thái đăng ký của user hiện tại\n    - is_completed: trạng thái hoàn thành của từng lesson (nếu đã đăng ký)\n    \n    **Lưu ý:**\n    - Không yêu cầu đăng nhập để xem\n    - Nếu đăng nhập, sẽ hiển thị thêm progress information"
           }
-        },
-        {
-          "name": "Kiểm tra trạng thái đăng ký khóa học",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/courses/{course_id}/enrollment-status",
-            "description": "Kiểm tra xem user hiện tại đã đăng ký khóa học chưa.\n    \n    **Yêu cầu:** Đăng nhập\n    \n    **Trả về:**\n    - is_enrolled: true nếu đã đăng ký và status != 'cancelled'\n    - enrollment_id: ID của enrollment (nếu có)\n    - status: active, completed, hoặc cancelled\n    - progress_percent: Tiến độ học (0-100)\n    - can_access_content: true nếu được phép truy cập nội dung\n    \n    **Sử dụng:**\n    Endpoint này được gọi trước khi cho phép user truy cập\n    nội dung lesson/module để kiểm tra quyền."
-          }
         }
       ]
     },
     {
       "name": "Dashboard",
       "item": [
-        {
-          "name": "Dashboard tổng quan học viên",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/dashboard/student",
-            "description": "Hiển thị khóa học đang học (3-5 gần nhất), quiz pending, lessons completed, điểm TB"
-          }
-        },
         {
           "name": "Dashboard tổng quan giảng viên",
           "request": {
@@ -967,6 +1044,21 @@
             "url": "{{base_url}}/dashboard/admin",
             "description": "Dashboard admin với metrics quan trọng: users, courses, enrollments"
           }
+        },
+        {
+          "name": "Dashboard tổng quan học viên",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/dashboard/student",
+            "description": "Hiển thị khóa học đang học (3-5 gần nhất), quiz pending, lessons completed, điểm TB"
+          }
         }
       ]
     },
@@ -974,26 +1066,18 @@
       "name": "Enrollments - Đăng ký khóa học",
       "item": [
         {
-          "name": "Đăng ký khóa học mới",
+          "name": "Hủy đăng ký khóa học",
           "request": {
-            "method": "POST",
+            "method": "DELETE",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{base_url}}/enrollments",
-            "description": "User đăng ký vào một khóa học.\n    \n    **Yêu cầu:** Đăng nhập\n    \n    **Request body:**\n    - course_id: ID của khóa học muốn đăng ký\n    \n    **Kiểm tra:**\n    - Course tồn tại và đã publish\n    - User chưa đăng ký trước đó\n    \n    **Kết quả:**\n    - Tạo enrollment record với status='active'\n    - Tăng enrollment_count của course\n    - Trả về thông tin enrollment\n    \n    **Lỗi:**\n    - 404: Course không tồn tại\n    - 400: Đã đăng ký rồi hoặc course chưa publish"
+            "body": null,
+            "url": "{{base_url}}/enrollments/{enrollment_id}",
+            "description": "User hủy đăng ký một khóa học.\n    \n    **Yêu cầu:** Đăng nhập và là chủ sở hữu enrollment\n    \n    **Xử lý:**\n    - Cập nhật status thành 'cancelled' (soft delete)\n    - Giữ lại toàn bộ dữ liệu progress để user có thể tham khảo sau\n    - Giảm enrollment_count của course\n    \n    **Lưu ý:**\n    - Không xóa vĩnh viễn enrollment record\n    - User có thể xem lại tiến độ cũ trong lịch sử\n    - Nếu muốn đăng ký lại, cần tạo enrollment mới\n    \n    **Trả về:**\n    - Thông báo hủy thành công\n    - Xác nhận dữ liệu progress đã được bảo toàn\n    \n    **Lỗi:**\n    - 404: Enrollment không tồn tại\n    - 403: Không phải enrollment của user hiện tại\n    - 400: Enrollment đã cancelled rồi"
           }
         },
         {
@@ -1027,57 +1111,7 @@
           }
         },
         {
-          "name": "Hủy đăng ký khóa học",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/enrollments/{enrollment_id}",
-            "description": "User hủy đăng ký một khóa học.\n    \n    **Yêu cầu:** Đăng nhập và là chủ sở hữu enrollment\n    \n    **Xử lý:**\n    - Cập nhật status thành 'cancelled' (soft delete)\n    - Giữ lại toàn bộ dữ liệu progress để user có thể tham khảo sau\n    - Giảm enrollment_count của course\n    \n    **Lưu ý:**\n    - Không xóa vĩnh viễn enrollment record\n    - User có thể xem lại tiến độ cũ trong lịch sử\n    - Nếu muốn đăng ký lại, cần tạo enrollment mới\n    \n    **Trả về:**\n    - Thông báo hủy thành công\n    - Xác nhận dữ liệu progress đã được bảo toàn\n    \n    **Lỗi:**\n    - 404: Enrollment không tồn tại\n    - 403: Không phải enrollment của user hiện tại\n    - 400: Enrollment đã cancelled rồi"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Learning",
-      "item": [
-        {
-          "name": "Xem chi tiết module",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/courses/{course_id}/modules/{module_id}",
-            "description": "Hiển thị thông tin chi tiết module:\n    - Tiêu đề, mô tả, cấp độ khó\n    - Danh sách lessons với trạng thái (completed/locked)\n    - Learning outcomes\n    - Tài nguyên đính kèm\n    - Progress percent"
-          }
-        },
-        {
-          "name": "Xem nội dung lesson",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/courses/{course_id}/lessons/{lesson_id}",
-            "description": "Hiển thị nội dung chi tiết lesson:\n    - Nội dung text/HTML hoặc video\n    - Tài liệu đính kèm (PDF, slides, code)\n    - Tracking tự động (thời gian học, video progress)\n    - Quiz kèm theo (nếu có)\n    - Navigation (lesson trước/sau)\n    - Trạng thái khóa lesson tiếp theo"
-          }
-        },
-        {
-          "name": "Đánh dấu hoàn thành lesson",
+          "name": "Đăng ký khóa học mới",
           "request": {
             "method": "POST",
             "header": [
@@ -1086,11 +1120,24 @@
                 "value": "application/json"
               }
             ],
-            "body": null,
-            "url": "{{base_url}}/courses/{course_id}/lessons/{lesson_id}/complete",
-            "description": "Đánh dấu bài học đã hoàn thành và mở khóa bài tiếp theo nếu đủ điều kiện"
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/enrollments",
+            "description": "User đăng ký vào một khóa học.\n    \n    **Yêu cầu:** Đăng nhập\n    \n    **Request body:**\n    - course_id: ID của khóa học muốn đăng ký\n    \n    **Kiểm tra:**\n    - Course tồn tại và đã publish\n    - User chưa đăng ký trước đó\n    \n    **Kết quả:**\n    - Tạo enrollment record với status='active'\n    - Tăng enrollment_count của course\n    - Trả về thông tin enrollment\n    \n    **Lỗi:**\n    - 404: Course không tồn tại\n    - 400: Đã đăng ký rồi hoặc course chưa publish"
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "Learning",
+      "item": [
         {
           "name": "Danh sách modules trong course",
           "request": {
@@ -1158,58 +1205,57 @@
             "url": "{{base_url}}/courses/{course_id}/modules/{module_id}/assessments/generate",
             "description": "Sử dụng AI để tạo quiz dựa trên learning outcomes và độ khó yêu cầu"
           }
+        },
+        {
+          "name": "Xem chi tiết module",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/courses/{course_id}/modules/{module_id}",
+            "description": "Hiển thị thông tin chi tiết module:\n    - Tiêu đề, mô tả, cấp độ khó\n    - Danh sách lessons với trạng thái (completed/locked)\n    - Learning outcomes\n    - Tài nguyên đính kèm\n    - Progress percent"
+          }
+        },
+        {
+          "name": "Xem nội dung lesson",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/courses/{course_id}/lessons/{lesson_id}",
+            "description": "Hiển thị nội dung chi tiết lesson:\n    - Nội dung text/HTML hoặc video\n    - Tài liệu đính kèm (PDF, slides, code)\n    - Tracking tự động (thời gian học, video progress)\n    - Quiz kèm theo (nếu có)\n    - Navigation (lesson trước/sau)\n    - Trạng thái khóa lesson tiếp theo"
+          }
+        },
+        {
+          "name": "Đánh dấu hoàn thành lesson",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/courses/{course_id}/lessons/{lesson_id}/complete",
+            "description": "Đánh dấu bài học đã hoàn thành và mở khóa bài tiếp theo nếu đủ điều kiện"
+          }
         }
       ]
     },
     {
       "name": "Personal Courses",
       "item": [
-        {
-          "name": "Tạo khóa học từ AI prompt",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{base_url}}/courses/from-prompt",
-            "description": "Học viên nhập mô tả bằng ngôn ngữ tự nhiên, AI sẽ tự động sinh:\n    - Modules với thứ tự logic\n    - Lessons cho mỗi module\n    - Learning outcomes\n    - Nội dung cơ bản\n    \n    Khóa học được tạo với status=\"draft\", có thể chỉnh sửa sau."
-          }
-        },
-        {
-          "name": "Tạo khóa học thủ công",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": "{{base_url}}/courses/personal",
-            "description": "Tạo khóa học từ đầu với thông tin cơ bản:\n    - Nhập title, description, category, level\n    - Hệ thống tạo course trống với status=\"draft\"\n    - User tự thêm modules và lessons sau\n    \n    Phù hợp cho người muốn kiểm soát hoàn toàn nội dung."
-          }
-        },
         {
           "name": "Chi tiết khóa học cá nhân để chỉnh sửa",
           "request": {
@@ -1249,21 +1295,6 @@
           }
         },
         {
-          "name": "Xóa khóa học cá nhân",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/courses/personal/{course_id}",
-            "description": "Xóa vĩnh viễn khóa học:\n    - Chỉ owner mới được xóa\n    - Tất cả modules, lessons sẽ bị xóa\n    - Không thể khôi phục\n    \n    Cảnh báo sẽ hiển thị trước khi xóa."
-          }
-        },
-        {
           "name": "Danh sách khóa học cá nhân",
           "request": {
             "method": "GET",
@@ -1276,6 +1307,67 @@
             "body": null,
             "url": "{{base_url}}/courses/my-personal",
             "description": "Hiển thị tất cả khóa học do học viên tạo:\n    - Chỉ hiển thị cho người tạo và Admin\n    - Filter theo status (draft/published/archived)\n    - Search theo tên\n    - Thống kê: số modules/lessons, thời lượng"
+          }
+        },
+        {
+          "name": "Tạo khóa học thủ công",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/courses/personal",
+            "description": "Tạo khóa học từ đầu với thông tin cơ bản:\n    - Nhập title, description, category, level\n    - Hệ thống tạo course trống với status=\"draft\"\n    - User tự thêm modules và lessons sau\n    \n    Phù hợp cho người muốn kiểm soát hoàn toàn nội dung."
+          }
+        },
+        {
+          "name": "Tạo khóa học từ AI prompt",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/courses/from-prompt",
+            "description": "Học viên nhập mô tả bằng ngôn ngữ tự nhiên, AI sẽ tự động sinh:\n    - Modules với thứ tự logic\n    - Lessons cho mỗi module\n    - Learning outcomes\n    - Nội dung cơ bản\n    \n    Khóa học được tạo với status=\"draft\", có thể chỉnh sửa sau."
+          }
+        },
+        {
+          "name": "Xóa khóa học cá nhân",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/courses/personal/{course_id}",
+            "description": "Xóa vĩnh viễn khóa học:\n    - Chỉ owner mới được xóa\n    - Tất cả modules, lessons sẽ bị xóa\n    - Không thể khôi phục\n    \n    Cảnh báo sẽ hiển thị trước khi xóa."
           }
         }
       ]
@@ -1304,21 +1396,6 @@
       "name": "Quizzes",
       "item": [
         {
-          "name": "Xem chi tiết quiz",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/quizzes/{quiz_id}",
-            "description": "Hiển thị thông tin quiz: câu hỏi, thời gian, số lần làm, điểm tốt nhất"
-          }
-        },
-        {
           "name": "Cập nhật quiz",
           "request": {
             "method": "PUT",
@@ -1342,9 +1419,9 @@
           }
         },
         {
-          "name": "Xóa quiz",
+          "name": "Danh sách quiz với filters",
           "request": {
-            "method": "DELETE",
+            "method": "GET",
             "header": [
               {
                 "key": "Content-Type",
@@ -1352,8 +1429,8 @@
               }
             ],
             "body": null,
-            "url": "{{base_url}}/quizzes/{quiz_id}",
-            "description": "Xóa quiz (chỉ được xóa nếu chưa có người làm)"
+            "url": "{{base_url}}/quizzes",
+            "description": "Lọc quiz theo khóa học, lesson, độ khó"
           }
         },
         {
@@ -1377,21 +1454,6 @@
             },
             "url": "{{base_url}}/quizzes/{quiz_id}/attempt",
             "description": "Submit câu trả lời quiz và nhận kết quả chấm điểm"
-          }
-        },
-        {
-          "name": "Xem kết quả quiz chi tiết",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/quizzes/{quiz_id}/results",
-            "description": "Hiển thị điểm số, câu đúng/sai, giải thích từng câu, câu bắt buộc"
           }
         },
         {
@@ -1433,6 +1495,21 @@
           }
         },
         {
+          "name": "Thống kê kết quả quiz của cả lớp",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/quizzes/{quiz_id}/class-results",
+            "description": "Phân tích: điểm trung bình, phân bố điểm, xếp hạng, câu khó nhất"
+          }
+        },
+        {
           "name": "Tạo quiz mới cho lesson",
           "request": {
             "method": "POST",
@@ -1456,7 +1533,7 @@
           }
         },
         {
-          "name": "Danh sách quiz với filters",
+          "name": "Xem chi tiết quiz",
           "request": {
             "method": "GET",
             "header": [
@@ -1466,12 +1543,12 @@
               }
             ],
             "body": null,
-            "url": "{{base_url}}/quizzes",
-            "description": "Lọc quiz theo khóa học, lesson, độ khó"
+            "url": "{{base_url}}/quizzes/{quiz_id}",
+            "description": "Hiển thị thông tin quiz: câu hỏi, thời gian, số lần làm, điểm tốt nhất"
           }
         },
         {
-          "name": "Thống kê kết quả quiz của cả lớp",
+          "name": "Xem kết quả quiz chi tiết",
           "request": {
             "method": "GET",
             "header": [
@@ -1481,8 +1558,23 @@
               }
             ],
             "body": null,
-            "url": "{{base_url}}/quizzes/{quiz_id}/class-results",
-            "description": "Phân tích: điểm trung bình, phân bố điểm, xếp hạng, câu khó nhất"
+            "url": "{{base_url}}/quizzes/{quiz_id}/results",
+            "description": "Hiển thị điểm số, câu đúng/sai, giải thích từng câu, câu bắt buộc"
+          }
+        },
+        {
+          "name": "Xóa quiz",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/quizzes/{quiz_id}",
+            "description": "Xóa quiz (chỉ được xóa nếu chưa có người làm)"
           }
         }
       ]
@@ -1490,21 +1582,6 @@
     {
       "name": "Recommendations",
       "item": [
-        {
-          "name": "Đề xuất lộ trình học tập từ đánh giá năng lực",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": null,
-            "url": "{{base_url}}/recommendations/from-assessment",
-            "description": "AI sinh lộ trình cá nhân hóa dựa trên kết quả assessment: courses ưu tiên, thứ tự học, bài tập practice"
-          }
-        },
         {
           "name": "Đề xuất khóa học chung",
           "request": {
@@ -1519,14 +1596,9 @@
             "url": "{{base_url}}/recommendations",
             "description": "AI đề xuất khóa học dựa trên lịch sử học tập và sở thích"
           }
-        }
-      ]
-    },
-    {
-      "name": "Search",
-      "item": [
+        },
         {
-          "name": "Tìm kiếm thông minh universal",
+          "name": "Đề xuất lộ trình học tập từ đánh giá năng lực",
           "request": {
             "method": "GET",
             "header": [
@@ -1536,10 +1608,15 @@
               }
             ],
             "body": null,
-            "url": "{{base_url}}/search",
-            "description": "Universal search box cho tất cả đối tượng: courses, users, classes, modules, lessons"
+            "url": "{{base_url}}/recommendations/from-assessment",
+            "description": "AI sinh lộ trình cá nhân hóa dựa trên kết quả assessment: courses ưu tiên, thứ tự học, bài tập practice"
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
         {
           "name": "Gợi ý tìm kiếm real-time",
           "request": {
@@ -1584,14 +1661,9 @@
             "url": "{{base_url}}/search/analytics",
             "description": "Thống kê hiệu suất search và user behavior"
           }
-        }
-      ]
-    },
-    {
-      "name": "Users",
-      "item": [
+        },
         {
-          "name": "Xem hồ sơ cá nhân",
+          "name": "Tìm kiếm thông minh universal",
           "request": {
             "method": "GET",
             "header": [
@@ -1601,10 +1673,35 @@
               }
             ],
             "body": null,
-            "url": "{{base_url}}/users/me",
-            "description": "Hiển thị thông tin chi tiết người dùng đang đăng nhập: tên, email, avatar, bio, sở thích học tập. (Section 2.1.4)"
+            "url": "{{base_url}}/search",
+            "description": "Universal search box cho tất cả đối tượng: courses, users, classes, modules, lessons"
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "system",
+      "item": [
+        {
+          "name": "Kiểm tra sức khỏe hệ thống",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/health",
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
         {
           "name": "Cập nhật hồ sơ cá nhân",
           "request": {
@@ -1626,6 +1723,21 @@
             },
             "url": "{{base_url}}/users/me",
             "description": "Chỉnh sửa thông tin cá nhân: tên đầy đủ, avatar, bio, thông tin liên hệ, sở thích học tập. (Section 2.1.5)"
+          }
+        },
+        {
+          "name": "Xem hồ sơ cá nhân",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": null,
+            "url": "{{base_url}}/users/me",
+            "description": "Hiển thị thông tin chi tiết người dùng đang đăng nhập: tên, email, avatar, bio, sở thích học tập. (Section 2.1.4)"
           }
         }
       ]

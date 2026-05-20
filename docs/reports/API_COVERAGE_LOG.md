@@ -1,9 +1,9 @@
 # API Coverage Log
 
-**Ngày cập nhật:** 2026-05-19  
+**Ngày cập nhật:** 2026-05-19 (P7)  
 **Nguồn route:** `BE/tests/fixtures/openapi.json` (snapshot OpenAPI)  
-**Pytest:** 171 cases (`pytest --collect-only -q`) — **không thêm test trong log này**  
-**Chi tiết bug:** [`TEST_ISSUES_AND_GAPS.md`](TEST_ISSUES_AND_GAPS.md)
+**Pytest:** **173** cases (`python tests/run_tests.py` hoặc `pytest -q`)  
+**Chi tiết bug / trạng thái:** [`TEST_ISSUES_AND_GAPS.md`](TEST_ISSUES_AND_GAPS.md)
 
 ---
 
@@ -15,8 +15,8 @@
 | HTTP operations (method × path) | **~88** |
 | Operations đã gọi trong pytest | **~86** (smoke / regression / RBAC) |
 | Operations chưa có test riêng | **~2** (không tồn tại BE) |
-| Bug đã ghi (BUG-001 → BUG-014) | **14** |
-| Luồng E2E Playwright | **9** spec (một phần cần `GOOGLE_API_KEY`) |
+| Bug BUG-001 → BUG-014 | **Đã sửa** (pytest assert 200/201/403) |
+| Luồng E2E Playwright | **12** spec (`admin`, `instructor`, `route-guards`, `personal-courses`, …) |
 
 **Chú thích cột Test**
 
@@ -137,7 +137,7 @@ Prefix: `/api/v1` (trừ `/health`).
 
 | Method | Path | Test | Ghi chú |
 |--------|------|------|---------|
-| GET | `/progress/course/{course_id}` | ✅ | FE `ProgressPage` chủ yếu dùng analytics |
+| GET | `/progress/course/{course_id}` | ✅ | FE `CourseDetailPage` (đã ghi danh) + pytest; `ProgressPage` dùng analytics |
 
 ---
 
@@ -188,16 +188,16 @@ Prefix: `/api/v1` (trừ `/health`).
 
 | Method | Path | Test | Ghi chú |
 |--------|------|------|---------|
-| POST | `/classes` | ⚠️ | student cũng 201 → **BUG-011** |
-| GET | `/classes/my-classes` | ✅ | |
-| GET | `/classes/{class_id}` | ✅ | ownership |
+| POST | `/classes` | ✅ | student → 403 (BUG-011 đã sửa) |
+| GET | `/classes/my-classes` | ✅ | **E1:** role-aware — student query `student_ids`, instructor `instructor_id` |
+| GET | `/classes/{class_id}` | ✅ | instructor owner; student trong `student_ids` (read-only, no `invite_code`) |
 | PUT | `/classes/{class_id}` | ✅ | không có field `status` trong schema |
 | DELETE | `/classes/{class_id}` | ✅ | lớp có HV → 400; lớp trống → xóa OK |
-| POST | `/classes/join` | ⚠️ | mã sai/đầy/đã join OK; lớp mới → **BUG-014** |
+| POST | `/classes/join` | ✅ | lớp `active` join OK; `preparing` → 400 |
 | GET | `/classes/{class_id}/students` | ✅ | |
-| GET | `/classes/{class_id}/students/{student_id}` | ⚠️ | **BUG-007** → 500 `course_id` |
-| DELETE | `/classes/{class_id}/students/{student_id}` | ⚠️ | **BUG-008** → 404 sau join |
-| GET | `/classes/{class_id}/progress` | ⚠️ | **BUG-003** → 500 schema |
+| GET | `/classes/{class_id}/students/{student_id}` | ✅ | BUG-007 đã sửa |
+| DELETE | `/classes/{class_id}/students/{student_id}` | ✅ | BUG-008 đã sửa |
+| GET | `/classes/{class_id}/progress` | ✅ | BUG-003 đã sửa |
 
 ---
 
@@ -218,23 +218,23 @@ Prefix: `/api/v1` (trừ `/health`).
 
 | Method | Path | Test | Ghi chú |
 |--------|------|------|---------|
-| GET | `/admin/users` | ✅ | role, sort; `keyword` → **BUG-012** |
+| GET | `/admin/users` | ✅ | role, sort, keyword search |
 | POST | `/admin/users` | ✅ | student cần password (422 nếu thiếu) |
-| GET | `/admin/users/{user_id}` | ⚠️ | **BUG-001** → 500 `created_at` |
+| GET | `/admin/users/{user_id}` | ✅ | đã sửa BUG-001 |
 | PUT | `/admin/users/{user_id}` | ✅ | |
 | DELETE | `/admin/users/{user_id}` | ✅ | |
 | PUT | `/admin/users/{user_id}/role` | ✅ | RBAC matrix |
 | POST | `/admin/users/{user_id}/reset-password` | ✅ | |
-| GET | `/admin/courses` | ✅ | `keyword` → **BUG-010** |
-| POST | `/admin/courses` | ⚠️ | **BUG-002** → 500 `owner_id` |
-| GET | `/admin/courses/{course_id}` | ⚠️ | **BUG-004** → 500 `get_course_detail` |
-| PUT | `/admin/courses/{course_id}` | ⚠️ | **BUG-005** → 500 response schema |
-| DELETE | `/admin/courses/{course_id}` | ⚠️ | **BUG-009** → 500 ExpressionField |
-| GET | `/admin/classes` | ✅ | `search` → **BUG-013** |
+| GET | `/admin/courses` | ✅ | keyword search |
+| POST | `/admin/courses` | ✅ | BUG-002 đã sửa |
+| GET | `/admin/courses/{course_id}` | ✅ | BUG-004 đã sửa |
+| PUT | `/admin/courses/{course_id}` | ✅ | BUG-005 đã sửa |
+| DELETE | `/admin/courses/{course_id}` | ✅ | BUG-009 đã sửa |
+| GET | `/admin/classes` | ✅ | search filter |
 | GET | `/admin/classes/{class_id}` | ✅ | |
 | GET | `/admin/analytics/users-growth` | ✅ | time_range |
 | GET | `/admin/analytics/courses` | ✅ | |
-| GET | `/admin/analytics/system-health` | ⚠️ | **BUG-006** → 500 `created_at` |
+| GET | `/admin/analytics/system-health` | ✅ | BUG-006 đã sửa |
 
 ---
 
@@ -256,16 +256,16 @@ Prefix: `/api/v1` (trừ `/health`).
 | F4 | Khám phá → enroll → my-courses | courses/*, enrollments/* | ✅ | 🔶 enrollment-lesson | |
 | F5 | Học bài: modules → lesson → complete | learning/* | ✅ | 🔶 enrollment-lesson | |
 | F6 | Quiz: detail → attempt → results → retake | quizzes/* | ✅ | 🔶 quiz.spec | |
-| F7 | Personal course: prompt → CRUD | courses/from-prompt, personal/* | ✅ | ❌ | |
+| F7 | Personal course: prompt → CRUD | courses/from-prompt, personal/* | ✅ | 🔶 personal-courses.spec | |
 | F8 | Chat theo course | chat/* | ✅ | 🔶 chat.spec (skip không key) | |
-| F9 | Dashboard + analytics student | dashboard/student, analytics/* | ✅ | 🔶 student-flow | RBAC gap role khác |
-| F10 | Instructor: tạo lớp → mời → quản lý HV | classes/* | ⚠️ | 🔶 instructor.spec | **BUG-014** join lớp preparing; **BUG-007/008** |
+| F9 | Dashboard + analytics student | dashboard/student, analytics/* | ✅ | 🔶 student-flow | RBAC student-only |
+| F10 | Instructor: tạo lớp → mời → quản lý HV | classes/* | ✅ | 🔶 instructor.spec | E2E tạo lớp + invite code |
 | F11 | Instructor: tạo quiz → kết quả lớp | lessons/.../quizzes, class-results | ✅ | ❌ | |
-| F12 | Instructor dashboard + analytics | dashboard/instructor, analytics/instructor/* | ✅ | 🔶 | |
-| F13 | Admin: users / courses / classes / analytics | admin/* | ⚠️ | 🔶 admin.spec (1 tab users) | nhiều route 500 |
+| F12 | Instructor dashboard + analytics | dashboard/instructor, analytics/instructor/* | ✅ | 🔶 instructor.spec | |
+| F13 | Admin: users / courses / classes / analytics | admin/* | ✅ | 🔶 admin.spec | 4 tabs E2E |
 | F14 | Integration happy path HV | F2→F3→F4→F5→F6 (rút gọn) | ✅ | — | `integration/test_flow_steps.py` |
 | F15 | Universal search | search/* | ✅ | ❌ | |
-| F16 | RBAC ma trận admin/instructor | admin/*, dashboard, classes, quiz | ✅ | ❌ | `tests/rbac/` |
+| F16 | RBAC ma trận admin/instructor | admin/*, dashboard, classes, quiz | ✅ | 🔶 route-guards.spec | `tests/rbac/` |
 
 ---
 
@@ -297,42 +297,36 @@ Tất cả admin/instructor/class routes có bug trong §5 — pytest chỉ regr
 | Mục | Trạng thái |
 |-----|------------|
 | Admin UI: courses, classes, analytics | 🔶 chưa |
-| Instructor: tạo lớp, quiz trên UI | 🔶 chưa |
+| Instructor: tạo lớp trên UI | ✅ `instructor.spec.js` (invite code) |
+| Admin: courses/classes/analytics tabs | ✅ `admin.spec.js` |
+| Personal courses FE | ✅ `personal-courses.spec.js` |
+| FE route guards | ✅ `route-guards.spec.js` |
 | Assessment + chat E2E với Gemini thật | skip không `GOOGLE_API_KEY` |
-| FE route guards (`StudentRoute`, …) | ❌ không pytest |
-| `BE/scripts/smoke_test.py` | script tay, không CI pytest |
+| Student join lớp trên UI | ❌ route chỉ `InstructorRoute` — join modal chưa có path student |
 
-### 4.5 RBAC (đã test, chưa sửa code)
+### 4.5 RBAC — đã sửa (pytest `tests/rbac/`)
 
-| Gap | Mô tả |
-|-----|--------|
-| `middleware/rbac.py` | Không gắn router |
-| BUG-011 | Student `POST /classes` → 201 |
-| Instructor/admin vào `/dashboard/student` | 200 |
-| Admin vào `/dashboard/instructor` | 403 (lệch hierarchy rbac.py) |
+| Mục | Trạng thái |
+|-----|------------|
+| `dashboard_router`, `analytics_router` | `Depends(require_student_only \| require_instructor)` |
+| BUG-011 / RBAC-R2 | Student `POST /classes` → **403** |
+| `/dashboard/student`, learning-stats | Instructor/admin → **403** |
+| `/dashboard/instructor`, quiz mutate | Admin → **200** (hierarchy) |
+| E2E route guards | `e2e/tests/route-guards.spec.js` |
 
 ---
 
-## 5. Bug registry (chỉ ghi — không thêm test)
+## 5. Bug registry (lịch sử — đã xử lý P1–P5)
 
-| ID | Method | Path | HTTP | Lỗi / detail (tóm tắt) |
-|----|--------|------|------|-------------------------|
-| BUG-001 | GET | `/admin/users/{user_id}` | 500 | `created_at` — ISO string vs `datetime`; enrollment `progress` vs `progress_percent` |
-| BUG-002 | POST | `/admin/courses` | 500 | `Course.owner_id` Field required |
-| BUG-003 | GET | `/classes/{class_id}/progress` | 500 | `ClassProgressResponse` schema mismatch service payload |
-| BUG-004 | GET | `/admin/courses/{course_id}` | 500 | `course_service.get_course_detail` không tồn tại |
-| BUG-005 | PUT | `/admin/courses/{course_id}` | 500 | `AdminCourseUpdateResponse` thiếu `title`, `status` |
-| BUG-006 | GET | `/admin/analytics/system-health` | 500 | `created_at` serialization |
-| BUG-007 | GET | `/classes/.../students/{student_id}` | 500 | `QuizAttempt` không có `course_id` |
-| BUG-008 | DELETE | `/classes/.../students/{student_id}` | 404 | Sau join thành công (id mismatch / join logic) |
-| BUG-009 | DELETE | `/admin/courses/{course_id}` | 500 | `ExpressionField` object is not callable |
-| BUG-010 | GET | `/admin/courses?keyword=` | 500 | ExpressionField |
-| BUG-011 | POST | `/classes` | 201 | Student được tạo lớp (thiếu check role) |
-| BUG-012 | GET | `/admin/users?keyword=` | 500 | ExpressionField |
-| BUG-013 | GET | `/admin/classes?search=` | 500 | ExpressionField |
-| BUG-014 | POST | `/classes` + POST `/classes/join` | 400 | Lớp `preparing`, join cần `active`; không API đổi status |
+| ID | Trạng thái | Ghi chú ngắn |
+|----|------------|--------------|
+| BUG-001–006, 009–013 | ✅ | Admin + Beanie search/delete |
+| BUG-003, 007–008, 011, 014 | ✅ | Classes progress, quiz, role, status dates |
+| BUG-004 | ✅ | `get_course_detail_admin` |
+| BUG-010 | ✅ | (cùng nhóm search regex) |
+| BUG-014 | ✅ | `start_date` tương lai → `preparing`; join khi `active` |
 
-**Known (không phải 500):** KNOWN-001 recommendations chưa evaluate → 404; KNOWN-002 lesson document; KNOWN-003 practice lesson_id; KNOWN-004 E2E cần API key; KNOWN-005 no forgot password API.
+**Known (không phải 500):** KNOWN-001 recommendations chưa evaluate → 404; KNOWN-002 lesson document; KNOWN-003 practice lesson_id; KNOWN-004 E2E cần API key. **Auth:** forgot/reset password covered in `tests/auth/test_password_reset.py`.
 
 ---
 
@@ -340,8 +334,9 @@ Tất cả admin/instructor/class routes có bug trong §5 — pytest chỉ regr
 
 ```powershell
 cd BE
+python tests/run_tests.py
+python tests/run_tests.py -v tests/rbac/
 pytest --collect-only -q
-pytest -q
 ```
 
 Cập nhật snapshot OpenAPI sau đổi router:
@@ -357,3 +352,4 @@ python scripts/export_openapi.py
 | Ngày | Thay đổi |
 |------|----------|
 | 2026-05-19 | Tạo log: 88 operations, ma trận test/RBAC, 14 bug, 16 flow, mục chưa cover |
+| 2026-05-19 | INFRA-002: export OpenAPI (79 paths), Postman regen; roadmap E1–E9 chốt |

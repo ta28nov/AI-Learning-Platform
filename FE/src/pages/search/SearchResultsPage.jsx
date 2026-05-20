@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import searchService from '@services/searchService'
+import { useAuthStore } from '@stores/authStore'
 import Card, { CardBody } from '@components/ui/Card'
 import Button from '@components/ui/Button'
 import StateView from '@components/ui/StateView'
@@ -38,6 +39,8 @@ const SearchResultsPage = () => {
   const [results, setResults] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [searchAnalytics, setSearchAnalytics] = useState(null)
+  const { user } = useAuthStore()
 
   // Goi API tim kiem
   useEffect(() => {
@@ -70,6 +73,11 @@ const SearchResultsPage = () => {
 
     fetchResults()
   }, [query, page, categoryFilter, levelFilter])
+
+  useEffect(() => {
+    if (user?.role !== 'admin') return
+    searchService.getAnalytics().then(setSearchAnalytics).catch(() => {})
+  }, [user?.role])
 
   // Chuyen trang
   const goToPage = useCallback((newPage) => {
@@ -107,23 +115,39 @@ const SearchResultsPage = () => {
     setSearchParams(params)
   }, [setSearchParams])
 
+  // Map URL API (/courses/...) sang route dashboard (/dashboard/courses/...)
+  const resolveSearchItemUrl = useCallback((item) => {
+    const url = item?.url || ''
+    if (url.startsWith('/dashboard/')) return url
+
+    const courseMatch = url.match(/^\/courses\/([^/]+)$/)
+    if (courseMatch) return `/dashboard/courses/${courseMatch[1]}`
+
+    const classMatch = url.match(/^\/classes\/([^/]+)$/)
+    if (classMatch) return `/dashboard/classes/${classMatch[1]}`
+
+    const moduleMatch = url.match(/^\/courses\/([^/]+)\/modules\/([^/]+)$/)
+    if (moduleMatch) return `/dashboard/courses/${moduleMatch[1]}/modules/${moduleMatch[2]}`
+
+    const lessonMatch = url.match(/^\/courses\/([^/]+)\/modules\/[^/]+\/lessons\/([^/]+)$/)
+    if (lessonMatch) return `/dashboard/courses/${lessonMatch[1]}/lessons/${lessonMatch[2]}`
+
+    if (url) return url.startsWith('/') ? `/dashboard${url}` : url
+
+    const typeRoutes = {
+      course: `/dashboard/courses/${item.id}`,
+      user: '/dashboard/profile',
+      class: `/dashboard/classes/${item.id}`,
+      module: '/dashboard/courses',
+      lesson: '/dashboard/courses',
+    }
+    return typeRoutes[item?.type] || `/dashboard/courses/${item?.id}`
+  }, [])
+
   // Xu ly click vao result item - dieu huong theo type
   const handleItemClick = useCallback((item) => {
-    if (item?.url) {
-      // url tu BE co the la relative path
-      navigate(item.url)
-    } else {
-      // Fallback dieu huong theo type
-      const typeRoutes = {
-        course: `/dashboard/courses/${item.id}`,
-        user: `/dashboard/profile/${item.id}`,
-        class: `/dashboard/classes/${item.id}`,
-        module: `/dashboard/courses`, // Can courseId, fallback
-        lesson: `/dashboard/courses`
-      }
-      navigate(typeRoutes[item.type] || `/dashboard/courses/${item.id}`)
-    }
-  }, [navigate])
+    navigate(resolveSearchItemUrl(item))
+  }, [navigate, resolveSearchItemUrl])
 
   // Tinh tong pages
   const totalPages = Math.ceil((results?.total_results || 0) / 20)
@@ -451,6 +475,20 @@ const SearchResultsPage = () => {
           )}
         </div>
       </div>
+
+      {user?.role === 'admin' && searchAnalytics && (
+        <Card className="search-analytics-panel">
+          <CardBody>
+            <h3 className="search-analytics-title">Thống kê tìm kiếm (admin)</h3>
+            <p className="search-analytics-meta">
+              Tổng truy vấn: {searchAnalytics.total_searches ?? searchAnalytics.total ?? '—'}
+              {searchAnalytics.top_queries?.length > 0 && (
+                <> · Top: {searchAnalytics.top_queries.slice(0, 3).map((q) => q.query || q).join(', ')}</>
+              )}
+            </p>
+          </CardBody>
+        </Card>
+      )}
     </motion.div>
   )
 }

@@ -5,6 +5,7 @@ import { AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import analyticsService from '@services/analyticsService'
+import dashboardService from '@services/dashboardService'
 import StateView from '@components/ui/StateView'
 import AILoadingState from '@components/ui/AILoadingState'
 import './ProgressPage.css'
@@ -98,6 +99,54 @@ const ACHIEVEMENT_DEF = [
   { id: 'quiz90',  Icon: StarIcon,   title: 'Điểm quiz 90+',           check: (s) => (s?.avg_quiz_score   || 0) >= 90 },
 ]
 
+/** Map learning-stats + student dashboard overview → UI stats model */
+function buildProgressStats(learningStats, studentDash) {
+  const overview = studentDash?.overview || {}
+  const recent = studentDash?.recent_courses || []
+  const byCourse = learningStats?.by_course || []
+
+  const courseProgress = recent.map((c) => {
+    const extra = byCourse.find((b) => b.course_id === c.course_id)
+    const completedLessons = extra?.lessons_completed ?? 0
+    const totalLessons = extra?.total_lessons ?? 0
+    const progressPct = extra?.progress_percent ?? c.progress_percent ?? 0
+
+    return {
+      course_id: c.course_id,
+      title: c.title,
+      progress: Math.round(progressPct),
+      completed_lessons: completedLessons,
+      total_lessons: totalLessons,
+      completed_modules: extra?.completed_modules ?? 0,
+      total_modules: extra?.total_modules ?? 0,
+    }
+  })
+
+  const totalLessonsAcrossCourses = byCourse.reduce((s, b) => s + (b.total_lessons || 0), 0)
+
+  const avgProgress =
+    courseProgress.length > 0
+      ? courseProgress.reduce((s, c) => s + (c.progress || 0), 0) / courseProgress.length
+      : 0
+
+  const quizzesTaken = (learningStats?.quizzes_passed || 0) + (learningStats?.quizzes_failed || 0)
+
+  return {
+    overall_progress: Math.round(avgProgress),
+    courses_enrolled: overview.total_courses_enrolled ?? learningStats?.in_progress_courses ?? 0,
+    courses_completed: overview.completed_courses ?? learningStats?.completed_courses ?? 0,
+    lessons_completed: learningStats?.lessons_completed ?? overview.total_lessons_completed ?? 0,
+    total_lessons: totalLessonsAcrossCourses || learningStats?.lessons_completed || overview.total_lessons_completed || 0,
+    quizzes_taken: quizzesTaken,
+    avg_quiz_score: learningStats?.avg_quiz_score ?? studentDash?.performance_summary?.average_quiz_score ?? 0,
+    total_study_hours: overview.total_study_hours ?? 0,
+    avg_daily_hours: overview.total_study_hours ? Math.round((overview.total_study_hours / 30) * 10) / 10 : 0,
+    current_streak: overview.current_streak_days ?? 0,
+    best_streak: overview.current_streak_days ?? 0,
+    course_progress: courseProgress,
+  }
+}
+
 /**
  * ProgressPage — Trang tiến độ học tập
  * Route: /dashboard/progress
@@ -114,11 +163,19 @@ const ProgressPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const [statsData, chartData] = await Promise.allSettled([
+        const [statsData, chartData, dashData] = await Promise.allSettled([
           analyticsService.getLearningStats(),
-          analyticsService.getProgressChart(),
+          analyticsService.getProgressChart({ time_range: 'week' }),
+          dashboardService.getStudentDashboard(),
         ])
-        if (statsData.status === 'fulfilled') setStats(statsData.value)
+        if (statsData.status === 'fulfilled' || dashData.status === 'fulfilled') {
+          setStats(
+            buildProgressStats(
+              statsData.status === 'fulfilled' ? statsData.value : null,
+              dashData.status === 'fulfilled' ? dashData.value : null
+            )
+          )
+        }
         if (chartData.status === 'fulfilled') setChart(chartData.value)
       } catch {
         toast.error('Không thể tải dữ liệu tiến độ')
@@ -291,8 +348,12 @@ const ProgressPage = () => {
                     <h4 className="pp-course__title">{course.title}</h4>
                     <p className="pp-course__meta">
                       {course.completed_lessons || 0}/{course.total_lessons || 0} bài học
-                      <span className="pp-dot">·</span>
-                      {course.completed_modules || 0}/{course.total_modules || 0} modules
+                      {course.total_modules > 0 && (
+                        <>
+                          <span className="pp-dot">·</span>
+                          {course.completed_modules || 0}/{course.total_modules} modules
+                        </>
+                      )}
                     </p>
                   </div>
                   <div className="pp-course__bar-area">

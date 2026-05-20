@@ -150,6 +150,103 @@
 .quiz-prompt__info h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
 .mandatory-badge { font-size: 0.7rem; padding: 2px 8px; background: #fef3c7; color: #92400e; border-radius: 10px; font-weight: 600; }
 
+/* Instructor quiz management */
+.quiz-instructor-card {
+  border-color: var(--gold-500, #c9a227);
+  background: linear-gradient(135deg, rgba(201, 162, 39, 0.06) 0%, transparent 55%);
+}
+
+.quiz-prompt--instructor {
+  align-items: flex-start;
+}
+
+@media (min-width: 768px) {
+  .quiz-prompt--instructor {
+    align-items: center;
+  }
+}
+
+.quiz-instructor-eyebrow {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-600, #a8841a);
+  margin-bottom: 4px;
+}
+
+.lesson-instructor-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #6b7280);
+  margin: 0;
+  line-height: 1.45;
+  max-width: 36rem;
+}
+
+.quiz-instructor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .quiz-instructor-actions {
+    width: auto;
+    justify-content: flex-end;
+  }
+}
+
+/* Completion — hết bài / hết khóa */
+.lesson-complete-card {
+  border-color: var(--gold-500, #c9a227);
+  background: linear-gradient(135deg, rgba(201, 162, 39, 0.08) 0%, transparent 60%);
+}
+
+.lesson-complete-card__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+  padding: 8px 4px 4px;
+}
+
+.lesson-complete-card__eyebrow {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-600, #a8841a);
+}
+
+.lesson-complete-card__title {
+  margin: 0;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 1.35rem;
+  line-height: 1.25;
+  color: var(--text-primary, #1a1a2e);
+}
+
+.lesson-complete-card__message {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #6b7280);
+  line-height: 1.5;
+  max-width: 36rem;
+  margin-inline: auto;
+}
+
+.lesson-complete-card__nav {
+  justify-content: center;
+  margin-top: 4px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
 /* Navigation */
 .lesson-navigation {
   display: flex;

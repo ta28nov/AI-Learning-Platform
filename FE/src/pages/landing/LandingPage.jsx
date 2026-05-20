@@ -802,6 +802,8 @@ const LandingPage = () => {
                   <Link to="/dashboard/courses">Khóa học</Link>
                   <Link to="/dashboard/assessment">Assessment</Link>
                   <Link to="/dashboard/chat">AI Chat</Link>
+                  <Link to="/terms">Điều khoản</Link>
+                  <Link to="/privacy">Bảo mật</Link>
                   <Link to="/auth/login">Đăng nhập</Link>
                   <Link to="/auth/register">Đăng ký</Link>
                 </nav>

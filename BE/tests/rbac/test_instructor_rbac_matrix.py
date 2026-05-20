@@ -30,15 +30,12 @@ async def test_student_forbidden_on_instructor_dashboard_analytics(
         ("/analytics/instructor/classes", None),
     ],
 )
-async def test_admin_forbidden_on_instructor_strict_routes(
+async def test_admin_allowed_on_instructor_routes_via_hierarchy(
     client, admin_auth, path, params
 ):
-    """
-    Controllers use `role != \"instructor\"` (exact match).
-    rbac.py hierarchy would allow admin — implementation disagrees with middleware design.
-    """
+    """ADMIN_PERMISSIONS includes instructor dashboard per middleware.rbac."""
     response = await client.get(path, headers=admin_auth["headers"], params=params or {})
-    assert response.status_code == 403
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -70,13 +67,13 @@ async def test_admin_allowed_on_quiz_list_instructor_branch(
 
 
 @pytest.mark.asyncio
-async def test_admin_forbidden_on_quiz_create_update_delete(
+async def test_admin_can_mutate_quiz_via_instructor_hierarchy(
     client, admin_auth, instructor_auth, sample_course_with_enrollment
 ):
     lesson_id = sample_course_with_enrollment["lesson_id"]
     create_body = {
         "title": "Admin RBAC Quiz",
-        "description": "Should be instructor-only",
+        "description": "Admin has QUIZ_CREATE via ADMIN_PERMISSIONS",
         "time_limit": 15,
         "pass_threshold": 70,
         "questions": [
@@ -96,27 +93,18 @@ async def test_admin_forbidden_on_quiz_create_update_delete(
         json=create_body,
         headers=admin_auth["headers"],
     )
-    assert created.status_code == 403
-
-    created_ok = await client.post(
-        f"/lessons/{lesson_id}/quizzes",
-        json=create_body,
-        headers=instructor_auth["headers"],
-    )
-    assert created_ok.status_code == 201
-    quiz_id = created_ok.json()["quiz_id"]
+    assert created.status_code == 201
+    quiz_id = created.json()["quiz_id"]
 
     update = await client.put(
         f"/quizzes/{quiz_id}",
-        json={"title": "Admin update attempt"},
+        json={"title": "Admin RBAC Quiz Updated"},
         headers=admin_auth["headers"],
     )
-    assert update.status_code == 403
+    assert update.status_code == 200
 
     delete = await client.delete(f"/quizzes/{quiz_id}", headers=admin_auth["headers"])
-    assert delete.status_code == 403
-
-    await client.delete(f"/quizzes/{quiz_id}", headers=instructor_auth["headers"])
+    assert delete.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -152,12 +140,12 @@ async def test_class_routes_no_role_gate_on_create_and_my_classes(
 ):
     """
     class_controller has no role check — any authenticated user can POST /classes
-    and GET /classes/my-classes (scoped by JWT user_id as instructor_id).
+    Student POST /classes is forbidden; GET /classes/my-classes is scoped by JWT.
     """
     now = datetime.now(timezone.utc)
     payload = {
         "name": "RBAC Class Probe",
-        "description": "No role middleware on classes router",
+        "description": "Student must not create classes",
         "course_id": published_catalog_course.id,
         "start_date": now.isoformat(),
         "end_date": (now + timedelta(days=14)).isoformat(),
@@ -167,7 +155,7 @@ async def test_class_routes_no_role_gate_on_create_and_my_classes(
     student_create = await client.post(
         "/classes", json=payload, headers=student_auth["headers"]
     )
-    assert student_create.status_code == 201
+    assert student_create.status_code == 403
 
     student_list = await client.get(
         "/classes/my-classes", headers=student_auth["headers"]
@@ -215,14 +203,13 @@ async def test_instructor_class_crud_owned_class(
 
 
 @pytest.mark.asyncio
-async def test_student_dashboard_accessible_without_role_check(
-    client, instructor_auth
+async def test_instructor_forbidden_on_student_dashboard_analytics(
+    client, instructor_auth, admin_auth
 ):
-    """Student dashboard/analytics have no role!=student guard — instructor gets 200."""
-    dash = await client.get("/dashboard/student", headers=instructor_auth["headers"])
-    assert dash.status_code == 200
+    """Student routes use require_student_only (exact role)."""
+    for headers in (instructor_auth["headers"], admin_auth["headers"]):
+        dash = await client.get("/dashboard/student", headers=headers)
+        assert dash.status_code == 403
 
-    stats = await client.get(
-        "/analytics/learning-stats", headers=instructor_auth["headers"]
-    )
-    assert stats.status_code == 200
+        stats = await client.get("/analytics/learning-stats", headers=headers)
+        assert stats.status_code == 403

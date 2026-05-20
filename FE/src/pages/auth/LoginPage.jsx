@@ -7,6 +7,7 @@ import Button from '@components/ui/Button'
 import Input from '@components/ui/Input'
 import { toast } from 'react-hot-toast'
 import { staggerEditorial, fadeUp, fadeDown } from '@/styles/motion'
+import SocialAuthButtons from '@components/auth/SocialAuthButtons'
 import './AuthPages.css'
 
 /* =============================================================================
@@ -72,6 +73,10 @@ const LoginPage = () => {
             <p className="auth-form-subtitle">
               Chào mừng bạn quay trở lại AI Learning Platform
             </p>
+          </motion.div>
+
+          <motion.div variants={fadeUp}>
+            <SocialAuthButtons mode="login" />
           </motion.div>
 
           {/* Form — react-hook-form logic unchanged */}

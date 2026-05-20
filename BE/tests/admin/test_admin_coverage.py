@@ -17,14 +17,14 @@ async def test_admin_list_users_by_role(client, admin_auth, student_user):
 
 @pytest.mark.asyncio
 async def test_admin_list_users_with_keyword_known_bug(client, admin_auth):
-    """BUG-012: keyword search on admin users — ExpressionField is not callable."""
+    """BUG-012: keyword search on admin users."""
     response = await client.get(
         "/admin/users",
         params={"keyword": "student", "sort_by": "email", "sort_order": "asc"},
         headers=admin_auth["headers"],
     )
-    assert response.status_code == 500
-    assert "ExpressionField" in response.json().get("detail", "")
+    assert response.status_code == 200
+    assert isinstance(response.json().get("data", []), list)
 
 
 @pytest.mark.asyncio
@@ -35,14 +35,14 @@ async def test_admin_list_courses_no_filter(client, admin_auth, published_catalo
 
 @pytest.mark.asyncio
 async def test_admin_list_courses_with_keyword_known_bug(client, admin_auth):
-    """BUG-010: Beanie query ExpressionField error when keyword filter is set."""
+    """BUG-010: keyword search on admin courses."""
     response = await client.get(
         "/admin/courses",
-        params={"keyword": "Python", "status": "published", "course_type": "public"},
+        params={"keyword": "Python"},
         headers=admin_auth["headers"],
     )
-    assert response.status_code == 500
-    assert "ExpressionField" in response.json().get("detail", "") or "danh sách" in response.json().get("detail", "")
+    assert response.status_code == 200
+    assert "data" in response.json()
 
 
 @pytest.mark.asyncio
@@ -67,8 +67,8 @@ async def test_admin_delete_course_known_bug(client, admin_auth, admin_user):
         f"/admin/courses/{course.id}",
         headers=admin_auth["headers"],
     )
-    assert response.status_code == 500
-    assert "ExpressionField" in response.json().get("detail", "") or "xóa" in response.json().get("detail", "").lower()
+    assert response.status_code == 200
+    assert response.json()["course_id"] == course.id
 
 
 @pytest.mark.asyncio
@@ -83,14 +83,14 @@ async def test_admin_list_classes_pagination(client, admin_auth, instructor_with
 
 @pytest.mark.asyncio
 async def test_admin_list_classes_search_known_bug(client, admin_auth):
-    """BUG-013: search filter on admin classes — ExpressionField is not callable."""
+    """BUG-013: search filter on admin classes."""
     response = await client.get(
         "/admin/classes",
         params={"search": "Test", "status_filter": "active"},
         headers=admin_auth["headers"],
     )
-    assert response.status_code == 500
-    assert "ExpressionField" in response.json().get("detail", "")
+    assert response.status_code == 200
+    assert isinstance(response.json().get("data", []), list)
 
 
 @pytest.mark.asyncio

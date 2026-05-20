@@ -9,6 +9,8 @@ import { AssessmentPage } from '../pages/AssessmentPage.js'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const users = JSON.parse(readFileSync(join(__dirname, '../fixtures/test-users.json'), 'utf-8'))
 
+const hasGemini = Boolean(process.env.GOOGLE_API_KEY && process.env.GOOGLE_API_KEY !== 'fake-key-not-used-in-tests')
+
 test.describe('Student learning flow', () => {
   test.beforeEach(async ({ page }) => {
     const login = new LoginPage(page)
@@ -21,6 +23,7 @@ test.describe('Student learning flow', () => {
   })
 
   test('assessment generate navigates to quiz UI', async ({ page }) => {
+    test.skip(!hasGemini, 'Requires GOOGLE_API_KEY for live assessment generation')
     test.setTimeout(180_000)
     const assessment = new AssessmentPage(page)
     await assessment.startBeginnerPythonAssessment()

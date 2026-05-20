@@ -93,3 +93,80 @@
 .cd-instructor-card__name { font-size: 0.9rem; font-weight: 600; color: #1a1a2e; display: block; }
 .cd-instructor-card__exp { font-size: 0.7rem; color: #94a3b8; }
 .cd-instructor-card__bio { font-size: 0.75rem; color: #64748b; line-height: 1.5; margin: 0; }
+
+/* Course progress detail (enrolled) */
+.cd-progress-detail { border-color: rgba(16, 185, 129, 0.2); }
+.cd-progress-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+@media (min-width: 640px) {
+  .cd-progress-stats { grid-template-columns: repeat(4, 1fr); }
+}
+.cd-progress-stat {
+  padding: 14px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  text-align: center;
+}
+.cd-progress-stat__val {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--jade-700, #047857);
+  line-height: 1.2;
+}
+.cd-progress-stat__lbl {
+  display: block;
+  font-size: 0.68rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+.cd-progress-modules { display: flex; flex-direction: column; gap: 12px; }
+.cd-progress-mod {
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #fafafa;
+}
+.cd-progress-mod__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.cd-progress-mod__title { font-size: 0.85rem; font-weight: 600; color: #1a1a2e; }
+.cd-progress-mod__pct { font-size: 0.75rem; font-weight: 700; color: #10b981; }
+.cd-progress-mod__bar {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.cd-progress-mod__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  border-radius: 3px;
+  transition: width 0.35s ease;
+}
+.cd-progress-lessons { list-style: none; margin: 0; padding: 0; }
+.cd-progress-lesson {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 0.78rem;
+  color: #475569;
+  border-bottom: 1px solid #f1f5f9;
+}
+.cd-progress-lesson:last-child { border-bottom: none; }
+.cd-progress-lesson--completed .cd-progress-lesson__status { color: #10b981; font-weight: 600; }
+.cd-progress-lesson--in-progress .cd-progress-lesson__status { color: #6366f1; font-weight: 600; }
+.cd-progress-lesson__status { font-size: 0.68rem; color: #94a3b8; flex-shrink: 0; }

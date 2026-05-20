@@ -237,17 +237,24 @@ sequenceDiagram
 - Dependency factories: `require_role`, `require_permission`, `require_any_role`, `require_ownership_or_admin`.
 - Shorthand `require_student / require_instructor / require_admin`, `require_instructor_or_admin`.
 
-**Tuy nhiên các router hiện không gắn các helper này.** Việc kiểm role đang được làm bằng cách so chuỗi `current_user["role"]` trong controllers. Một số ví dụ thực tế:
+**Đã gắn `Depends` trên một số router** (hierarchy `admin ≥ instructor ≥ student`; student-only dùng `require_student_only`):
+
+| Router | Dependency |
+|--------|------------|
+| [`routers/dashboard_router.py`](routers/dashboard_router.py) | `require_student_only` → `/dashboard/student`; `require_instructor` → `/dashboard/instructor` |
+| [`routers/analytics_router.py`](routers/analytics_router.py) | `require_student_only` → learning-stats, progress-chart; `require_instructor` → `/analytics/instructor/*` |
+
+**Vẫn check chuỗi trong controller** (chưa refactor sang `Depends`):
 
 | File | Pattern check |
 |------|----------------|
-| [`controllers/admin_controller.py`](controllers/admin_controller.py) | Check `current_user.get("role") != "admin"` → 403 |
-| [`controllers/dashboard_controller.py`](controllers/dashboard_controller.py) | Check role cho `/dashboard/instructor`, `/dashboard/admin`, analytics admin |
-| [`controllers/quiz_controller.py`](controllers/quiz_controller.py) | `POST /lessons/{id}/quizzes`, `PUT/DELETE /quizzes/{id}` yêu cầu instructor; `class-results` yêu cầu instructor + chủ class |
+| [`controllers/admin_controller.py`](controllers/admin_controller.py) | `role != "admin"` → 403 |
+| [`controllers/dashboard_controller.py`](controllers/dashboard_controller.py) | `ensure_student_only` / `ensure_minimum_role(INSTRUCTOR)` + admin dashboard |
+| [`controllers/quiz_controller.py`](controllers/quiz_controller.py) | `ensure_minimum_role(INSTRUCTOR)` cho mutate quiz; student list riêng |
 | [`controllers/search_controller.py`](controllers/search_controller.py) | `GET /search/analytics` chỉ admin |
-| [`controllers/class_controller.py`](controllers/class_controller.py) | CRUD class yêu cầu instructor; join code yêu cầu student; phần lớn check ownership trong service |
+| [`controllers/class_controller.py`](controllers/class_controller.py) | Tạo lớp: instructor/admin; ownership trong service |
 
-Khi mở rộng router mới, **khuyến nghị** dùng `Depends(require_role(...))` thay vì check chuỗi để tận dụng hierarchy đã định nghĩa.
+Khi mở rộng router mới, ưu tiên `Depends(require_role(...))` / `require_student_only` thay vì so chuỗi lặp lại.
 
 ---
 
@@ -300,7 +307,7 @@ Reference đầy đủ: [`../docs/API.md`](../docs/API.md).
 
 - **Seed**: [`scripts/init_data.py`](scripts/init_data.py) — chạy `cd BE && python -m scripts.init_data` (full reset collections + seed lớn: users, courses, enrollments, quizzes, classes, …). Cuối script in **demo accounts** (ví dụ `admin1@ailearning.vn / Admin@123456`). Tham khảo thêm [`docs/reports/SEED_SCHEMA_MATRIX.md`](docs/reports/SEED_SCHEMA_MATRIX.md).
   - Nếu không muốn reset toàn DB: chỉ dùng Swagger `POST /auth/register` rồi `PUT /admin/users/{id}/role` khi cần role đặc biệt.
-- **Tests**: Thư mục [`tests/`](tests/) — **171** pytest cases; báo cáo lỗi: [`docs/reports/TEST_ISSUES_AND_GAPS.md`](../docs/reports/TEST_ISSUES_AND_GAPS.md) (integration, mock Gemini), database `ai_learning_test`. Modules: auth, assessments, recommendations, courses, enrollments, learning, quizzes, dashboard, chat, users, progress, search, analytics, classes, personal_courses, admin, instructor, **rbac** (`tests/rbac/` — ma trận Admin/Instructor + unit `middleware/rbac.py`), `integration/test_flow_steps.py`. Chạy: `pytest -q`. Export OpenAPI: `python scripts/export_openapi.py`; Postman: `python scripts/generate_postman.py`.
+- **Tests**: Thư mục [`tests/`](tests/) — **173** pytest cases; báo cáo lỗi: [`docs/reports/TEST_ISSUES_AND_GAPS.md`](../docs/reports/TEST_ISSUES_AND_GAPS.md) (integration, mock Gemini), database `ai_learning_test`. Modules: auth, assessments, recommendations, courses, enrollments, learning, quizzes, dashboard, chat, users, progress, search, analytics, classes, personal_courses, admin, instructor, **rbac** (`tests/rbac/` — ma trận Admin/Instructor + unit `middleware/rbac.py`), `integration/test_flow_steps.py`. Chạy: `pytest -q`. Export OpenAPI: `python scripts/export_openapi.py`; Postman: `python scripts/generate_postman.py`.
 
 ---
 
@@ -318,8 +325,9 @@ Reference đầy đủ: [`../docs/API.md`](../docs/API.md).
 ## 14. Known gaps & lưu ý
 
 - **`PasswordResetTokenDocument`** có collection nhưng không router nào dùng (chưa có endpoint forgot/reset password). FE có page nhưng service báo lỗi 501.
-- **`SECRET_KEY` vs `JWT_SECRET_KEY`** — QUICKSTART đang nhầm tên biến; dùng `SECRET_KEY` trong `.env`.
-- **RBAC dependency không được gắn router** — như mục 9.2 mô tả. Khuyến nghị refactor sang `Depends(require_role(...))`.
+- **`SECRET_KEY` vs `JWT_SECRET_KEY`** — đã sửa [`QUICKSTART.md`](QUICKSTART.md); dùng `SECRET_KEY` trong `.env`.
+- **RBAC** — dashboard/analytics đã dùng `middleware/rbac` trên router; admin/classes/search vẫn check trong controller (mục 9.2).
+- **`ProgressPage` (FE)** — dùng `/analytics/learning-stats` + `/analytics/progress-chart`, không gọi `GET /progress/course/{id}` (theo thiết kế FE; xem `docs/API.md`).
 - **`GEMINI_MODEL` không nhất quán** — code default `gemini-1.5-pro`, `.env.example` ghi `gemini-2.5-flash`.
 
 ---

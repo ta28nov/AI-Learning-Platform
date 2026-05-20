@@ -4,7 +4,7 @@ export class LoginPage {
     this.page = page
     this.email = page.getByLabel('Email')
     this.password = page.getByLabel('Mật khẩu')
-    this.submit = page.getByRole('button', { name: /đăng nhập/i })
+    this.submit = page.getByRole('button', { name: 'Đăng nhập', exact: true })
   }
 
   async goto() {
