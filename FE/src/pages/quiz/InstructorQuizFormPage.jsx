@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import quizService from '@services/quizService'
 import learningService from '@services/learningService'
+import courseService from '@services/courseService'
 import Button from '@components/ui/Button'
 import Input from '@components/ui/Input'
 import StateView from '@components/ui/StateView'
@@ -58,6 +59,51 @@ const InstructorQuizFormPage = () => {
   })
   const [questions, setQuestions] = useState([emptyQuestion(1)])
   const [fieldErrors, setFieldErrors] = useState({})
+  const [pickerCourses, setPickerCourses] = useState([])
+  const [pickerLoading, setPickerLoading] = useState(false)
+  const [pickerCourseId, setPickerCourseId] = useState('')
+  const [pickerDetail, setPickerDetail] = useState(null)
+  const [pickerDetailLoading, setPickerDetailLoading] = useState(false)
+
+  useEffect(() => {
+    if (lessonId) return
+    const loadCourses = async () => {
+      setPickerLoading(true)
+      try {
+        const data = await courseService.getPublicCourses({ limit: 50 })
+        setPickerCourses(data.courses || data.items || [])
+      } catch {
+        toast.error('Không tải được danh sách khóa học')
+      } finally {
+        setPickerLoading(false)
+      }
+    }
+    loadCourses()
+  }, [lessonId])
+
+  useEffect(() => {
+    if (!pickerCourseId || lessonId) {
+      setPickerDetail(null)
+      return
+    }
+    const loadDetail = async () => {
+      setPickerDetailLoading(true)
+      try {
+        const detail = await courseService.getCourseDetail(pickerCourseId)
+        setPickerDetail(detail)
+      } catch {
+        toast.error('Không tải được cấu trúc khóa học')
+        setPickerDetail(null)
+      } finally {
+        setPickerDetailLoading(false)
+      }
+    }
+    loadDetail()
+  }, [pickerCourseId, lessonId])
+
+  const startQuizForLesson = (cid, lid) => {
+    navigate(`/dashboard/instructor/quizzes/create?courseId=${cid}&lessonId=${lid}`, { replace: true })
+  }
 
   useEffect(() => {
     if (!courseId || !lessonId) {
@@ -196,15 +242,55 @@ const InstructorQuizFormPage = () => {
     return (
       <motion.div className="iqf-page" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         <PageHeader onBack={() => navigate('/dashboard/instructor/quizzes')} title="Tạo quiz mới" />
-        <StateView
-          type="empty"
-          title="Chưa chọn bài học"
-          message="Quiz phải gắn với một bài học cụ thể. Mở khóa học → chọn module → vào bài học, rồi bấm «Tạo quiz»."
-          action={{
-            label: 'Đến khóa học',
-            onClick: () => navigate('/dashboard/courses'),
-          }}
-        />
+        <p className="iqf-picker-intro">
+          Chọn khóa học và bài học để gắn quiz. Mỗi quiz phải thuộc một bài học cụ thể.
+        </p>
+        {pickerLoading ? (
+          <StateView type="loading" message="Đang tải khóa học…" />
+        ) : (
+          <div className="iqf-picker">
+            <label className="iqf-picker__label" htmlFor="iqf-course-select">Khóa học</label>
+            <select
+              id="iqf-course-select"
+              className="iqf-picker__select"
+              value={pickerCourseId}
+              onChange={(e) => setPickerCourseId(e.target.value)}
+            >
+              <option value="">— Chọn khóa học —</option>
+              {pickerCourses.map((c) => (
+                <option key={c.id || c.course_id} value={c.id || c.course_id}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
+            {pickerDetailLoading && <StateView type="loading" message="Đang tải module…" />}
+            {!pickerDetailLoading && pickerDetail?.modules?.length > 0 && (
+              <div className="iqf-picker-lessons">
+                {pickerDetail.modules.map((mod) => (
+                  <div key={mod.id} className="iqf-picker-module">
+                    <h3 className="iqf-picker-module__title">{mod.title}</h3>
+                    <ul>
+                      {(mod.lessons || []).map((les) => (
+                        <li key={les.id}>
+                          <button
+                            type="button"
+                            className="iqf-picker-lesson-btn"
+                            onClick={() => startQuizForLesson(pickerCourseId, les.id)}
+                          >
+                            {les.title || `Bài ${les.order}`}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+            {!pickerDetailLoading && pickerCourseId && !pickerDetail?.modules?.length && (
+              <StateView type="empty" message="Khóa học chưa có module/bài học." />
+            )}
+          </div>
+        )}
         <div className="iqf-empty-actions">
           <Button variant="outline" onClick={() => navigate('/dashboard/instructor/quizzes')}>
             Quay lại danh sách quiz

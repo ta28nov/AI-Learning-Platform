@@ -23,7 +23,6 @@ import CourseDetailPage from '@pages/courses/CourseDetailPage'
 // Enrollment pages
 import MyCoursesPage from '@pages/enrollment/MyCoursesPage'
 import StudentEnrollmentPage from '@pages/enrollment/StudentEnrollmentPage'
-import InstructorDashboardPage from '@pages/enrollment/InstructorDashboardPage'
 
 // Assessment pages
 import AssessmentSetupPage from '@pages/assessment/AssessmentSetupPage'
@@ -167,7 +166,7 @@ const AppRouter = () => {
         {/* Instructor routes */}
         <Route path="/dashboard/instructor" element={
           <InstructorRoute>
-            <InstructorDashboardPage />
+            <Navigate to="/dashboard" replace />
           </InstructorRoute>
         } />
         <Route path="/dashboard/instructor/analytics" element={

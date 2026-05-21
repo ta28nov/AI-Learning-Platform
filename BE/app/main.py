@@ -29,6 +29,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+from middleware.ai_rate_limit import AIRateLimitMiddleware
+
+app.add_middleware(AIRateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,

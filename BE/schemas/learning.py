@@ -43,6 +43,12 @@ class ResourceItem(BaseModel):
     description: str = Field("", description="Mô tả ngắn, default empty string")
 
 
+class ModulePrerequisite(BaseModel):
+    """Module tiên quyết — enriched id + title cho UI."""
+    id: str = Field(..., description="UUID module tiên quyết")
+    title: str = Field(..., description="Tên module tiên quyết")
+
+
 class ModuleDetailResponse(BaseModel):
     """
     Response cho GET /api/v1/courses/{course_id}/modules/{module_id}
@@ -73,8 +79,11 @@ class ModuleDetailResponse(BaseModel):
     progress_percent: float = Field(..., description="% hoàn thành (0-100)")
     is_accessible: bool = Field(..., description="Module có thể truy cập (không bị khóa)")
     
-    # Prerequisites
-    prerequisites: List[str] = Field(default_factory=list, description="Danh sách module IDs tiên quyết")
+    # Prerequisites (enriched objects — UIUX-009/HV-05)
+    prerequisites: List[ModulePrerequisite] = Field(
+        default_factory=list,
+        description="Danh sách module tiên quyết (id + title)",
+    )
 
 
 # ============================================================================

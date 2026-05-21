@@ -66,10 +66,9 @@ async def handle_create_course_from_prompt(
             detail=f"Validation error: {str(e)}"
         )
     except Exception as e:
-        # Log the full error for debugging
+        import logging
         import traceback
-        print(f"Error creating course from prompt:")
-        print(traceback.format_exc())
+        logging.getLogger(__name__).exception("Error creating course from prompt")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Lỗi khi tạo khóa học từ AI: {str(e)}"

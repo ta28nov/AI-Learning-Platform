@@ -1,6 +1,6 @@
 # QA snapshot
 
-**Ngày:** 2026-05-19  
+**Ngày:** 2026-05-19 (cập nhật GV deep QA: 2026-05-21)  
 **Môi trường:** MongoDB local, `TESTING=true`, mock Gemini trong pytest.
 
 ## Kết quả chạy test
@@ -72,6 +72,7 @@
 | 7 | E7 verify-email | ✅ | ✅ | ✅ form |
 | — | E7 OAuth | ✅ placeholder FE | — (by design) | — |
 | 8 | E5 progress wire | ✅ `CourseDetailPage` | ✅ | smoke tay |
+| **UI/UX Plan Phase 5 (pre-deploy)** | — | PRE-001→007 | seed, assessment goals, AI rate limit, GV quiz/class/stats | xem `UI_UX_MANUAL_TEST_REPORT.md` §Phase 5 |
 
 **E2E (sau `init_data`, không Gemini):**
 ```powershell
@@ -98,5 +99,11 @@ cd e2e && npx playwright test instructor roadmap-epics admin route-guards person
 
 - Plan: [`.cursor/plans/ui_ux_editorial_refactor_plan_e17edc9e.plan.md`](../.cursor/plans/ui_ux_editorial_refactor_plan_e17edc9e.plan.md)
 - Báo cáo: [`UI_UX_MANUAL_TEST_REPORT.md`](UI_UX_MANUAL_TEST_REPORT.md)
+- **2026-05-21:** Fix **UIUX-032** (GV 403 lesson content khi tạo quiz) + retest deep luồng instructor — §Phase 7 báo cáo; pytest `test_instructor_lesson_content_without_enrollment` pass
+- **2026-05-21:** Retest browser luồng **học viên** `/dashboard/classes` — §7.9 báo cáo (list/detail/tabs/resume/guard PASS; UIUX-033 CSS OK cho HV)
+- **2026-05-21:** Deep retest **toàn bộ UI/luồng HV** — §7.10 (17/18 trang PASS; UIUX-HV-05 module detail fail trên 1 module)
+- **2026-05-21:** Fix **UIUX-HV-05/HV-03/GV-02/030/031** + deep retest §7.11 — module detail PASS; quiz titles class progress PASS; profile save PASS; personal course modals PASS
+- **2026-05-21:** Seed/polish **HV-01/02/04/06/07, GV-01/03/06** — `init_data`, `curriculum_content`, `patch_seed_display.py`, mobile sidebar CSS; deep retest HV §7.12 (enrollment, join mã `B8BBA609`, quiz/assessment/class copy PASS)
+- **2026-05-21:** Deep retest luồng HV còn lại §7.13 — chat AI PASS, quiz results PASS, lesson→quiz PASS; assessment resume in-progress **FAIL** (UIUX-HV-08)
 
 Chi tiết: `ROADMAP_CLOSURE.md` · bug cũ: `TEST_ISSUES_AND_GAPS.md` · API: `API_COVERAGE_LOG.md`

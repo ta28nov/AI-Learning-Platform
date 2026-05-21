@@ -816,8 +816,9 @@ async def list_quizzes_with_filters(
             QuizAttempt.submitted_at != None
         ).to_list()
         
-        total_students = len(set(a.user_id for a in attempts))
-        completed_count = len(attempts)
+        unique_student_ids = {a.user_id for a in attempts}
+        total_students = len(unique_student_ids)
+        completed_count = len(unique_student_ids)
         pass_count = sum(1 for a in attempts if a.passed)
         pass_rate = (pass_count / completed_count * 100) if completed_count > 0 else 0
         avg_score = (sum(a.score for a in attempts) / completed_count) if completed_count > 0 else 0
@@ -1121,9 +1122,10 @@ async def get_class_quiz_results(quiz_id: str, class_id: str) -> Dict:
     # Filter only students in class
     class_attempts = [a for a in attempts if a.user_id in student_ids]
     
-    # Statistics
+    # Statistics — count unique students, not total attempts (UIUX-GV-02)
     total_students = len(student_ids)
-    completed_count = len(class_attempts)
+    unique_completed = {a.user_id for a in class_attempts}
+    completed_count = len(unique_completed)
     completion_rate = (completed_count / total_students * 100) if total_students > 0 else 0
     
     pass_count = sum(1 for a in class_attempts if a.passed)

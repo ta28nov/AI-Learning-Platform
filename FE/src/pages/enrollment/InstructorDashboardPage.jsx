@@ -132,10 +132,7 @@ const InstructorDashboardPage = () => {
         >
           + Tạo lớp học mới
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => navigate('/dashboard/instructor/classes')}
-        >
+        <Button variant="outline" onClick={() => navigate('/dashboard/instructor/classes')}>
           Quản lý lớp học
         </Button>
         <Button variant="outline" onClick={() => navigate('/dashboard/instructor/quizzes')}>

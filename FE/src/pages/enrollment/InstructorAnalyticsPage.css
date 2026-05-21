@@ -19,6 +19,15 @@
 .ia-chart-hint { font-size: 0.82rem; color: var(--ink-400); margin: 0 0 var(--space-4); }
 .ia-class-list { border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); overflow: hidden; }
 .ia-class-row { display: flex; justify-content: space-between; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); font-size: 0.88rem; }
+.ia-class-row--link {
+  width: 100%;
+  background: var(--surface-1);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+.ia-class-row--link:hover { background: var(--surface-2); }
 .ia-class-row:last-child { border-bottom: none; }
 .ia-class-row__meta { color: var(--ink-400); }
 .ia-table-wrap { overflow-x: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); }

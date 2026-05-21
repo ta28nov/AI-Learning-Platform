@@ -93,7 +93,7 @@ const AssessmentSetupPage = () => {
   const [historyLoading, setHistoryLoading] = useState(true)
   const [focusAreas, setFocusAreas] = useState([])
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
-    defaultValues: { category: '', subject: '', level: 'Beginner', focus_areas: [] },
+    defaultValues: { category: '', subject: '', level: 'Beginner', focus_areas: [], custom_goals: '' },
   })
 
   const selectedCategory = watch('category')
@@ -322,6 +322,29 @@ const AssessmentSetupPage = () => {
               </label>
             ))}
           </div>
+        </motion.div>
+
+        {/* Step 4: Custom goals (free text) */}
+        <motion.div
+          className="asp-step"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.25 }}
+        >
+          <div className="asp-step__label">
+            <span className="asp-step__num">04</span>
+            <span className="asp-step__title">Mục tiêu đánh giá của bạn</span>
+          </div>
+          <p className="asp-step__hint">
+            Mô tả cụ thể bạn muốn kiểm tra (kỹ năng, tình huống, công việc). AI sẽ ưu tiên các câu hỏi phù hợp.
+          </p>
+          <textarea
+            className="asp-goals-textarea"
+            rows={4}
+            maxLength={500}
+            placeholder="VD: Tôi muốn đánh giá khả năng viết API FastAPI, xử lý async và viết test pytest cho endpoint CRUD..."
+            {...register('custom_goals', { maxLength: 500 })}
+          />
         </motion.div>
 
         {/* Submit */}

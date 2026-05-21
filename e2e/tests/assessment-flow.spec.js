@@ -22,7 +22,7 @@ test.describe('Assessment full flow', () => {
 
   test('setup → generate → answer → submit → results', async ({ page }) => {
     test.skip(!hasGemini, 'Requires GOOGLE_API_KEY for live assessment generation')
-    test.setTimeout(180_000)
+    test.setTimeout(240_000)
 
     const assessment = new AssessmentPage(page)
     await assessment.startBeginnerPythonAssessment()

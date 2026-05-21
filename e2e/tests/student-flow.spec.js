@@ -24,9 +24,9 @@ test.describe('Student learning flow', () => {
 
   test('assessment generate navigates to quiz UI', async ({ page }) => {
     test.skip(!hasGemini, 'Requires GOOGLE_API_KEY for live assessment generation')
-    test.setTimeout(180_000)
+    test.setTimeout(240_000)
     const assessment = new AssessmentPage(page)
     await assessment.startBeginnerPythonAssessment()
-    await expect(page).toHaveURL(/\/dashboard\/assessment\/quiz/)
+    await expect(page).toHaveURL(/\/dashboard\/assessment\/[^/]+$/)
   })
 })

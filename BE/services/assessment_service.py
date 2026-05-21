@@ -19,7 +19,8 @@ async def create_assessment_session(
     category: str,
     subject: str,
     level: str,
-    focus_areas: Optional[List[str]] = None
+    focus_areas: Optional[List[str]] = None,
+    custom_goals: Optional[str] = None,
 ) -> AssessmentSession:
     """
     Tạo phiên đánh giá mới với câu hỏi từ AI
@@ -60,7 +61,8 @@ async def create_assessment_session(
         subject=subject,
         level=level,
         count=total_questions,
-        focus_areas=focus_areas
+        focus_areas=focus_areas,
+        custom_goals=custom_goals,
     )
     
     # Tính expiry time (60 phút từ khi tạo)
@@ -71,6 +73,8 @@ async def create_assessment_session(
         category=category,
         subject=subject,
         level=level,
+        focus_areas=focus_areas or [],
+        custom_goals=(custom_goals or "").strip() or None,
         total_questions=total_questions,
         time_limit_minutes=time_limit_minutes,
         questions=questions,

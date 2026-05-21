@@ -166,6 +166,7 @@ async def get_student_dashboard(user_id: str) -> Dict:
                         logger.info(f"[STUDENT DASHBOARD] Added pending quiz: {lesson.title}")
             except Exception as e:
                 logger.error(f"[STUDENT DASHBOARD] Error processing lesson {lesson.id}: {str(e)}")
+                logger.error(traceback.format_exc())
                 continue
         
         logger.info(f"[STUDENT DASHBOARD] Returning {len(in_progress_courses)} courses, {len(pending_quizzes)} quizzes")
@@ -576,30 +577,28 @@ async def get_instructor_dashboard(instructor_id: str) -> Dict:
     active_classes = [c for c in classes if c.status == "active"]
     active_classes_count = len(active_classes)
     
-    # Count total students (enrolled in instructor's courses with classes)
-    total_students = 0
+    # Count total students in active classes (unique roster, not course enrollments)
+    unique_student_ids = set()
     completion_rates = []
-    
+
     for cls in active_classes:
-        enrollments = await Enrollment.find(
-            Enrollment.course_id == cls.course_id,
-            Enrollment.status == "active"
+        roster = [str(s) for s in (cls.student_ids or [])]
+        for sid in roster:
+            unique_student_ids.add(sid)
+        if not roster:
+            continue
+        progress_list = await Progress.find(
+            Progress.course_id == cls.course_id,
+            In(Progress.user_id, roster),
         ).to_list()
-        
-        total_students += len(enrollments)
-        
-        if enrollments:
-            enrollment_user_ids = [e.user_id for e in enrollments]
-            progress_list = await Progress.find(
-                Progress.course_id == cls.course_id,
-                In(Progress.user_id, enrollment_user_ids)
-            ).to_list()
-            if progress_list:
-                avg_progress = sum(p.overall_progress_percent for p in progress_list) / len(progress_list)
-                completion_rates.append(avg_progress)
+        if progress_list:
+            avg_progress = sum(p.overall_progress_percent for p in progress_list) / len(progress_list)
+            completion_rates.append(avg_progress)
+
+    total_students = len(unique_student_ids)
     
     avg_completion_rate = sum(completion_rates) / len(completion_rates) if completion_rates else 0
-    
+
     # Count quizzes created by instructor
     quizzes = await Quiz.find(Quiz.created_by == instructor_id).to_list()
     quizzes_created_count = len(quizzes)
@@ -621,10 +620,7 @@ async def get_instructor_dashboard(instructor_id: str) -> Dict:
             "class_id": str(c.id),
             "class_name": c.name,
             "course_title": course_title,
-            "student_count": len(await Enrollment.find(
-                Enrollment.course_id == c.course_id,
-                Enrollment.status == "active"
-            ).to_list()),
+            "student_count": len(c.student_ids or []),
             "created_at": c.created_at
         })
     
@@ -692,28 +688,22 @@ async def get_instructor_class_stats(
     classes = await Class.find(*query_conditions).to_list()
     
     class_stats = []
-    total_students = 0
+    unique_student_ids = set()
     all_attendance_rates = []
     all_completion_rates = []
     
     for cls in classes:
-        # Get enrollments
-        enrollments = await Enrollment.find(
-            Enrollment.course_id == cls.course_id,
-            Enrollment.status == "active"
-        ).to_list()
+        roster = [str(s) for s in (cls.student_ids or [])]
+        student_count = len(roster)
+        for sid in roster:
+            unique_student_ids.add(sid)
         
-        student_count = len(enrollments)
-        total_students += student_count
-        
-        # Calculate attendance rate (approx from progress updates)
-        # Attendance = students with progress updated in last 7 days / total students
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
         
         active_students = 0
-        for enrollment in enrollments:
+        for student_id in roster:
             progress = await Progress.find_one(
-                Progress.user_id == enrollment.user_id,
+                Progress.user_id == student_id,
                 Progress.course_id == cls.course_id,
                 Progress.updated_at >= seven_days_ago
             )
@@ -723,37 +713,31 @@ async def get_instructor_class_stats(
         attendance_rate = (active_students / student_count * 100) if student_count > 0 else 0
         all_attendance_rates.append(attendance_rate)
         
-        # FIX: Calculate avg progress - chỉ của students trong class này
-        # Lấy user_ids từ enrollments của class
-        enrollment_user_ids = [e.user_id for e in enrollments]
-        
         progress_list = await Progress.find(
             Progress.course_id == cls.course_id,
-            In(Progress.user_id, enrollment_user_ids)  # FIX: Filter theo students của class
+            In(Progress.user_id, roster),
         ).to_list()
         
         avg_progress = sum(p.overall_progress_percent for p in progress_list) / len(progress_list) if progress_list else 0
         all_completion_rates.append(avg_progress)
         
-        # Quiz completion rate
-        # Get quizzes for this course
         quizzes = await Quiz.find(Quiz.course_id == cls.course_id).to_list()
         
         quiz_completion = 0
-        if quizzes and enrollments:
+        if quizzes and roster:
             from models.models import QuizAttempt
             
-            total_expected_attempts = len(quizzes) * len(enrollments)
+            total_expected_attempts = len(quizzes) * len(roster)
             
             # Count actual completed attempts
             completed_attempts = 0
             for quiz in quizzes:
                 attempts = await QuizAttempt.find(
                     QuizAttempt.quiz_id == str(quiz.id),
-                    QuizAttempt.submitted_at != None
+                    QuizAttempt.submitted_at != None,
+                    In(QuizAttempt.user_id, roster),
                 ).to_list()
                 
-                # Count unique students
                 unique_students = set(a.user_id for a in attempts)
                 completed_attempts += len(unique_students)
             
@@ -780,7 +764,7 @@ async def get_instructor_class_stats(
     return {
         "classes": class_stats,
         "total_classes": len(classes),
-        "total_students": total_students,
+        "total_students": len(unique_student_ids),
         "avg_attendance": round(avg_attendance, 2),
         "avg_completion": round(avg_completion, 2)
     }

@@ -8,9 +8,10 @@ import Button from '@components/ui/Button'
 import StateView from '@components/ui/StateView'
 import JoinClassModal from '@components/classes/JoinClassModal'
 import { navigateToCourseLearning } from '@utils/classLearningContext'
+import './ClassListPage.css'
 
 const UsersIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
     <circle cx="9" cy="7" r="4"/>
     <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
@@ -18,12 +19,12 @@ const UsersIcon = () => (
   </svg>
 )
 const KeyIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
     <path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/>
   </svg>
 )
 const PlusIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
     <path d="M12 5v14M5 12h14"/>
   </svg>
 )
@@ -61,7 +62,7 @@ const ClassListPage = () => {
     <div className="cls-page">
       {/* Hero */}
       <motion.div className="cls-hero" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.65, 0, 0.35, 1] }}>
-        <svg className="cls-ornament" viewBox="0 0 48 12" fill="none">
+        <svg className="cls-ornament" width="48" height="12" viewBox="0 0 48 12" fill="none" aria-hidden>
           <line x1="0" y1="6" x2="16" y2="6" stroke="var(--gold-500)" strokeWidth="1"/>
           <circle cx="24" cy="6" r="4" stroke="var(--gold-500)" strokeWidth="1"/>
           <line x1="32" y1="6" x2="48" y2="6" stroke="var(--gold-500)" strokeWidth="1"/>

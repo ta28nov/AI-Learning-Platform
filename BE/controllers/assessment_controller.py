@@ -62,7 +62,8 @@ async def handle_generate_assessment(
             category=request.category,
             subject=request.subject,
             level=request.level,
-            focus_areas=request.focus_areas
+            focus_areas=request.focus_areas,
+            custom_goals=request.custom_goals,
         )
         
         return AssessmentGenerateResponse(

@@ -1,34 +1,37 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# Dependencies
 /node_modules
 /package-lock.json
 /.pnp
 .pnp.js
 
-# testing
+# Testing
 /coverage
 
-# production
+# Production
 /build
 /dist
 
-# misc
-.DS_Store
+# Environment
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# logs
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Debug và test files
+_*.txt
+_*.json
+_*.log
+
 # Editor directories and files
+.vscode/
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -37,9 +40,16 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*.swo
+*~
 
 # OS generated files
+.DS_Store
 Thumbs.db
+desktop.ini
+.AppleDouble
+.LSOverride
 
 # Runtime data
 pids
@@ -47,10 +57,8 @@ pids
 *.seed
 *.pid.lock
 
-# Optional npm cache directory
+# npm cache
 .npm
-
-# Optional eslint cache
 .eslintcache
 
 # Output of 'npm pack'
@@ -59,32 +67,31 @@ pids
 # Yarn Integrity file
 .yarn-integrity
 
-# parcel-bundler cache (https://parceljs.log/)
+# Parcel cache
 .cache
 .parcel-cache
 
-# next.js build output
+# Build outputs
 .next
-
-# nuxt.js build output
 .nuxt
-
-# vuepress build output
 .vuepress/dist
 
-# Serverless directories
+# Serverless
 .serverless
 
 # FuseBox cache
 .fusebox/
 
-# DynamoDB Local files
+# DynamoDB
 .dynamodb/
 
 # TernJS port file
 .tern-port
 
-# Stores VSCode versions used for testing VSCode extensions
+# VSCode test
 .vscode-test
+
+# Package managers
 package-lock.json
+yarn.lock
   

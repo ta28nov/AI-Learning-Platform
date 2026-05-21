@@ -5,33 +5,53 @@ __pycache__/
 build/
 dist/
 *.egg-info/
+*.egg
+*.whl
 
 # Môi trường ảo
 venv/
-.env
-.env.*
-!.env.example
+env/
+ENV/
+.venv
 
 # IDE và hệ điều hành
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# Environment và secrets
+.env
+.env.*
+!.env.example
+.env.local
 
 # Log và dữ liệu tạm
 logs/
 *.log
 *.sqlite3
+*.db
+
+# Debug và test files
+_*.txt
+_*.json
+_*.log
 
 # Test
 .pytest_cache/
 .coverage
 coverage.xml
 htmlcov/
+.tox/
 
 # Docker
 *.pid
 
-docs/
-
-scripts/
+# OS files
+.DS_Store
+.AppleDouble
+.LSOverride

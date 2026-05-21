@@ -102,8 +102,12 @@
 
 .sidebar-nav {
   flex: 1;
+  min-height: 0;
   padding: var(--spacing-md) var(--spacing-sm);
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--border-light) transparent;
 }
@@ -414,6 +418,19 @@
   .dashboard-sidebar {
     width: 100%;
     max-width: 320px;
+  }
+
+  .sidebar-nav {
+    padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .sidebar-nav-item {
+    padding: 0.5rem var(--spacing-md);
+  }
+
+  .sidebar-section-label {
+    padding: var(--spacing-xs) var(--spacing-md);
+    margin-bottom: 0;
   }
 
   .dashboard-header {

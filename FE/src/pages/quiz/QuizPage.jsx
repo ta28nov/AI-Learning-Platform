@@ -93,7 +93,7 @@ const QuizPage = () => {
         </p>
         {isInstructor && (
           <div className="qp-hero__actions">
-            <Button onClick={() => navigate('/dashboard/courses')}>
+            <Button onClick={() => navigate('/dashboard/instructor/quizzes/create')}>
               + Tạo quiz từ bài học
             </Button>
             <Button variant="outline" onClick={() => navigate('/dashboard/instructor/analytics')}>
@@ -236,8 +236,8 @@ const QuizPage = () => {
           action={
             !searchTerm
               ? {
-                  label: isInstructor ? 'Mở khóa học' : 'Khám phá khóa học',
-                  onClick: () => navigate('/dashboard/courses'),
+                  label: isInstructor ? 'Tạo quiz mới' : 'Khám phá khóa học',
+                  onClick: () => navigate(isInstructor ? '/dashboard/instructor/quizzes/create' : '/dashboard/courses'),
                 }
               : undefined
           }

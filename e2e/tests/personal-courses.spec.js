@@ -64,7 +64,19 @@ test.describe('Personal course from-prompt (live AI)', () => {
 
     await page.getByRole('button', { name: 'Tạo bằng AI' }).click()
     await page.getByRole('button', { name: 'Mẫu 1' }).click()
+    const createResponse = page.waitForResponse(
+      (r) =>
+        r.url().includes('/courses/from-prompt') &&
+        r.request().method() === 'POST' &&
+        r.request().headers()['content-type']?.includes('application/json'),
+      { timeout: 120_000 }
+    )
     await page.getByRole('button', { name: 'Tạo khóa học' }).click()
-    await expect(page).toHaveURL(/\/dashboard\/personal-courses\/[^/]+\/edit/, { timeout: 120_000 })
+    const post = await createResponse
+    if (post.status() !== 201) {
+      const errBody = await post.text().catch(() => '')
+      throw new Error(`POST /courses/from-prompt → ${post.status()}: ${errBody.slice(0, 800)}`)
+    }
+    await expect(page).toHaveURL(/\/dashboard\/personal-courses\/[^/]+\/edit/, { timeout: 30_000 })
   })
 })

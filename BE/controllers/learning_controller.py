@@ -29,7 +29,7 @@ from schemas.learning import (
 )
 
 # Import models
-from models.models import Quiz, generate_uuid
+from models.models import Class, Quiz, generate_uuid
 
 # Import services
 from services import learning_service, enrollment_service, course_service
@@ -41,6 +41,26 @@ logger = logging.getLogger(__name__)
 
 def _is_course_owner(course, user_id: str) -> bool:
     return bool(course and user_id and str(course.owner_id) == str(user_id))
+
+
+async def _is_instructor_for_course(user_id: str, course_id: str) -> bool:
+    """GV có lớp gắn khóa này được xem nội dung (soạn quiz, quản lý lớp)."""
+    if not user_id or not course_id:
+        return False
+    cls = await Class.find_one(
+        Class.instructor_id == user_id,
+        Class.course_id == course_id,
+    )
+    return cls is not None
+
+
+async def _can_access_course_learning(user_id: str, course_id: str, course) -> bool:
+    if _is_course_owner(course, user_id):
+        return True
+    if await _is_instructor_for_course(user_id, course_id):
+        return True
+    enrollment = await enrollment_service.get_user_enrollment(user_id, course_id)
+    return bool(enrollment and enrollment.status != "cancelled")
 
 
 # ============================================================================
@@ -88,9 +108,7 @@ async def handle_get_module_detail(
             detail="Khóa học không tồn tại"
         )
     
-    # Owner của personal course có thể truy cập trực tiếp không cần enrollment
-    enrollment = await enrollment_service.get_user_enrollment(user_id, course_id)
-    if (not enrollment or enrollment.status == "cancelled") and not _is_course_owner(course, user_id):
+    if not await _can_access_course_learning(user_id, course_id, course):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Bạn cần đăng ký khóa học để xem module"
@@ -156,9 +174,7 @@ async def handle_get_lesson_content(
             detail="Khóa học không tồn tại"
         )
     
-    # Owner của personal course có thể truy cập trực tiếp không cần enrollment
-    enrollment = await enrollment_service.get_user_enrollment(user_id, course_id)
-    if (not enrollment or enrollment.status == "cancelled") and not _is_course_owner(course, user_id):
+    if not await _can_access_course_learning(user_id, course_id, course):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Bạn cần đăng ký khóa học để xem lesson"
@@ -177,19 +193,18 @@ async def handle_get_lesson_content(
             detail="Lesson không tồn tại"
         )
     
-    # Check if lesson is locked via navigation
-    navigation = lesson_data.get("navigation", {})
-    prev_lesson = navigation.get("previous_lesson")
-    if prev_lesson and prev_lesson.get("id"):
-        # Nếu có previous lesson, check xem nó đã completed chưa
-        enrollment = await enrollment_service.get_user_enrollment(user_id, course_id)
-        if enrollment and prev_lesson.get("id") not in enrollment.completed_lessons:
-            # Previous lesson chưa completed, lesson này bị khóa
-            if not lesson_data.get("completion_status", {}).get("is_completed"):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Bạn cần hoàn thành bài học trước đó"
-                )
+    # GV quản lý lớp không bị khóa tuần tự lesson khi soạn quiz / xem nội dung
+    if not await _is_instructor_for_course(user_id, course_id):
+        navigation = lesson_data.get("navigation", {})
+        prev_lesson = navigation.get("previous_lesson")
+        if prev_lesson and prev_lesson.get("id"):
+            enrollment = await enrollment_service.get_user_enrollment(user_id, course_id)
+            if enrollment and prev_lesson.get("id") not in enrollment.completed_lessons:
+                if not lesson_data.get("completion_status", {}).get("is_completed"):
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Bạn cần hoàn thành bài học trước đó"
+                    )
     
     # Return service data directly - đã match với LessonContentResponse schema
     return LessonContentResponse(**lesson_data)
@@ -214,8 +229,7 @@ async def handle_complete_lesson(
             detail="Khóa học không tồn tại"
         )
 
-    enrollment = await enrollment_service.get_user_enrollment(user_id, course_id)
-    if (not enrollment or enrollment.status == "cancelled") and not _is_course_owner(course, user_id):
+    if not await _can_access_course_learning(user_id, course_id, course):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Bạn cần đăng ký khóa học để hoàn thành bài học"
@@ -340,8 +354,7 @@ async def handle_get_module_outcomes(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Khóa học không tồn tại"
         )
-    enrollment = await enrollment_service.get_user_enrollment(user_id, course_id)
-    if (not enrollment or enrollment.status == "cancelled") and not _is_course_owner(course, user_id):
+    if not await _can_access_course_learning(user_id, course_id, course):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Bạn cần đăng ký khóa học"
@@ -390,8 +403,7 @@ async def handle_get_module_resources(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Khóa học không tồn tại"
         )
-    enrollment = await enrollment_service.get_user_enrollment(user_id, course_id)
-    if (not enrollment or enrollment.status == "cancelled") and not _is_course_owner(course, user_id):
+    if not await _can_access_course_learning(user_id, course_id, course):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Bạn cần đăng ký khóa học"
@@ -453,15 +465,12 @@ async def handle_generate_module_assessment(
             detail="Khóa học không tồn tại"
         )
     
-    # Verify enrollment (if not owner)
-    if course.owner_id != user_id:
-        enrollment = await enrollment_service.get_user_enrollment(user_id, course_id)
-        if not enrollment or enrollment.status == "cancelled":
-            logger.warning(f"User {user_id} not enrolled in course {course_id}")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Bạn cần đăng ký khóa học để tạo bài kiểm tra"
-            )
+    if not await _can_access_course_learning(user_id, course_id, course):
+        logger.warning(f"User {user_id} cannot access course {course_id} for assessment")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bạn cần đăng ký khóa học để tạo bài kiểm tra"
+        )
     
     # Get module with learning outcomes
     module = None

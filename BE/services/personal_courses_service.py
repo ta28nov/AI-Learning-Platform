@@ -4,11 +4,132 @@ Business logic cho personal courses (khóa học cá nhân)
 Section 2.5.1-2.5.5
 """
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from datetime import datetime
 
 from models.models import Course, EmbeddedModule, EmbeddedLesson, generate_uuid
 from services.ai_service import generate_course_from_prompt
+
+
+def _safe_str(value: Any, default: str = "") -> str:
+    if value is None:
+        return default
+    text = str(value).strip()
+    return text if text else default
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _normalize_course_level(level: Optional[str], fallback: str = "Beginner") -> str:
+    """Map AI / loose strings to API-allowed course levels."""
+    allowed = {"Beginner", "Intermediate", "Advanced"}
+    if level in allowed:
+        return level
+    low = _safe_str(level).lower()
+    if "intermediate" in low or "trung cấp" in low or "trung bình" in low:
+        return "Intermediate"
+    if "advanced" in low or "nâng cao" in low:
+        return "Advanced"
+    if "beginner" in low or "cơ bản" in low or "nhập môn" in low:
+        return "Beginner"
+    return fallback if fallback in allowed else "Beginner"
+
+
+def _normalize_module_learning_outcomes(raw: Any) -> List[Dict[str, str]]:
+    """
+    Coerce AI output to list of {description, skill_tag} for module + CourseFromPromptResponse.
+    Gemini often omits skill_tag or returns plain strings.
+    """
+    out: List[Dict[str, str]] = []
+    if not raw or not isinstance(raw, list):
+        return [
+            {"description": "Hoàn thành nội dung module", "skill_tag": "module-complete"}
+        ]
+    for idx, item in enumerate(raw):
+        if isinstance(item, str):
+            out.append(
+                {
+                    "description": item.strip() or f"Mục tiêu {idx + 1}",
+                    "skill_tag": f"outcome-{idx + 1}",
+                }
+            )
+            continue
+        if isinstance(item, dict):
+            desc = (
+                item.get("description")
+                or item.get("title")
+                or item.get("text")
+                or item.get("outcome")
+                or item.get("objective")
+            )
+            tag = (
+                item.get("skill_tag")
+                or item.get("skill")
+                or item.get("tag")
+                or item.get("id")
+                or f"skill-{idx + 1}"
+            )
+            desc_s = _safe_str(desc, f"Mục tiêu {idx + 1}")
+            tag_s = _safe_str(tag, f"skill-{idx + 1}")[:120]
+            out.append({"description": desc_s, "skill_tag": tag_s})
+    if not out:
+        out.append(
+            {"description": "Hoàn thành nội dung module", "skill_tag": "module-complete"}
+        )
+    return out
+
+
+def _normalize_course_learning_outcomes_stored(raw: Any) -> List[Dict[str, str]]:
+    """Course document stores List[dict]; empty AI field → []."""
+    if not raw or not isinstance(raw, list):
+        return []
+    out: List[Dict[str, str]] = []
+    for idx, item in enumerate(raw):
+        if isinstance(item, str):
+            out.append(
+                {"description": item.strip() or f"Mục tiêu {idx + 1}", "skill_tag": f"course-{idx + 1}"}
+            )
+            continue
+        if isinstance(item, dict):
+            desc = (
+                item.get("description")
+                or item.get("title")
+                or item.get("text")
+                or item.get("outcome")
+                or item.get("objective")
+            )
+            tag = (
+                item.get("skill_tag")
+                or item.get("skill")
+                or item.get("tag")
+                or item.get("id")
+                or f"course-{idx + 1}"
+            )
+            desc_s = _safe_str(desc, f"Mục tiêu {idx + 1}")
+            tag_s = _safe_str(tag, f"course-{idx + 1}")[:120]
+            out.append({"description": desc_s, "skill_tag": tag_s})
+    return out
+
+
+def _course_learning_outcomes_to_strings(stored: Any) -> List[str]:
+    """PersonalCourseDetailResponse expects learning_outcomes: List[str]."""
+    result: List[str] = []
+    if not stored:
+        return result
+    for item in stored:
+        if isinstance(item, str):
+            if item.strip():
+                result.append(item.strip())
+        elif isinstance(item, dict):
+            desc = item.get("description") or item.get("title") or item.get("text")
+            if desc and str(desc).strip():
+                result.append(str(desc).strip())
+    return result
 
 
 # ============================================================================
@@ -48,55 +169,102 @@ async def create_course_from_ai_prompt(
         user_preferences=None,
         difficulty=level  # Map level to difficulty parameter
     )
+
+    resolved_level = _normalize_course_level(
+        ai_result.get("level") or level, fallback=level or "Beginner"
+    )
+    course_title = _safe_str(ai_result.get("title"), "Khóa học mới")
+    course_description = _safe_str(
+        ai_result.get("description"),
+        "Khóa học được tạo từ mô tả của bạn.",
+    )
+    course_category = _safe_str(ai_result.get("category"), "General")
+    course_learning_outcomes = _normalize_course_learning_outcomes_stored(
+        ai_result.get("learning_outcomes")
+    )
     
     # Tạo modules từ AI result
     modules = []
     total_lessons = 0
     
     for idx, module_data in enumerate(ai_result.get("modules", [])):
+        if not isinstance(module_data, dict):
+            continue
         # Tạo lessons cho module
         lessons = []
-        for lesson_idx, lesson_data in enumerate(module_data.get("lessons", [])):
+        for lesson_idx, lesson_data in enumerate(module_data.get("lessons", []) or []):
+            if not isinstance(lesson_data, dict):
+                continue
+            lesson_title = _safe_str(lesson_data.get("title"), f"Bài {lesson_idx + 1}")
+            lesson_order = _safe_int(lesson_data.get("order"), lesson_idx + 1)
             lesson = EmbeddedLesson(
                 id=generate_uuid(),
-                title=lesson_data.get("title"),
-                order=lesson_idx + 1,
-                content=lesson_data.get("content", ""),
-                content_type=lesson_data.get("content_type", "text"),
+                title=lesson_title,
+                order=lesson_order,
+                content=_safe_str(lesson_data.get("content"), ""),
+                content_type=_safe_str(lesson_data.get("content_type"), "text") or "text",
                 video_url=lesson_data.get("video_url"),
-                duration_minutes=lesson_data.get("duration_minutes", 0),
-                resources=lesson_data.get("resources", [])
+                duration_minutes=_safe_int(lesson_data.get("duration_minutes"), 0),
+                resources=(
+                    lesson_data.get("resources")
+                    if isinstance(lesson_data.get("resources"), list)
+                    else []
+                ),
             )
             lessons.append(lesson)
             total_lessons += 1
+
+        if not lessons:
+            lessons.append(
+                EmbeddedLesson(
+                    id=generate_uuid(),
+                    title="Bài 1",
+                    order=1,
+                    content="",
+                    content_type="text",
+                    duration_minutes=0,
+                    resources=[],
+                )
+            )
+            total_lessons += 1
         
         # Tạo module
+        module_title = _safe_str(module_data.get("title"), f"Module {idx + 1}")
+        module_order = _safe_int(module_data.get("order"), idx + 1)
+        mod_learning_outcomes = _normalize_module_learning_outcomes(
+            module_data.get("learning_outcomes")
+        )
         module = EmbeddedModule(
             id=generate_uuid(),
-            title=module_data.get("title"),
-            description=module_data.get("description", ""),
-            order=idx + 1,
-            difficulty=module_data.get("difficulty", "Basic"),
-            estimated_hours=module_data.get("estimated_hours", 0),
-            learning_outcomes=module_data.get("learning_outcomes", []),
+            title=module_title,
+            description=_safe_str(module_data.get("description"), ""),
+            order=module_order,
+            difficulty=_safe_str(module_data.get("difficulty"), "Basic") or "Basic",
+            estimated_hours=float(module_data.get("estimated_hours") or 0),
+            learning_outcomes=mod_learning_outcomes,
             lessons=lessons,
             total_lessons=len(lessons),
             total_duration_minutes=sum(l.duration_minutes for l in lessons)
         )
         modules.append(module)
+
+    if not modules:
+        raise ValueError(
+            "AI không trả về module hợp lệ; thử lại với mô tả chi tiết hơn."
+        )
     
     # Tạo Course document
     course = Course(
         id=generate_uuid(),
-        title=ai_result.get("title"),
-        description=ai_result.get("description"),
-        category=ai_result.get("category", "General"),
-        level=ai_result.get("level", level),  # Use AI level or fallback to param level
+        title=course_title,
+        description=course_description,
+        category=course_category,
+        level=resolved_level,
         status="draft",
         owner_id=user_id,
         owner_type="student",  # Personal course
         modules=modules,
-        learning_outcomes=ai_result.get("learning_outcomes", []),
+        learning_outcomes=course_learning_outcomes,
         total_duration_minutes=sum(m.total_duration_minutes for m in modules),
         total_modules=len(modules),
         total_lessons=total_lessons,
@@ -124,7 +292,7 @@ async def create_course_from_ai_prompt(
                 "description": m.description,
                 "order": m.order,
                 "difficulty": m.difficulty,
-                "learning_outcomes": m.learning_outcomes,
+                "learning_outcomes": _normalize_module_learning_outcomes(m.learning_outcomes),
                 "lessons": [
                     {
                         "id": lesson.id,
@@ -339,7 +507,7 @@ async def get_personal_course_detail(user_id: str, course_id: str) -> Optional[D
         "status": course.status,
         "language": course.language or "vi",
         "thumbnail_url": course.thumbnail_url,
-        "learning_outcomes": course.learning_outcomes or [],
+        "learning_outcomes": _course_learning_outcomes_to_strings(course.learning_outcomes or []),
         "prerequisites": course.prerequisites or [],
         "modules": modules_data,
         "created_at": course.created_at,

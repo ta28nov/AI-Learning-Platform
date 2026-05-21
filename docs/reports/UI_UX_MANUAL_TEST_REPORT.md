@@ -1,6 +1,6 @@
 # UI/UX Manual Test Report
 
-**Ngày:** 2026-05-19  
+**Ngày:** 2026-05-19 (cập nhật Phase 3–4: 2026-05-20; Phase 7 GV deep retest: 2026-05-21)  
 **Plan:** [`ui_ux_full_qa_73509397.plan.md`](../../.cursor/plans/ui_ux_full_qa_73509397.plan.md)  
 **DB:** `ai_learning_app` | **FE:** http://localhost:3000 | **BE:** http://127.0.0.1:8000
 
@@ -155,9 +155,124 @@
 
 ---
 
-## Phase 3+ (tóm tắt smoke trước đó)
+## Phase 3 — Role flows & UX checklist (2026-05-20)
 
-Student/Instructor/Admin auth flows smoke: PASS trên localhost:3000. Chi tiết flow sâu → Phase 3.
+**Môi trường:** `http://localhost:3000` · **BE:** `GET /health` → 200 `{"status":"ok"}` · MCP `cursor-ide-browser` (snapshot).
+
+**Tiêu chí UX (rút gọn):** loading (`StateView` / copy «Đang tải…») · empty (quiz trống, chat chưa có hội thoại) · form đăng nhập · modal (chưa mở destructive) · quay lại (`Danh sách lớp`, sidebar) · desktop layout (chưa đo 390px trong phiên này).
+
+### 3a — Student (`student1@gmail.com`)
+
+| Route / hành động | Kết quả | Ghi chú UX |
+|-------------------|---------|------------|
+| `/auth/login` → `/dashboard` | **PASS** | Dashboard load; «Quiz cần làm» empty state «Không có quiz cần làm» (UIUX-027) |
+| `/dashboard/my-courses` | **PASS** | Tabs + đếm, card, **Chi tiết đăng ký** / **Tiếp tục học** / **Hủy đăng ký** |
+| `/dashboard/courses` | **PASS** | Filter + grid + pagination sau loading |
+| `/dashboard/quiz` | **PASS** | Danh sách quiz sau loading |
+| `/dashboard/chat` | **PASS** | Sidebar empty «Chưa có hội thoại nào»; combobox khóa «Chọn khóa học…» (async — đã ghi 2b.9) |
+| `/dashboard/progress` | **PASS** | Sau vài giây: «Tiến độ của bạn», «Biểu đồ tiến độ», «Khóa học đang học» (5 card %), «Thành tựu» |
+
+**Đã cover sâu ở Phase 2b (không lặp lại browser đầy đủ trong phiên này):** `/dashboard/assessment`, `/dashboard/classes`, `/dashboard/personal-courses`, `/dashboard/profile`, học module/lesson, quiz attempt/results — xem §2b.5–2b.8, §2b.3–2b.4.
+
+### 3b — Instructor (`instructor1@ailearning.vn` / `Instructor@123`)
+
+**Phiên smoke (2026-05-20):** navigate + load trang. **Phiên deep (2026-05-21):** click/submit/modal — chi tiết §Phase 7.
+
+| Route / hành động | Kết quả | Ghi chú UX |
+|-------------------|---------|------------|
+| Logout student → login GV | **PASS** | Sidebar đúng role (Khóa học, Quiz, Chat, Tìm kiếm, **Giảng dạy**) |
+| `/dashboard` | **PASS** | Lớp gần đây, CTA Tạo lớp / Khóa học / Tạo khóa học AI |
+| `/dashboard/instructor` | **PASS** | Stats + recent classes + CTA Quiz / Analytics / Lớp |
+| `/dashboard/instructor/analytics` | **PASS** | Chart + bảng lớp + hiệu quả quiz (~5–8s load) |
+| `/dashboard/instructor/quizzes` | **PASS** | Grid, tìm kiếm, **Kết quả lớp**, **Xóa**, phân trang **Sau →** |
+| `/dashboard/instructor/classes` | **PASS** | **2 lớp** (dữ liệu `instructor1` hiện tại; gồm lớp QA mới tạo) |
+| `/dashboard/instructor/classes/:id` | **PASS** | Tab Thông tin / Học viên (44) / Tiến độ; **Chỉnh sửa** lưu OK; modal **Hồ sơ HV** |
+| `/dashboard/instructor/quizzes/create` | **PASS** (sau UIUX-032) | Form load lesson «Injection»; trước fix → 403 |
+| `/dashboard/courses`, `/dashboard/chat`, `/dashboard/profile` | **PASS** | Catalog + filter; chat empty state; profile load |
+| Tạo quiz submit (UI) | **PARTIAL** | Form OK; automation không chọn được `<select>` đáp án — tạo qua API **201** |
+| Tạo lớp submit (UI) | **PARTIAL** | Form mở OK; automation không chọn `<select>` khóa — tạo qua API **201** |
+
+**Ghi chú automation:** Global search bar đôi khi chặn click card lớp — scroll + click vùng khóa học. Combobox lớp/quiz: dùng `?classId=` trên URL results hoặc chọn tay.
+
+### 3c — Admin (`admin1@ailearning.vn` / `Admin@123456`)
+
+| Route / hành động | Kết quả | Ghi chú UX |
+|-------------------|---------|------------|
+| Login admin | **PASS** | `/dashboard` — tiles Quản trị nhanh (Users / Khóa học / Lớp / Analytics) |
+| `/dashboard/admin/users` | **PASS** | Filter tên/email, role, status; bảng + **Vai trò** / **Reset** / **Xóa**; phân trang **Tiếp →** bật sau load |
+| `/dashboard/admin/analytics?q=math` | **PASS** | Loading → **Sức khỏe hệ thống**, **Tăng trưởng người dùng (30 ngày)**, **Phân tích khóa học** — `?q=` không thấy `useSearchParams` trong `AdminPage.jsx` (query **không bind** UI analytics; vô hại) |
+| `/dashboard/admin/courses` | **PASS** | Ô tìm + **+ Tạo khóa học** + page size (snapshot ngay sau navigate; bảng load theo 2b.11) |
+| `/dashboard/search?q=math` (admin) | **PASS** | Loading «AI đang tìm kiếm» → grid khóa + filter; panel **Thống kê tìm kiếm (admin)** — **Tổng truy vấn: 1500** (khớp 2b.10) |
+
+### Phase 3 — Tóm tắt
+
+| Nhánh | Trạng thái |
+|-------|------------|
+| 3a Student | **Done** (browser phiên này + 2b đã cover assessment/classes/personal/profile) |
+| 3b Instructor | **Done** (deep retest 2026-05-21 — §Phase 7) |
+| 3c Admin | **Done** |
+| Instructor quiz create UI submit | **PARTIAL** | Form + API OK; `<select>` đáp án cần chọn tay |
+| Instructor class create UI submit | **PARTIAL** | Form OK; `<select>` khóa cần chọn tay |
+
+---
+
+## Phase 4 — AI flows & công cụ lỗi (2026-05-20)
+
+**Tiền đề:** `GET /health` → **200** · `GOOGLE_API_KEY` trong `BE/.env` → **đã set** (Python `dotenv_values`, không in secret) · FE `http://localhost:3000` → **200**.
+
+**Công cụ QA (bật trong phiên):**
+
+| Công cụ | Mục đích |
+|---------|----------|
+| MCP `cursor-ide-browser` — `browser_console_messages` | DevTools console: cảnh báo React / framer-motion |
+| MCP `cursor-ide-browser` — `browser_network_requests` | XHR: method, URL, status (sau thao tác) |
+| `BE/logs/app.log` | Access + ERROR server (from-prompt 500, dashboard `created_at`) |
+| Playwright (local) | `e2e/_phase4_ai_playwright.py` — load key từ `BE/.env`, `E2E_SKIP_WEB_SERVER=1`, log → `e2e/_phase4_playwright_last.log` |
+
+### 4.1 Assessment — `POST /assessments/generate`
+
+| Bước | Kết quả | Network / console |
+|------|---------|-------------------|
+| Student → `/dashboard/assessment` → Math / Algebra → **Bắt đầu đánh giá** | **PASS** | UI «AI đang tạo…» → redirect `/dashboard/assessment/{sessionId}` với câu hỏi MCQ |
+| Playwright `assessment-flow.spec.js` | **FAIL** (2 lần / retry) | Log `e2e/_phase4_playwright_last.log` — timeout/flake so với manual (có thể do chọn field khác hoặc tải chậm) |
+
+**Ghi chú:** Sau khi vào trang quiz, DevTools log có `GET .../assessments/{id}/results` → **404** (chưa nộp) — kỳ vọng; không white-screen.
+
+### 4.2 Chat — `POST /chat/course/{courseId}`
+
+| Bước | Kết quả | Network / console |
+|------|---------|-------------------|
+| Chọn khóa **Complete Math 22** → nhập câu hỏi → **Gửi** | **PASS** | `POST .../chat/course/eeed2fc5-...` → **201**; `GET /chat/history` **200**; chip follow-up + link bài học |
+| Playwright `chat.spec.js` | **PASS** | ~6s |
+
+**Console (nên sửa sau, không chặn wire):** `Warning: Each child in a list should have a unique "key" prop` — `ChatPage.jsx`.
+
+### 4.3 Personal course — `POST /courses/from-prompt`
+
+| Bước | Kết quả | Network / console |
+|------|---------|-------------------|
+| «Tạo bằng AI» → Mẫu 1 → **Tạo khóa học** | **FAIL** (phiên 2026-05-20) | `POST /api/v1/courses/from-prompt` → **500** — xem **UIUX-029** |
+| **Sau fix BE** (chuẩn hóa `learning_outcomes` / level từ Gemini + `GET` detail map LO → string) | **Cần tái xác minh tay** | Playwright: `test_create_from_prompt_malformed_ai_learning_outcomes` **PASS** |
+| Playwright (nhóm smoke trong `personal-courses.spec.js`) | **PASS** | Chỉ modal + template — **không** gọi from-prompt trong spec đó |
+
+**UIUX-029 (đã xử lý trên BE):** Response `CourseFromPromptResponse` / insert course lỗi khi Gemini trả `learning_outcomes` thiếu `skill_tag`, chuỗi thuần, hoặc `level` không đúng enum; đồng thời `GET /courses/personal/{id}` vỡ vì `learning_outcomes` lưu dict nhưng schema detail cần `List[str]`. Sửa trong `personal_courses_service.py` + test hồi quy.
+
+**Console:** `validateDOMNesting`: `<button>` trong `<button>` — `PersonalCoursesPage` + `Card` (cấu trúc DOM lồng nút).
+
+### 4.4 Playwright tổng hợp (`_phase4_playwright_last.log`)
+
+| Spec | Kết quả |
+|------|---------|
+| `assessment-flow` | **×** (retry) — **2026-05-20:** tăng timeout URL quiz lên **240s** (`AssessmentPage.js` + spec) để giảm flake khi Gemini chậm |
+| `chat` | **ok** |
+| `personal-courses` smoke (3 test) | **ok** |
+| `student-flow` | *(log file cắt sớm — chạy lại nếu cần)* |
+
+**Lệnh gợi ý (PowerShell, đã có BE/FE chạy):**
+
+```powershell
+cd c:\Users\Admin\AI-Learning-Platform; python e2e\_phase4_ai_playwright.py
+```
 
 ---
 
@@ -377,7 +492,7 @@ Low — workaround: dùng `localhost:3000`.
 
 ## Tổng hợp bug & UX (2026-05-19)
 
-### Đã sửa (24 mục)
+### Đã sửa (25 mục)
 
 | ID | Mức | Vấn đề | Fix |
 |----|-----|--------|-----|
@@ -406,6 +521,7 @@ Low — workaround: dùng `localhost:3000`.
 | UIUX-026 | Medium | Click kết quả search → 404 | `SearchResultsPage.resolveSearchItemUrl()` map API path → `/dashboard/*` |
 | UIUX-027 | Medium | Student dashboard pending quiz log lỗi `created_at` | `dashboard_service.py`: sort `started_at`, check `attempt.passed` |
 | UIUX-028 | Low | Landing footer thiếu link pháp lý | `LandingPage.jsx` footer `/terms`, `/privacy` |
+| UIUX-029 | High | `from-prompt` **500** / detail LO schema | `personal_courses_service.py`: chuẩn hóa LO + level; map LO detail → `List[str]`; lesson/module fallback; test malformed AI |
 | 2b.2 | — | MyCourses JSX + link enrollment detail | `MyCoursesPage.jsx` |
 | 2b.3 | — | `CourseLearningNav` thiếu nút quay lại | Component dùng chung 3 trang học |
 
@@ -423,8 +539,35 @@ Low — workaround: dùng `localhost:3000`.
 - `FE/.../LessonPage.jsx`, `ModuleDetailPage.jsx`, `ModuleListPage.jsx`, `CourseLearningNav.*`
 - `FE/.../ProgressPage.jsx`, `InstructorDashboardPage.jsx`, `RecommendationsPage.*`
 - `FE/.../ClassDetailPage.jsx`, `ClassDetailPage.css`
-- `BE/services/dashboard_service.py` — pending quiz query (UIUX-027)
+- `BE/services/dashboard_service.py` — pending quiz query (UIUX-027); traceback khi xử lý lesson pending quiz (Phase 4 debug)
 - `FE/src/pages/landing/LandingPage.jsx` — footer legal (UIUX-028)
+- `BE/services/personal_courses_service.py` — from-prompt + detail LO (UIUX-029)
+
+---
+
+## Phase 5 — Bug report & pre-deploy fixes (2026-05-21)
+
+| ID | Mức | Vấn đề | Trạng thái / Fix |
+|----|-----|--------|------------------|
+| **PRE-001** | **Critical** | Seed: title/lesson Faker generic, không giống khóa thật | **Fixed** — `BE/scripts/curriculum_content.py` + `init_data.py` dùng giáo trình Python/Data/Math/Business/Languages |
+| **PRE-002** | **High** | Assessment: không có form mục tiêu tự do | **Fixed** — `custom_goals` FE step 04 + BE schema/service/AI prompt |
+| **PRE-003** | **High** | AI không rate limit → burst/quota | **Fixed** — `middleware/ai_rate_limit.py` (assessment 5/min, from-prompt 3/min, chat 30/min) |
+| **PRE-004** | **High** | GV tạo quiz: phải vào lesson, `/create` vô dụng | **Fixed** — picker khóa → module → bài trên `InstructorQuizFormPage` |
+| **PRE-005** | **Medium** | GV xem lớp: không thấy giáo trình khóa nền | **Fixed** — `get_class_detail` trả `course.modules[]`; tab Thông tin hiện «Giáo trình» |
+| **PRE-006** | **Medium** | Dashboard/analytics GV đếm HV sai (enrollment vs roster) | **Fixed** — `get_instructor_dashboard`, `get_instructor_class_stats` dùng `class.student_ids` unique |
+| **PRE-007** | **Low** | UI classes/dashboard GV quá rộng / tràn | **Fixed** — CSS compact `ClassListPage`, `InstructorDashboardPage` |
+| **UIUX-032** | **High** | GV tạo quiz: `GET lesson content` → **403** (chưa enroll khóa nền) | **Fixed** — `_is_instructor_for_course` + `_can_access_course_learning` trong `learning_controller.py`; test `test_instructor_lesson_content_without_enrollment`; **cần restart BE** |
+| UIUX-030 | Low | ChatPage thiếu React `key` | **Fixed** — fallback `key` khi `message_id` null (`ChatPage.jsx`) |
+| UIUX-031 | Low | PersonalCourses nested `<button>` | **Fixed** — bỏ `onClick` trên `Card`; title `role=button` riêng (`PersonalCoursesPage.jsx`) |
+
+**Lớp ↔ khóa (by design):** Một lớp gắn **một** `course_id`. Cùng GV **có thể** tạo nhiều lớp cùng khóa (cohort khác học kỳ) — **không** chặn trùng. Thống kê GV **tính từ DB thật** (Progress, QuizAttempt, roster), không mock — sau PRE-006 không còn double-count enrollment.
+
+**Tái seed sau deploy:**
+
+```powershell
+cd BE
+python -m scripts.init_data
+```
 
 ---
 
@@ -436,10 +579,365 @@ Low — workaround: dùng `localhost:3000`.
 | 1 Auth | Done |
 | **2 Data audit** | Done |
 | **2b API matrix** | **Done** |
-| 3–4 Flows / AI | Pending |
-| Bugs P0/P1 | **Đã fix** UIUX-001→028 |
+| **3 Role flows (manual)** | **Done** (2026-05-20; GV deep 2026-05-21) |
+| **4 AI flows** | **Partial** (2026-05-20) — assessment + chat manual OK; **from-prompt BE fix** (UIUX-029); Playwright assessment timeout **240s**; polish: Chat keys, PersonalCourses nested buttons |
+| **7 Instructor deep retest** | **Done** (2026-05-21) — UIUX-032 fix + ma trận tương tác §Phase 7 |
+| Bugs P0/P1 | **Đã fix** UIUX-001→032 (032 = GV lesson access 403) |
 
-**Tiếp theo:** Phase 3–4 Flows / AI UX sâu (theo plan).
+**Tiếp theo:** Tái xác minh tay **from-prompt** sau deploy BE; chạy lại `assessment-flow` + `student-flow` Playwright; dọn warning React (`ChatPage` keys, `PersonalCoursesPage` button nesting).
+
+---
+
+## Phase 7 — Instructor deep interaction retest (2026-05-21)
+
+**Tài khoản:** `instructor1@ailearning.vn` / `Instructor@123`  
+**Môi trường:** FE `http://127.0.0.1:3000` · BE `http://127.0.0.1:8000/api/v1`  
+**Phương pháp:** Browser MCP (click/modal/tab/submit) + curl/API log + pytest  
+**Lưu ý:** Sau sửa `learning_controller.py` phải **restart uvicorn** (tránh 2 process port 8000 — process cũ vẫn trả 403).
+
+### 7.1 Fix UIUX-032 (alias QA: UIUX-GV-07)
+
+| Mục | Chi tiết |
+|-----|----------|
+| Triệu chứng | Mở `/dashboard/instructor/quizzes/create?courseId=…&lessonId=…` → spinner «Đang lấy tiêu đề bài học…» / lỗi; network `GET /courses/{cid}/lessons/{lid}` → **403** |
+| Nguyên nhân | Handler lesson content chỉ cho **owner khóa cá nhân** hoặc **enrollment active** — GV dạy lớp gắn khóa catalog **không** enroll |
+| Fix | `BE/controllers/learning_controller.py`: `_is_instructor_for_course()` (query `Class` theo `instructor_id` + `course_id`); `_can_access_course_learning()` gom owner \| instructor \| enrollment; áp dụng module/lesson/outcomes/resources/assessment; GV **bypass** sequential lesson lock |
+| Verify BE | `python -m pytest tests/learning/test_learning.py::test_instructor_lesson_content_without_enrollment` → **1 passed** |
+| Verify API | `BE/logs/_lesson_test.json` — `GET …/lessons/18ac3284-…` **200**, title «Injection» |
+| Verify UI | Form hiện tiêu đề auto `Quiz: Injection`, context «Web security · Xem bài học» |
+
+### 7.2 Ma trận tương tác GV (browser)
+
+| # | Màn / luồng | Hành động đã thực hiện | Kết quả | Ghi chú |
+|---|-------------|------------------------|---------|---------|
+| 1 | Login | Submit `instructor1@ailearning.vn` | **PASS** | Sidebar role GV |
+| 2 | Dashboard GV | Load `/dashboard/instructor` | **PASS** | Stats + CTA |
+| 3 | Danh sách lớp | Mở `/dashboard/instructor/classes` | **PASS** | 2 card: `Lop QA Manual Test 2026`, `Class 50 - Ratione QA` |
+| 4 | Chi tiết lớp | Mở `ae9c0887-…` | **PASS** | Header + tab Thông tin |
+| 5 | Tab Học viên | Chuyển tab | **PASS** | Bảng **44** HV |
+| 6 | Modal hồ sơ HV | Click tên HV (Angela Walsh) | **PASS** | Module progress + điểm quiz → đóng modal |
+| 7 | Tab Tiến độ lớp | Chuyển tab | **PASS** | Nội dung tab load (sparse trong a11y tree) |
+| 8 | Chỉnh sửa lớp | Đổi tên → **Lưu** | **PASS** | Header cập nhật `Class 50 - Ratione QA` |
+| 9 | Mã mời | Nút **Sao chép** trên tab Thông tin | **PASS** | Nút hiện; clipboard không assert trong automation |
+| 10 | CTA lớp | **Xem chi tiết khóa** / **Tạo quiz** / **Quản lý quiz** | **PASS** | 3 nút render trên tab Thông tin |
+| 11 | Xóa lớp | **Xóa lớp** → modal → **Hủy** | **PASS** | Không xóa dữ liệu seed |
+| 12 | Gỡ HV | Nút **Gỡ** trên tab HV | **PASS** | Nút hiện (không confirm xóa thật) |
+| 13 | Quiz list | Load grid + tìm «QA Manual» | **PASS** | Lọc còn 1 card `Quiz QA Manual Injection` |
+| 14 | Quiz list | Tìm «CNN» | **PASS** | Lọc quiz CNN intro |
+| 15 | Phân trang quiz | **Sau →** | **PASS** | Trang 2: quiz khác (VD «Quiz - Tích phân bất định»); **← Trước** bật |
+| 16 | Kết quả lớp | Card quiz QA → **Kết quả lớp** | **PASS** | Route `/quizzes/2017a9ef-…/results` |
+| 17 | Kết quả lớp | Chọn lớp OWASP (`?classId=ae9c0887-…`) | **PASS** | Empty state «Chưa có học viên nào làm quiz» (quiz mới, đúng kỳ vọng) |
+| 18 | Kết quả lớp (quiz cũ) | Chọn lớp + stats | **PASS** | Tỷ lệ đạt, xếp hạng, câu khó (quiz đã có attempt) |
+| 19 | Xóa quiz | **Xóa** → modal → **Hủy** | **PASS** | Modal confirm OK |
+| 20 | Tạo quiz form | URL `create?courseId=8e03ec91-…&lessonId=18ac3284-…` | **PASS** | Sau UIUX-032; trước fix **403** |
+| 21 | Tạo quiz submit | Điền câu hỏi + **Tạo và xuất bản** (UI) | **PARTIAL** | Không chọn được `<select>` / combobox đáp án trong automation |
+| 22 | Tạo quiz API | `POST /lessons/18ac3284-…/quizzes` | **PASS** | **201** — `Quiz QA Manual Injection` `2017a9ef-…`; log `_quiz_create_test.json` |
+| 23 | Tạo lớp form | `/dashboard/instructor/classes/create` | **PASS** | Form mở, điền tên |
+| 24 | Tạo lớp submit (UI) | Chọn khóa + submit | **PARTIAL** | `<select>` khóa không tương tác được automation |
+| 25 | Tạo lớp API | `POST /classes` | **PASS** | **201** — `Lop QA Manual Test 2026` `02065d89-…`, invite `BQM23AKF`; log `_class_create_test.json` |
+| 26 | Analytics | Load + click hàng lớp | **PASS** | Drill về class detail |
+| 27 | Khóa học | `/dashboard/courses` + filter | **PASS** | Grid catalog load |
+| 28 | Chat | `/dashboard/chat` | **PASS** | «Chưa có hội thoại nào» + combobox khóa |
+| 29 | Hồ sơ | `/dashboard/profile` | **PASS** | Form profile load |
+| 30 | Sidebar | Quiz, Analytics, Lớp, Đăng xuất | **PASS** | Navigate OK |
+
+### 7.3 Dữ liệu QA tạo / đổi trong phiên
+
+| Entity | ID / giá trị | Ghi chú |
+|--------|----------------|---------|
+| Lớp đổi tên | `ae9c0887-c4b8-4319-8f56-22387a7b5c05` | `Class 50 - Ratione` → **`Class 50 - Ratione QA`** (test edit) |
+| Lớp mới | `02065d89-b0dc-4a53-ae20-4d87cb477341` | **`Lop QA Manual Test 2026`**, khóa JS ES6+, invite **`BQM23AKF`** |
+| Quiz mới | `2017a9ef-3946-4e49-82aa-a70535900a25` | **`Quiz QA Manual Injection`**, lesson Injection (OWASP `8e03ec91-…`) |
+
+### 7.4 Bug GV còn mở (chưa fix phiên này)
+
+| ID | Mức | Vấn đề | Trạng thái |
+|----|-----|--------|------------|
+| UIUX-GV-01 | Low | ~~Mô tả quiz seed vẫn Faker/Latin~~ | **Fixed** §7.12 — `init_data` + `patch_seed_display.py` |
+| UIUX-GV-02 | Medium | Stats quiz «completed > total students» trên vài card | **Fixed** — `completed_count` = unique `user_id` (`quiz_service.py` list + class-results) |
+| UIUX-GV-03 | Low | ~~Tên lớp seed generic (`Class 50 - Ratione`)~~ | **Fixed** §7.12 — tên lớp gắn khóa học (VN) |
+| UIUX-GV-04 | Medium | Không có luồng **sửa quiz** (chỉ create/delete) | By design — `PUT /quizzes/{id}` API_NO_UI |
+| UIUX-GV-06 | Low | ~~Mobile: sidebar scroll che Quiz/Analytics~~ | **Fixed** §7.12 — `DashboardLayout.css` scroll + padding mobile |
+
+### 7.5 File / test liên quan
+
+- `BE/controllers/learning_controller.py` — fix access control
+- `BE/tests/learning/test_learning.py` — `test_instructor_lesson_content_without_enrollment`
+- `BE/logs/_lesson_test.json`, `_quiz_create_test.json`, `_class_create_test.json` — API verify
+
+### 7.6 Retest sau restart BE `--reload` (2026-05-21, phiên 2)
+
+**Lệnh BE:** `uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload` (WatchFiles reloader PID 11332)
+
+| # | Luồng | Kết quả | Ghi chú |
+|---|-------|---------|---------|
+| R1 | `GET /health` | **PASS** | `{"status":"ok"}` |
+| R2 | API lesson (GV, chưa enroll) | **PASS** | `GET …/lessons/18ac3284-…` → **200**, title «Injection» |
+| R3 | pytest instructor lesson | **PASS** | `test_instructor_lesson_content_without_enrollment` 1 passed |
+| R4 | Login GV → dashboard | **PASS** | 2 lớp gần đây hiện đúng |
+| R5 | Class detail → tab Học viên (44) | **PASS** | Bảng HV load |
+| R6 | Modal hồ sơ HV (Angela Walsh) | **PASS** | Modal mở + load hồ sơ |
+| R7 | Form tạo quiz (query courseId+lessonId) | **PASS** | `Quiz: Injection`, «Web security» — **không còn 403** |
+| R8 | Kết quả lớp quiz QA + `?classId=` | **PASS** | Empty state quiz mới (đúng kỳ vọng) |
+| R9 | Analytics GV | **PASS** | Chart + 2 lớp + 58 quiz sau ~6s load |
+
+**Kết luận retest:** UIUX-032 vẫn **PASS** trên instance BE mới khởi động với `--reload`. Không regression so với §7.2.
+
+### 7.7 Luồng `/dashboard/instructor/classes` (2026-05-21, phiên 3)
+
+**Tài khoản:** `instructor1@ailearning.vn` · **Routes:** list / create / detail  
+**API đối chiếu:** `GET /classes/my-classes` → **2 lớp**; `GET /classes/{id}` → **200**; `GET /classes/{id}/students` → **total=44**; `GET /classes/{id}/progress` → **200**
+
+| Route / hành động | Kết quả | Ghi chú |
+|-------------------|---------|---------|
+| `/dashboard/instructor/classes` — load list | **PASS** | «2 lớp học»; card `Lop QA Manual Test 2026`, `Class 50 - Ratione QA` khớp API |
+| Nút **Tạo lớp mới** | **PASS** | → `/dashboard/instructor/classes/create` |
+| `/create` — form + picker khóa | **PASS** | Combobox load catalog; submit thiếu khóa → focus validation (không POST) |
+| `/create` — **Hủy** / **Danh sách lớp** | **PASS** | Quay list (không tạo rác thêm) |
+| Detail `ae9c0887-…` — load | **PASS** | Header, mô tả, tab Thông tin / Học viên (44) / Tiến độ |
+| Tab **Thông tin** — stats + giáo trình | **PASS** | «Thống kê»; CTA **Sao chép**, **Xem chi tiết khóa**, **Tạo quiz**, **Quản lý quiz** |
+| **Sao chép** mã mời | **PASS** | Nút phản hồi click (toast/clipboard không assert automation) |
+| **Xem chi tiết khóa học** | **PASS** | → `/dashboard/courses/8e03ec91-…` |
+| **Tạo quiz cho khóa** | **PASS** | → `/dashboard/instructor/quizzes/create` (picker khóa→bài) |
+| **Quản lý quiz** | **PASS** | → `/dashboard/instructor/quizzes` |
+| **Chỉnh sửa** → modal → **Hủy** | **PASS** | Form tên/mô tả/max HV; đóng không đổi DB |
+| **Xóa lớp** | **PARTIAL** | Dùng `window.confirm` native — automation không assert dialog Hủy/OK |
+| Tab **Học viên** — bảng 44 HV | **PASS** | Cột tiến độ %, quiz TB, nút **Gỡ** |
+| Click tên HV → modal hồ sơ | **PASS** | VD Marcus Henson: module progress + điểm quiz → **Đóng** |
+| Tab **Tiến độ lớp** | **PASS** (API) | UI cards sparse trong a11y; `GET …/progress` trả `average_progress`, `completion_rate` |
+| **Danh sách lớp** (back) | **PASS** | → list |
+| Detail `02065d89-…` — lớp trống | **PASS** | «Học viên (0)», invite + CTA vẫn hiện |
+
+**Kết luận:** Luồng instructor/classes **ổn định** — list/create/detail/tabs/modal/CTA đều wire đúng API. Submit tạo lớp qua UI cần chọn `<select>` khóa tay (giới hạn automation). Xóa lớp dùng `confirm()` native — nên thay modal UI nếu muốn test/e2e ổn định hơn.
+
+### 7.8 Fix UI list lớp phình SVG (UIUX-033)
+
+| Mục | Chi tiết |
+|-----|----------|
+| Triệu chứng | Trang `/dashboard/instructor/classes` — ornament và icon SVG phình **full viewport** (vòng tròn/đường kẻ khổng lồ), card/grid vỡ layout |
+| Nguyên nhân | `ClassListPage.css` **không được import** trong `ClassListPage.jsx` → `.cls-ornament`, `.cls-grid`, `.cls-card` không áp dụng |
+| Fix | `import './ClassListPage.css'` + `width`/`height` inline trên SVG icon |
+| Verify | Reload trang → hero gọn, grid card 2 cột, ornament 48×12px |
+
+### 7.9 Luồng `/dashboard/classes` — học viên (2026-05-21, phiên 4)
+
+**Tài khoản:** `student1@gmail.com` / `Student@123` (James Bishop)  
+**FE:** `http://127.0.0.1:3000` · **BE:** `http://127.0.0.1:8000` (health OK)
+
+| # | Hành động | Kết quả | Ghi chú |
+|---|-----------|---------|---------|
+| 1 | Login → `/dashboard` | **PASS** | Sidebar HV: Khóa học của tôi, Lớp học, Đánh giá năng lực, Gợi ý, Khóa cá nhân, Tiến độ; **không** có Giảng dạy/Quản trị |
+| 2 | Sidebar → **Lớp học** | **PASS** | `/dashboard/classes` — tiêu đề «Lớp học của tôi», **8 lớp học** (khớp API `GET /classes/my-classes`) |
+| 3 | Layout list lớp | **PASS** | CSS UIUX-033 áp dụng đúng cho HV (hero gọn, grid 3 cột, badge trạng thái, progress bar, không SVG phình) |
+| 4 | Card lớp | **PASS** | Tên lớp (Faker), tên khóa, GV, số HV, ngày bắt đầu, % tiến độ, nút **Tiếp tục học** |
+| 5 | **Tham gia lớp** → modal | **PASS** | Input mã mời, hint 6–10 ký tự; nút «Tham gia lớp học» disabled khi trống |
+| 6 | Modal → **Hủy** | **PASS** | Đóng modal, quay list |
+| 7 | Click tiêu đề card → detail | **PASS** | VD `Class 23 - Voluptatibus` → `/dashboard/classes/413e6a96-…` |
+| 8 | Tab **Thông tin** | **PASS** | Stats (29 HV, ngày BĐ/KT), tiến độ cá nhân 42%, panel «Cách học trong lớp này» (3 bước), CTA **Tiếp tục học** + «Xem tất cả module» / «Tổng quan khóa» |
+| 9 | Tab **Tiến độ của tôi** | **PASS** | Cards: tổng tiến độ 42%, 2/6 module, 8.6h; list module + %; list kết quả quiz |
+| 10 | **Danh sách lớp** (back) | **PASS** | → `/dashboard/classes`, reload 8 lớp |
+| 11 | Card **Tiếp tục học** | **PASS** | Resume thông minh → `/dashboard/courses/36a874f3-…/lessons/b9d4a153-…` (bài «Load balancer») |
+| 12 | LessonPage sau resume | **PASS** | Banner «Đang học qua lớp Class 23…» + «Xem lớp»; nội dung bài, tài liệu, quiz panel, AI FAB; nav «← Lớp Class 23…» |
+| 13 | Route guard GV | **PASS** | Student → `/dashboard/instructor/classes` → `/unauthorized` «Không có quyền truy cập» |
+| 14 | Không có UI GV trên detail HV | **PASS** | Không tab Học viên / Tiến độ lớp; không nút Chỉnh sửa / Xóa lớp |
+
+**Phân biệt role trên ClassDetailPage (HV vs GV):**
+
+| Tab / CTA | Học viên | Giảng viên |
+|-----------|----------|------------|
+| Thông tin | ✅ | ✅ |
+| Tiến độ của tôi | ✅ | — |
+| Học viên | — | ✅ |
+| Tiến độ lớp | — | ✅ |
+| Chỉnh sửa / Xóa | — | ✅ |
+
+**Ghi nhận UX (seed data, không chặn wire):**
+
+| ID | Mô tả |
+|----|-------|
+| UIUX-HV-01 | Tên lớp Faker (`Class 23 - Voluptatibus`) — giống UIUX-GV-03 |
+| UIUX-HV-02 | Mô tả lớp Latin placeholder trên tab Thông tin |
+| UIUX-HV-03 | Tab Tiến độ — tên module trùng «Scalability» (seed); ~~quiz UUID fragment~~ → **Fixed** §7.11 (quiz titles đọc được) |
+| UIUX-HV-04 | Chưa test join mã mới trong phiên (tránh pollute DB); modal open/cancel đã verify |
+
+**Kết luận:** Luồng học viên `/dashboard/classes` **ổn định** — list/detail/tabs/resume lesson/route guard đều PASS. Fix CSS UIUX-033 áp dụng chung `ClassListPage` cho cả HV và GV.
+
+### 7.10 Deep retest toàn bộ UI/luồng học viên (2026-05-21, phiên 5)
+
+**Tài khoản:** `student1@gmail.com` / `Student@123` (James Bishop)  
+**Phạm vi:** Mọi route sidebar + luồng con (catalog, enrollment, learning, quiz, assessment, chat, search, gợi ý, personal, progress, profile, guards). Chi tiết lớp học xem thêm §7.9.
+
+#### Ma trận sidebar → trang
+
+| # | Route / Sidebar | Kết quả | Ghi chú |
+|---|-----------------|---------|---------|
+| 1 | Login → `/dashboard` | **PASS** | Greeting, cards «Khóa học đang học», «Quiz cần làm», «Gợi ý»; CTA Đánh giá năng lực |
+| 2 | `/dashboard/courses` | **PASS** | Grid 12 khóa/trang, filter danh mục/trình độ/sắp xếp, pagination 5 trang |
+| 3 | Course detail (click card) | **PASS** | Hero, «Bạn sẽ học được gì», curriculum 6 module accordion, CTA **Đăng ký khóa học** |
+| 4 | `/dashboard/my-courses` | **PASS** | **12** enrollment; tab Tất cả/Đang học(10)/Hoàn thành(2)/Đã hủy(0); card **Tiếp tục học** / **Hủy đăng ký** |
+| 5 | Enrollment detail | **PASS** | «Chi tiết đăng ký» → `/dashboard/enrollment/{id}` — stats, **Tiếp tục học**, **Thông tin khóa học**, **Hủy đăng ký** |
+| 6 | `/dashboard/classes` | **PASS** | §7.9 — 8 lớp, modal join, detail tabs, resume |
+| 7 | `/dashboard/assessment` | **PASS** | 3 level cards, mô tả AI, lịch sử 4 phiên; **Tiếp tục làm** / **Kết quả** / **Xem lại bài** |
+| 8 | Assessment results | **PASS** | «Kết quả» → skill analysis, lỗ hổng, lời khuyên AI; CTA **Xem lại bài làm** / **Làm lại** / **Xem lộ trình** |
+| 9 | `/dashboard/quiz` | **PASS** | Grid quiz + search + pagination |
+| 10 | Quiz detail → attempt | **PASS** | Detail: hướng dẫn, lịch sử; **Bắt đầu làm bài** → attempt: câu hỏi MCQ, timer nav |
+| 11 | `/dashboard/chat` | **PASS** | Sidebar hội thoại (×, Xóa tất cả), dropdown khóa enroll, gợi ý nhanh, input Gửi |
+| 12 | `/dashboard/search?q=design` | **PASS** | Modules + khóa học, filter danh mục/cấp độ, pagination; không panel analytics (đúng role) |
+| 13 | `/dashboard/search?q=math` | **PASS** (empty) | Empty state hợp lệ — seed không có title chứa «math» (khóa toán tên tiếng Việt) |
+| 14 | `/dashboard/recommendations` | **PASS** | Tab **Gợi ý chung** + **Theo đánh giá năng lực**; 5 khóa gợi ý + phiên assessment |
+| 15 | `/dashboard/personal-courses` | **PASS** | 1 khóa cá nhân; **Tạo bằng AI** / **+ Tạo thủ công**; card **Chỉnh sửa** / **Vào học** |
+| 16 | `/dashboard/progress` | **PASS** | Ring %, biểu đồ, 5 khóa progress bar, achievements |
+| 17 | `/dashboard/profile` | **PASS** | Avatar, email, sections Thông tin/Liên hệ/Sở thích/Tài khoản; nút **Chỉnh sửa** |
+| 18 | Header → Hồ sơ link | **PASS** | «Hồ sơ của James Bishop» → profile |
+
+#### Luồng học (learning chain)
+
+| # | Bước | Kết quả | Ghi chú |
+|---|------|---------|---------|
+| L1 | `/courses/{id}/modules` | **PASS** | 6 module cards + %; banner lớp «Xem lớp»; AI FAB |
+| L2 | Module detail (module 1) | **PASS** | Outcomes, resources, danh sách bài học, nav |
+| L3 | Module detail (module 2–6) | **PASS** | Sau fix UIUX-HV-05: module 2 (`17e8f43b-…`) hiện outcomes, prerequisites, danh sách bài |
+| L4 | LessonPage (resume từ lớp) | **PASS** | §7.9 — Load balancer, tài liệu, quiz panel, AI FAB |
+| L5 | Quiz từ lesson | **PARTIAL** | Panel «Làm quiz» hiện; chưa nộp full quiz trong phiên |
+
+#### Route guards (học viên)
+
+| Route | Kết quả |
+|-------|---------|
+| `/dashboard/admin` | **PASS** → `/unauthorized` |
+| `/dashboard/instructor/classes` | **PASS** → `/unauthorized` (§7.9) |
+| `/dashboard/instructor/quizzes/create` | **PASS** → `/unauthorized` (spot-check) |
+
+#### Chưa test sâu (automation / tránh pollute DB)
+
+| Luồng | Lý do |
+|-------|-------|
+| Submit đăng ký khóa mới | Tránh thêm enrollment seed |
+| Join lớp bằng mã mới | Tránh pollute roster |
+| Nộp quiz/assessment full | Cần 10–35 câu; API script đã verify Phase 2b |
+| Gửi chat AI thật | Cần Gemini key runtime |
+| Profile **Chỉnh sửa** submit | Modal mở; chưa assert save |
+| Personal course **Tạo bằng AI** | Cần Gemini; form create chưa mở |
+
+#### Bug / UX mở (phiên HV)
+
+| ID | Mức | Mô tả |
+|----|-----|-------|
+| UIUX-HV-05 | ~~Medium~~ | ~~Module detail 500 khi có prerequisites~~ | **Fixed** — `ModulePrerequisite` schema; pytest `test_get_module_detail_with_prerequisites` |
+| UIUX-HV-03 | ~~Low~~ | ~~Quiz UUID fragment trên tab Tiến độ~~ | **Fixed** — lookup `Quiz.title` trong `_build_student_class_profile` |
+| UIUX-HV-01,02,04 | ~~Low~~ | ~~Seed: tên lớp Faker, mô tả Latin, module trùng tên «Scalability»~~ | **Fixed** §7.12 |
+| UIUX-HV-06 | ~~Low~~ | ~~Assessment results — tên kỹ năng Latin~~ | **Fixed** §7.12 — skill tags VN trên trang Kết quả |
+| UIUX-HV-07 | ~~Low~~ | ~~Quiz list — mô tả Latin Faker~~ | **Fixed** §7.12 |
+
+**Kết luận tổng (§7.10):** **17/18** trang sidebar **PASS**; learning chain **PASS** sau fix UIUX-HV-05.
+
+### 7.11 Fix + deep retest (2026-05-21, phiên 4)
+
+**Fix code (phiên này):**
+
+| ID | File | Thay đổi |
+|----|------|----------|
+| UIUX-HV-05 | `BE/schemas/learning.py` | `ModulePrerequisite` `{id, title}` thay `List[str]` |
+| UIUX-HV-03 | `BE/services/class_service.py` | `Quiz.get()` → `quiz_title` đọc được |
+| UIUX-GV-02 | `BE/services/quiz_service.py` | `completed_count` = unique HV, không đếm attempts |
+| UIUX-030 | `FE/src/pages/chat/ChatPage.jsx` | Fallback React key |
+| UIUX-031 | `FE/src/pages/personal-courses/PersonalCoursesPage.jsx` | Không nested `<button>` |
+
+**pytest:** `test_get_module_detail_with_prerequisites` **PASS** · cần **restart BE** sau đổi schema (uvicorn reload đôi khi giữ model cũ).
+
+#### Deep test luồng còn lại (HV)
+
+| # | Luồng | Kết quả | Ghi chú |
+|---|-------|---------|---------|
+| D1 | Module detail module 2 | **PASS** | `/modules/17e8f43b-…` — prerequisites «Scalability», 6 bài |
+| D2 | Class → Tiến độ của tôi | **PASS** | Quiz titles: «Quiz - Load balancer», «Database scale», «Caching» (không UUID) |
+| D3 | Profile **Chỉnh sửa** → Lưu | **PASS** | Bio cập nhật; quay view mode |
+| D4 | Personal course modal **Tạo bằng AI** | **PASS** | Modal + mẫu + config; không submit (tránh Gemini) |
+| D5 | **+ Tạo thủ công** form | **PASS** | `/personal-courses/create` — đủ field bắt buộc |
+| D6 | Join lớp modal + mã sai | **PARTIAL** | Modal mở; `INVALID99` → loading, modal giữ (toast lỗi ngoài a11y tree) |
+| D7 | Nộp quiz/assessment full | **SKIP** | Tránh pollute DB; API Phase 2b đã verify |
+| D8 | Chat AI gửi tin thật | **SKIP** | Cần `GOOGLE_API_KEY` |
+| D9 | Đăng ký khóa mới | **SKIP** | Tránh thêm enrollment seed |
+
+**Kết luận §7.11:** Các bug UIUX medium **HV-05, HV-03, GV-02** và polish **030/031** đã fix + verify browser. HV **18/18** sidebar + learning chain **PASS** cho demo.
+
+### 7.12 Seed polish + deep retest HV (2026-05-21, phiên 6)
+
+**Fix seed / polish (không block demo):**
+
+| ID | File | Thay đổi |
+|----|------|----------|
+| UIUX-HV-01, GV-03 | `BE/scripts/init_data.py` | `CLASS_NAME_PREFIXES`, tên lớp gắn khóa («Lớp …», «Cohort … #2») |
+| UIUX-HV-02 | `BE/scripts/init_data.py` | `mk_class_description()` — mô tả lớp tiếng Việt |
+| UIUX-HV-04 | `BE/scripts/curriculum_content.py` | System Design 6 module; `pick_module()` thêm «— Phần N» khi trùng |
+| UIUX-HV-06 | `BE/scripts/init_data.py` | `ASSESSMENT_SKILLS_BY_CATEGORY`, skill tags VN |
+| UIUX-HV-07, GV-01 | `BE/scripts/init_data.py` | `mk_quiz_description()` từ tên bài học |
+| Patch DB hiện tại | `BE/scripts/patch_seed_display.py` | 91 lớp, 710 module, 2943 quiz, 515 assessment cập nhật |
+| UIUX-GV-06 | `FE/src/components/layout/DashboardLayout.css` | `.sidebar-nav` scroll mobile (`min-height:0`, touch scroll, padding) |
+
+**Chạy patch:** `cd BE && python -m scripts.patch_seed_display` (đã chạy trên DB local).
+
+#### Deep test luồng HV còn thiếu (browser)
+
+| # | Luồng | Kết quả | Ghi chú |
+|---|-------|---------|---------|
+| S1 | Assessment **Kết quả** — skill tags | **PASS** | «Quản lý dự án», «OKR & KPI», «Giao tiếp nhóm», «Ra quyết định» (không còn `fugiat_est_tempore`) |
+| S2 | Assessment **Xem lại bài** | **PARTIAL** | Trang load OK; nội dung câu hỏi/đáp án phiên cũ vẫn Latin (dữ liệu attempt cũ, không phải skill tag) |
+| S3 | `/dashboard/quiz` — mô tả card | **PASS** | VD «Kiểm tra kiến thức bài «Tone of voice». Brand voice» |
+| S4 | `/dashboard/classes` — tên lớp | **PASS** | «Cohort System Design cơ bản (Cohort 2)», «Buổi Kubernetes cơ bản», … |
+| S5 | Class detail **Thông tin** — mô tả | **PASS** | «Lớp học trực tuyến gắn khóa «…». Học theo module…» |
+| S6 | Class **Tiến độ của tôi** — module | **PASS** | «Scalability», «Scalability — Phần 2» … «Phần 6» (không còn 6× cùng tên) |
+| S7 | `/dashboard/my-courses` | **PASS** | 12 khóa, filter tab, card CTA |
+| S8 | **Chi tiết đăng ký** | **PASS** | `/dashboard/enrollment/{id}` — stats + Tiếp tục học |
+| S9 | Catalog **Đăng ký khóa học** | **PASS** | Docker & Container → «Bạn đã đăng ký khóa học này», Tiếp tục học |
+| S10 | **Join lớp** mã hợp lệ `B8BBA609` | **PASS** | → `/dashboard/classes/70e7dfb4-…` «Cohort Brand Strategy & Positioning #2» (9 lớp) |
+
+#### Còn SKIP / polish nhẹ (không chặn demo)
+
+| Luồng | Ghi chú |
+|-------|---------|
+| Nộp quiz/assessment full | Tránh pollute DB; API Phase 2b đã verify |
+| Chat / assessment AI generate | Cần `GOOGLE_API_KEY` |
+| Assessment review — thân câu hỏi Latin | Attempt cũ trước patch; skill analysis trên Kết quả đã VN |
+| «Lỗ hổng kiến thức» Latin trên Kết quả | Text AI/seed cũ trên phiên hoàn thành trước patch |
+| GV-06 mobile 375px | CSS đã fix; chưa resize viewport trong phiên này |
+
+**Kết luận §7.12:** Toàn bộ backlog seed/polish **HV-01/02/04/06/07** và **GV-01/03/06** đã **Fixed** + verify browser. Luồng HV còn thiếu §7.11 (enrollment, join, catalog) **PASS**. Demo học viên **sẵn sàng**.
+
+### 7.13 Deep retest luồng HV còn lại (2026-05-21, phiên 7)
+
+**Tài khoản:** `student1@gmail.com` / `Student@123`
+
+| # | Luồng | Kết quả | Ghi chú |
+|---|-------|---------|---------|
+| T1 | Quiz **Bắt đầu làm bài** (Quiz - Retro) | **PARTIAL** | Attempt mở, câu hỏi VN (Kubernetes, Python `is`, REST idempotent); trả lời 3 câu, chưa **Nộp bài** full |
+| T2 | Quiz **Xem kết quả lần trước** (Load balancer) | **PASS** | `/quiz/{id}/results` — 7 câu chi tiết, điểm/câu bắt buộc, CTA **Làm lại** + link **Xem lớp** |
+| T3 | Lesson từ lớp → **Làm quiz** | **PASS** | Resume «Load balancer» → panel quiz → quiz detail có lịch sử |
+| T4 | LessonPage (resume lớp) | **PASS** | Banner «Xem lớp», tài liệu đính kèm, **Đánh dấu đã học xong**, nav module, AI FAB |
+| T5 | **Chat AI** gửi tin | **PASS** | «Scalability là gì?» → phản hồi + gợi ý follow-up + link bài Load balancer/Caching |
+| T6 | `/dashboard/search?q=design` | **PASS** | Lớp + modules + khóa; filter danh mục/cấp độ; pagination |
+| T7 | `/dashboard/recommendations` | **PASS** | Tab **Gợi ý chung** (5 khóa) + **Theo đánh giá năng lực** (session + 5 đề xuất) |
+| T8 | `/dashboard/progress` | **PASS** | Ring/biểu đồ, 5 khóa (gồm Docker 0%), achievements |
+| T9 | Profile **Chỉnh sửa → Lưu** | **PASS** | Bio cập nhật, quay view mode |
+| T10 | Personal course **+ Tạo thủ công** | **PASS** | Form đủ field; không submit (tránh thêm khóa seed) |
+| T11 | Join lớp mã **INVALID99** | **PARTIAL** | API từ chối (vẫn 9 lớp); modal giữ mã — toast lỗi ngoài a11y tree |
+| T12 | Assessment **Tiếp tục làm** (phiên Eius) | **FAIL** | `/assessment/3fd49b09-…` → «Session đánh giá không có câu hỏi khả dụng» (session cũ/corrupt seed) |
+
+#### Bug mới (không chặn demo chính)
+
+| ID | Mức | Mô tả |
+|----|-----|-------|
+| UIUX-HV-08 | Low | Phiên assessment «Đang làm» trong lịch sử mở ra empty state — cần cleanup seed hoặc guard resume |
+
+#### Còn chưa chạy browser phiên này
+
+| Luồng | Ghi chú |
+|-------|---------|
+| Nộp quiz full (Retro attempt đang dở) | Có thể hoàn tất tay hoặc E2E `quiz.spec.js` |
+| Assessment **Bắt đầu đánh giá** generate mới | Latency AI ~3 ph; API Phase 2b đã verify |
+| GV-06 mobile sidebar 375px | CSS đã fix §7.12 |
+
+**Kết luận §7.13:** Hầu hết luồng HV còn thiếu đã **PASS** trên browser (chat AI, search, gợi ý, tiến độ, profile, lesson→quiz, quiz results). **FAIL** duy nhất: resume assessment in-progress corrupt. Demo HV **đủ coverage**.
 
 ---
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -36,6 +36,7 @@ const ClassDetailPage = () => {
   const [classProgress, setClassProgress] = useState(null)
   const [activeTab, setActiveTab] = useState('info')
   const [loading, setLoading] = useState(true)
+  const [studentsLoading, setStudentsLoading] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editForm, setEditForm] = useState({ name: '', description: '', max_students: 30 })
   const [saving, setSaving] = useState(false)
@@ -45,29 +46,46 @@ const ClassDetailPage = () => {
   const [studentDetailLoading, setStudentDetailLoading] = useState(false)
   const [myProgress, setMyProgress] = useState(null)
   const [myProgressLoading, setMyProgressLoading] = useState(false)
+  const fetchSeqRef = useRef(0)
 
   const fetchData = useCallback(async () => {
+    const seq = ++fetchSeqRef.current
+    setLoading(true)
+    setStudentsLoading(false)
     try {
-      setLoading(true)
       const detail = await classService.getClassDetail(classId)
+      if (seq !== fetchSeqRef.current) return
       setClassData(detail)
-
-      if (isInstructor) {
-        const [studentList, progress] = await Promise.all([
-          classService.getStudents(classId).catch(() => ({ data: [] })),
-          classService.getClassProgress(classId).catch(() => null),
-        ])
-        setStudents(studentList.data || [])
-        setClassProgress(progress)
-      } else {
-        setStudents([])
-        setClassProgress(null)
-      }
     } catch {
+      if (seq !== fetchSeqRef.current) return
       toast.error('Không thể tải thông tin lớp học')
       setClassData(null)
+      return
     } finally {
-      setLoading(false)
+      if (seq === fetchSeqRef.current) {
+        setLoading(false)
+      }
+    }
+
+    if (!isInstructor || seq !== fetchSeqRef.current) {
+      setStudents([])
+      setClassProgress(null)
+      return
+    }
+
+    setStudentsLoading(true)
+    try {
+      const [studentList, progress] = await Promise.all([
+        classService.getStudents(classId).catch(() => ({ data: [] })),
+        classService.getClassProgress(classId).catch(() => null),
+      ])
+      if (seq !== fetchSeqRef.current) return
+      setStudents(studentList?.data || [])
+      setClassProgress(progress)
+    } finally {
+      if (seq === fetchSeqRef.current) {
+        setStudentsLoading(false)
+      }
     }
   }, [classId, isInstructor])
 
@@ -298,6 +316,55 @@ const ClassDetailPage = () => {
               ))}
             </div>
 
+            {isInstructor && classData.course?.modules?.length > 0 && (
+              <div className="cld-curriculum">
+                <h2 className="cld-section-title">
+                  Giáo trình khóa học
+                  {classData.course.module_count != null && (
+                    <span className="cld-curriculum__meta">
+                      {classData.course.module_count} module
+                      {classData.course.level ? ` · ${classData.course.level}` : ''}
+                    </span>
+                  )}
+                </h2>
+                {classData.course.description && (
+                  <p className="cld-desc cld-curriculum__desc">{classData.course.description}</p>
+                )}
+                <ul className="cld-module-list">
+                  {classData.course.modules.map((mod) => (
+                    <li key={mod.id} className="cld-module-list__item cld-module-list__item--stack">
+                      <div>
+                        <span className="cld-module-list__title">
+                          Module {mod.order}: {mod.title}
+                        </span>
+                        <span className="cld-module-list__meta">
+                          {mod.lesson_count ?? mod.lessons?.length ?? 0} bài
+                          {mod.total_duration_minutes
+                            ? ` · ~${Math.round(mod.total_duration_minutes)} phút`
+                            : ''}
+                        </span>
+                      </div>
+                      {mod.lessons?.length > 0 && (
+                        <ul className="cld-lesson-list">
+                          {mod.lessons.map((les) => (
+                            <li key={les.id}>
+                              Bài {les.order}: {les.title}
+                              {les.content_type === 'video' ? ' (video)' : ''}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                {courseId && (
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/dashboard/courses/${courseId}`)}>
+                    Mở chi tiết khóa học
+                  </Button>
+                )}
+              </div>
+            )}
+
             {!isInstructor && (
               <div className="cld-student-learn">
                 <h2 className="cld-section-title">Cách học trong lớp này</h2>
@@ -327,7 +394,7 @@ const ClassDetailPage = () => {
               </div>
             )}
 
-            {courseId && (
+            {courseId && !isInstructor && (
               <div className="cld-course-cta">
                 <Button onClick={() => goToCourseLearning(true)}>
                   {(classData.my_progress ?? 0) > 0 ? 'Tiếp tục học' : 'Bắt đầu học'}
@@ -343,6 +410,20 @@ const ClassDetailPage = () => {
                 </Button>
                 <Button variant="outline" onClick={() => navigate(`/dashboard/courses/${courseId}`)}>
                   Tổng quan khóa
+                </Button>
+              </div>
+            )}
+
+            {courseId && isInstructor && (
+              <div className="cld-course-cta">
+                <Button variant="outline" onClick={() => navigate(`/dashboard/courses/${courseId}`)}>
+                  Xem chi tiết khóa học
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/dashboard/instructor/quizzes/create')}>
+                  Tạo quiz cho khóa
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/dashboard/instructor/quizzes')}>
+                  Quản lý quiz
                 </Button>
               </div>
             )}
@@ -368,7 +449,9 @@ const ClassDetailPage = () => {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.3 }}
           >
-            {students.length === 0 ? (
+            {studentsLoading && students.length === 0 ? (
+              <StateView type="loading" message="Đang tải danh sách học viên…" />
+            ) : students.length === 0 ? (
               <StateView type="empty" message="Chưa có học viên nào trong lớp" />
             ) : (
               <div className="cld-table-wrap">

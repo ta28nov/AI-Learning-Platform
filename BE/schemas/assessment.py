@@ -38,6 +38,11 @@ class AssessmentGenerateRequest(BaseModel):
     subject: str = Field(..., description="Chủ đề: Python, JavaScript, Algebra, English...")
     level: LevelEnum = Field(..., description="Mức độ: Beginner|Intermediate|Advanced")
     focus_areas: Optional[List[str]] = Field(default=None, description="Các chủ đề con cụ thể (tùy chọn)")
+    custom_goals: Optional[str] = Field(
+        default=None,
+        max_length=500,
+        description="Mục tiêu đánh giá tự do do học viên mô tả (tùy chọn)",
+    )
 
 
 class AssessmentQuestion(BaseModel):

@@ -47,7 +47,7 @@ const PRIMARY_NAV = [
     to: '/dashboard/quiz',
     label: 'Bài kiểm tra',
     Icon: QuizIcon,
-    isActive: (p) => p.startsWith('/dashboard/quiz'),
+    isActive: (p) => p.startsWith('/dashboard/quiz') || p.startsWith('/dashboard/instructor/quizzes'),
   },
   {
     to: '/dashboard/chat',
@@ -86,10 +86,22 @@ const SECONDARY_NAV = [
 
 const INSTRUCTOR_NAV = [
   {
-    to: '/dashboard/instructor',
-    label: 'Giảng dạy',
-    Icon: InstructorIcon,
-    isActive: (p) => p.startsWith('/dashboard/instructor'),
+    to: '/dashboard/instructor/classes',
+    label: 'Lớp học',
+    Icon: ClassesIcon,
+    isActive: (p) => p.startsWith('/dashboard/instructor/classes'),
+  },
+  {
+    to: '/dashboard/instructor/quizzes',
+    label: 'Quiz',
+    Icon: QuizIcon,
+    isActive: (p) => p.startsWith('/dashboard/instructor/quizzes') || p.startsWith('/dashboard/quiz'),
+  },
+  {
+    to: '/dashboard/instructor/analytics',
+    label: 'Analytics',
+    Icon: ProgressIcon,
+    isActive: (p) => p.startsWith('/dashboard/instructor/analytics'),
   },
 ]
 
@@ -118,7 +130,7 @@ const Sidebar = ({ onLogout }) => {
 
   const visiblePrimaryNav = (role === 'student'
     ? PRIMARY_NAV
-    : PRIMARY_NAV.filter((item) => !['/dashboard/my-courses', '/dashboard/assessment'].includes(item.to))
+    : PRIMARY_NAV.filter((item) => !['/dashboard/my-courses', '/dashboard/assessment', '/dashboard/quiz'].includes(item.to))
   ).filter((item) => !item.roles || item.roles.includes(role))
 
   const visibleSecondaryNav = role === 'student'

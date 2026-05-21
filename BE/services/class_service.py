@@ -28,6 +28,37 @@ def _lesson_progress_status(lp: Any) -> Optional[str]:
     return None
 
 
+def _course_modules_summary(course: Optional[Course]) -> List[Dict]:
+    """Danh sách module/lesson tóm tắt cho UI lớp học (giáo trình khóa nền)."""
+    if not course or not getattr(course, "modules", None):
+        return []
+    items = []
+    for m in sorted(course.modules, key=lambda x: x.order):
+        lessons = m.lessons or []
+        items.append(
+            {
+                "id": m.id,
+                "title": m.title,
+                "description": m.description,
+                "order": m.order,
+                "lesson_count": len(lessons),
+                "total_duration_minutes": m.total_duration_minutes
+                or sum((l.duration_minutes or 0) for l in lessons),
+                "lessons": [
+                    {
+                        "id": l.id,
+                        "title": l.title,
+                        "order": l.order,
+                        "duration_minutes": l.duration_minutes or 0,
+                        "content_type": l.content_type or "text",
+                    }
+                    for l in sorted(lessons, key=lambda x: x.order)
+                ],
+            }
+        )
+    return items
+
+
 async def _quiz_attempts_for_course(student_ids: List[str], course_id: str) -> List[QuizAttempt]:
     if not student_ids:
         return []
@@ -86,7 +117,10 @@ async def _build_student_class_profile(cls: Class, student_id: str) -> Dict:
     quiz_scores = []
     for attempt in quiz_attempts:
         quiz_title = f"Quiz {attempt.quiz_id[:8]}"
-        if course:
+        quiz_doc = await Quiz.get(attempt.quiz_id)
+        if quiz_doc and quiz_doc.title:
+            quiz_title = quiz_doc.title
+        elif course:
             for module in course.modules:
                 module_quiz_id = getattr(module, "default_quiz_id", None)
                 if not module_quiz_id:
@@ -326,6 +360,7 @@ async def list_my_classes(
             "name": cls.name,
             "course_id": cls.course_id,
             "course_title": course.title if course else "Unknown",
+            "module_count": len(course.modules) if course and course.modules else 0,
             "instructor_name": instructor.full_name if instructor else "Giảng viên",
             "student_count": student_count_label,
             "status": cls.status,
@@ -396,6 +431,9 @@ async def get_class_detail(class_id: str, user_id: str, role: str) -> Dict:
                 "id": cls.course_id,
                 "title": course.title if course else "Unknown",
                 "module_count": module_count,
+                "description": course.description if course else "",
+                "level": course.level if course else None,
+                "modules": _course_modules_summary(course),
             },
             "invite_code": None,
             "instructor_name": instructor_name,
@@ -465,6 +503,9 @@ async def get_class_detail(class_id: str, user_id: str, role: str) -> Dict:
             "id": cls.course_id,
             "title": course.title if course else "Unknown",
             "module_count": module_count,
+            "description": course.description if course else "",
+            "level": course.level if course else None,
+            "modules": _course_modules_summary(course),
         },
         "invite_code": cls.invite_code,
         "instructor_name": instructor_name,

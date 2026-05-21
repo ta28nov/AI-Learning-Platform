@@ -224,3 +224,29 @@
   max-width: 240px;
   line-height: 1.4;
 }
+
+.asp-step__hint {
+  font-size: 0.82rem;
+  color: var(--ink-400);
+  margin: 0 0 var(--space-3);
+  line-height: 1.5;
+}
+
+.asp-goals-textarea {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  resize: vertical;
+  min-height: 100px;
+  background: var(--surface-1);
+  color: var(--ink-900);
+}
+.asp-goals-textarea:focus {
+  outline: none;
+  border-color: var(--gold-500);
+  box-shadow: 0 0 0 3px rgba(var(--gold-500-rgb, 212, 175, 55), 0.15);
+}

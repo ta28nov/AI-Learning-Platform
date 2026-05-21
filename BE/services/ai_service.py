@@ -29,7 +29,8 @@ async def generate_assessment_questions(
     subject: str,
     level: str,
     count: int = 10,
-    focus_areas: Optional[List[str]] = None
+    focus_areas: Optional[List[str]] = None,
+    custom_goals: Optional[str] = None,
 ) -> List[Dict]:
     """
     Tạo câu hỏi đánh giá năng lực sử dụng Google Gemini
@@ -73,12 +74,13 @@ async def generate_assessment_questions(
         hard_count = count - easy_count - medium_count
     
     focus_areas_str = f"\n- Tập trung vào: {', '.join(focus_areas)}" if focus_areas else ""
+    goals_str = f"\n- Mục tiêu học viên mô tả: {custom_goals.strip()}" if custom_goals and custom_goals.strip() else ""
     
     prompt = f"""
 Tạo {total_questions} câu hỏi đánh giá năng lực cho:
 - Danh mục: {category}
 - Chủ đề: {subject}
-- Mức độ: {level}{focus_areas_str}
+- Mức độ: {level}{focus_areas_str}{goals_str}
 
 Phân bổ độ khó CHÍNH XÁC:
 - {easy_count} câu EASY (20%): Kiến thức nền tảng cơ bản
@@ -834,7 +836,7 @@ async def generate_course_from_prompt(
         def _ai_log(message: str) -> None:
             try:
                 print(message, flush=True)
-            except UnicodeEncodeError:
+            except (UnicodeEncodeError, OSError):
                 print(message.encode("ascii", errors="replace").decode("ascii"), flush=True)
 
         # Build prompt for AI

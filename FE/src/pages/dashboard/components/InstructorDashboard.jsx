@@ -24,7 +24,7 @@ const InstructorDashboard = ({ data }) => {
           {(data?.recent_classes || []).length > 0 ? (
             data.recent_classes.map((cls) => (
               <button key={cls.class_id} className="dash-class-card" onClick={() => navigate(`/dashboard/instructor/classes/${cls.class_id}`)}>
-                <h4>{cls.name}</h4>
+                <h4>{cls.class_name || cls.name}</h4>
                 <div className="dash-class-card__meta">
                   <span>{cls.student_count || 0} học viên</span>
                   <span className={`dash-class-card__status dash-class-card__status--${cls.status}`}>
@@ -50,7 +50,8 @@ const InstructorDashboard = ({ data }) => {
         <div className="dash-quick-actions">
           <Link to="/dashboard/instructor/classes/create" className="dash-quick-card"><span>Tạo lớp học</span></Link>
           <Link to="/dashboard/courses" className="dash-quick-card"><span>Khóa học</span></Link>
-          <Link to="/dashboard/personal-courses" className="dash-quick-card"><span>Tạo khóa học AI</span></Link>
+          <Link to="/dashboard/instructor/quizzes" className="dash-quick-card"><span>Quản lý quiz</span></Link>
+          <Link to="/dashboard/instructor/analytics" className="dash-quick-card"><span>Analytics</span></Link>
         </div>
       </motion.section>
     </>

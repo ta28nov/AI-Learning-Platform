@@ -1,5 +1,34 @@
+# Dependencies
 node_modules/
+package-lock.json
+yarn.lock
+
+# Test results
 test-results/
 playwright-report/
 blob-report/
+
+# Playwright
 .playwright/
+
+# Debug và log files
+_*.txt
+_*.json
+_*.log
+_phase4_playwright_last.log
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

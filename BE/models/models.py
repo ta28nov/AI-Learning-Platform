@@ -400,6 +400,7 @@ class AssessmentSession(Document):
     subject: str = Field(..., description="Chủ đề: Python, JavaScript, Algebra, English...")
     level: str = Field(..., description="Mức độ: Beginner|Intermediate|Advanced")
     focus_areas: List[str] = Field(default_factory=list, description="Các chủ đề con cụ thể")
+    custom_goals: Optional[str] = Field(None, description="Mục tiêu đánh giá tự do từ học viên")
     total_questions: int = Field(..., description="Số lượng câu hỏi được sinh")
     time_limit_minutes: int = Field(..., description="Thời gian làm bài (phút)")
     

@@ -144,10 +144,22 @@ const PersonalCoursesPage = () => {
             <Card
               hover
               className="personal-course-card"
-              onClick={() => handleOpenPersonalCourse(course)}
             >
               <CardBody>
-                <h3 className="personal-course-card__title">{course.title}</h3>
+                <h3
+                  className="personal-course-card__title personal-course-card__title--clickable"
+                  onClick={() => handleOpenPersonalCourse(course)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleOpenPersonalCourse(course)
+                    }
+                  }}
+                >
+                  {course.title}
+                </h3>
                 {course.description && (
                   <p className="personal-course-card__desc">
                     {course.description.substring(0, 100)}

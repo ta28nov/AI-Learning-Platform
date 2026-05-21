@@ -44,6 +44,18 @@ from models.models import (
 )
 
 
+from scripts.curriculum_content import (
+    get_course_blueprint,
+    get_course_learning_outcomes,
+    get_course_preview_url,
+    get_course_prerequisites,
+    get_course_thumbnail,
+    get_lesson_video_url,
+    get_module_learning_outcomes,
+    pick_lesson,
+    pick_module,
+)
+
 fake = Faker("vi_VN")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -371,6 +383,58 @@ QUIZ_FILL_IN_BLANK_POOL: List[Tuple[str, str]] = [
     ("Trong bash, `$?` chứa mã thoát của ____ vừa chạy.", "command"),
 ]
 
+ASSESSMENT_SKILLS_BY_CATEGORY: Dict[str, List[str]] = {
+    "Programming": ["Python cơ bản", "Cấu trúc dữ liệu", "Git & workflow", "Debug & testing"],
+    "Data Science": ["Phân tích dữ liệu", "SQL truy vấn", "Machine Learning", "Trực quan hóa"],
+    "Business": ["Quản lý dự án", "Giao tiếp nhóm", "OKR & KPI", "Ra quyết định"],
+    "Languages": ["Đọc hiểu tài liệu", "Viết kỹ thuật", "Thuyết trình", "Từ vựng chuyên ngành"],
+    "Math": ["Đại số", "Xác suất thống kê", "Giải tích", "Tư duy logic"],
+}
+
+ASSESSMENT_QUESTIONS_BY_DIFFICULTY: Dict[str, List[str]] = {
+    "easy": [
+        "Biến trong Python dùng để lưu trữ gì?",
+        "HTTP status 200 nghĩa là gì?",
+        "Git commit dùng để làm gì?",
+        "Hàm `len()` trong Python trả về gì?",
+    ],
+    "medium": [
+        "Sự khác nhau giữa list và tuple trong Python là gì?",
+        "Khi nào nên dùng index trong cơ sở dữ liệu?",
+        "REST API idempotent nghĩa là gì?",
+        "Cross-validation trong ML dùng để làm gì?",
+    ],
+    "hard": [
+        "Giải thích trade-off giữa consistency và availability trong CAP.",
+        "Phân biệt optimistic và pessimistic locking.",
+        "Khi nào chọn microservices thay vì monolith?",
+        "Giải thích overfitting và cách giảm thiểu.",
+    ],
+}
+
+CLASS_NAME_PREFIXES = ["Lớp", "Nhóm học", "Cohort", "Buổi"]
+
+
+def pick_assessment_skill(category: str) -> str:
+    pool = ASSESSMENT_SKILLS_BY_CATEGORY.get(category) or ASSESSMENT_SKILLS_BY_CATEGORY["Programming"]
+    return random.choice(pool)
+
+
+def mk_class_description(course_title: str) -> str:
+    return (
+        f"Lớp học trực tuyến gắn khóa «{course_title}». "
+        "Học theo module, làm quiz và theo dõi tiến độ trên dashboard."
+    )
+
+
+def mk_quiz_description(lesson_title: str, lesson_description: str = "") -> str:
+    base = f"Kiểm tra kiến thức bài «{lesson_title}»."
+    if lesson_description and lesson_description != lesson_title:
+        snippet = lesson_description[:100].strip()
+        if snippet:
+            return f"{base} {snippet}"
+    return base
+
 
 def pick_avatar_url() -> str:
     return random.choice(REAL_AVATARS)
@@ -472,6 +536,19 @@ def mk_module_outcome() -> dict:
     }
 
 
+def module_outcomes_from_curriculum(mod_tpl: dict) -> List[dict]:
+    outcomes = get_module_learning_outcomes(mod_tpl)
+    return [
+        {
+            "id": gid(),
+            "outcome": item["description"],
+            "skill_tag": item.get("skill_tag") or "module-outcome",
+            "is_mandatory": True,
+        }
+        for item in outcomes
+    ]
+
+
 def mk_quiz_question(order: int) -> dict:
     qtype = sample_weighted([
         ("multiple_choice", 0.7),
@@ -506,19 +583,79 @@ def mk_quiz_question(order: int) -> dict:
     }
 
 
-def mk_assessment_question(difficulty: str) -> dict:
+def mk_assessment_question(difficulty: str, category: str = "Programming") -> dict:
     qtype = random.choice(["multiple_choice", "fill_in_blank", "drag_and_drop"])
-    options = [fake.word() for _ in range(4)] if qtype == "multiple_choice" else None
+    options = ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"] if qtype == "multiple_choice" else None
     points = {"easy": 1, "medium": 2, "hard": 3}[difficulty]
+    skill_tag = pick_assessment_skill(category)
+    question_pool = ASSESSMENT_QUESTIONS_BY_DIFFICULTY.get(difficulty, ASSESSMENT_QUESTIONS_BY_DIFFICULTY["medium"])
     return {
         "question_id": gid(),
-        "question_text": fake.sentence(nb_words=14),
+        "question_text": random.choice(question_pool),
         "question_type": qtype,
         "difficulty": difficulty,
-        "skill_tag": fake.slug().replace("-", "_"),
+        "skill_tag": skill_tag,
         "points": points,
         "options": options,
-        "correct_answer_hint": fake.sentence(nb_words=6),
+        "correct_answer_hint": f"Ôn tập mục «{skill_tag}» trong lĩnh vực {category}.",
+    }
+
+
+def mk_assessment_skill_analysis_payload(
+    questions: List[dict],
+    correct_answers: int,
+    overall_feedback: str,
+) -> dict:
+    """Khớp cấu trúc assessment_service.evaluate — skill_analysis là dict, không phải list."""
+    by_tag: Dict[str, Dict[str, int]] = {}
+    for q in questions:
+        tag = q.get("skill_tag") or "general"
+        by_tag.setdefault(tag, {"total": 0, "correct": 0})
+        by_tag[tag]["total"] += 1
+
+    remaining = max(0, correct_answers or 0)
+    tags = list(by_tag.keys())
+    skill_items = []
+    for i, tag in enumerate(tags):
+        total = by_tag[tag]["total"]
+        if i == len(tags) - 1:
+            correct = remaining
+        else:
+            correct = min(remaining, random.randint(0, total))
+        remaining -= correct
+        pct = round((correct / total) * 100, 1) if total else 0.0
+        strength = "Strong" if pct >= 75 else ("Average" if pct >= 50 else "Weak")
+        skill_items.append({
+            "skill_tag": tag,
+            "questions_count": total,
+            "correct_count": correct,
+            "proficiency_percentage": pct,
+            "strength_level": strength,
+            "detailed_feedback": f"Kỹ năng «{tag}»: {correct}/{total} câu đúng.",
+        })
+
+    breakdown = {
+        d: {"correct": 0, "total": 0}
+        for d in ("easy", "medium", "hard")
+    }
+    for q in questions:
+        diff = q.get("difficulty", "medium")
+        if diff in breakdown:
+            breakdown[diff]["total"] += 1
+    remaining = max(0, correct_answers or 0)
+    for diff in ("easy", "medium", "hard"):
+        total = breakdown[diff]["total"]
+        if diff == "hard":
+            correct = remaining
+        else:
+            correct = min(remaining, random.randint(0, total)) if total else 0
+        breakdown[diff]["correct"] = correct
+        remaining -= correct
+
+    return {
+        "skill_analysis": skill_items,
+        "score_breakdown": breakdown,
+        "overall_feedback": overall_feedback,
     }
 
 
@@ -652,15 +789,15 @@ async def seed_users(cfg: SeedConfig) -> Dict[str, List[str]]:
 
 
 def build_course_blueprint(idx: int, owner_type: str) -> Dict[str, str]:
-    categories = ["Programming", "Data Science", "Business", "Languages", "Math", "Marketing", "Engineering"]
-    levels = ["Beginner", "Intermediate", "Advanced"]
+    pack = get_course_blueprint(idx)
     return {
-        "title": f"{random.choice(['Master', 'Complete', 'Bootcamp', 'Foundations'])} {random.choice(categories)} {idx+1}",
-        "description": fake.text(max_nb_chars=420),
-        "category": random.choice(categories),
-        "level": random.choice(levels),
+        "title": pack["title"],
+        "description": pack["description"],
+        "category": pack["category"],
+        "level": pack["level"],
         "language": random.choice(["vi", "en"]),
         "owner_type": owner_type,
+        "_curriculum": pack,
     }
 
 
@@ -677,32 +814,36 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
         instructor_id = random.choice(role_ids["instructor"])
         owner_id = random.choice(role_ids["admin"] + role_ids["instructor"])
         bp = build_course_blueprint(i, "admin" if owner_id in role_ids["admin"] else "instructor")
+        curriculum = bp.pop("_curriculum", {})
         module_embeds: List[EmbeddedModule] = []
         total_lessons = 0
         total_duration = 0
 
         for m in range(cfg.public_modules_per_course):
             mid = gid()
+            mod_tpl = pick_module(m, curriculum)
             module_lessons_embed: List[EmbeddedLesson] = []
             module_duration = 0
             for l in range(cfg.public_lessons_per_module):
                 lid = gid()
+                lesson_tpl = pick_lesson(mod_tpl, l)
                 mins = random.randint(18, 65)
-                ctype = random.choice(["text", "video", "mixed", "code"])
-                has_video = ctype in ["video", "mixed"]
+                ctype = lesson_tpl.get("content_type") or "text"
+                has_video = ctype in ["video", "mixed"] or bool(lesson_tpl.get("video_id"))
                 lesson = Lesson(
                     id=lid,
                     module_id=mid,
                     course_id=cid,
-                    title=f"Lesson {m+1}.{l+1} - {fake.sentence(nb_words=5)}",
-                    description=fake.sentence(nb_words=14),
+                    title=lesson_tpl["title"],
+                    description=lesson_tpl.get("description") or lesson_tpl["title"],
                     order=l + 1,
-                    content=f"<h2>{fake.sentence(nb_words=6)}</h2><p>{fake.paragraph(nb_sentences=4)}</p>",
+                    content=lesson_tpl["content"],
                     content_type=ctype,
                     duration_minutes=mins,
-                    video_url=pick_youtube_watch_url() if has_video else None,
-                    audio_url=f"https://cdn.example.com/audio/{gid()}.mp3" if ctype == "audio" else None,
-                    learning_objectives=[fake.sentence(nb_words=6) for _ in range(random.randint(2, 4))],
+                    video_url=get_lesson_video_url(curriculum, lesson_tpl, l) if has_video else None,
+                    audio_url=None,
+                    learning_objectives=lesson_tpl.get("objectives")
+                    or [fake.sentence(nb_words=6) for _ in range(random.randint(2, 3))],
                     resources=[
                         mk_resource("Slide pack", "slide"),
                         mk_resource("Practice code", "code"),
@@ -740,12 +881,12 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
             module = Module(
                 id=mid,
                 course_id=cid,
-                title=f"Module {m+1} - {fake.sentence(nb_words=4)}",
-                description=fake.text(max_nb_chars=180),
+                title=mod_tpl.get("title") or f"Module {m+1}",
+                description=mod_tpl.get("description") or fake.text(max_nb_chars=180),
                 order=m + 1,
                 difficulty=random.choice(["Basic", "Intermediate", "Advanced"]),
                 estimated_hours=round(module_duration / 60.0, 1),
-                learning_outcomes=[mk_module_outcome() for _ in range(random.randint(3, 5))],
+                learning_outcomes=module_outcomes_from_curriculum(mod_tpl),
                 resources=[mk_resource("Module Notes", "pdf"), mk_resource("Links", "link")],
                 prerequisites=[module_embeds[m - 1].id] if m > 0 else [],
                 total_lessons=cfg.public_lessons_per_module,
@@ -779,8 +920,8 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
             description=bp["description"],
             category=bp["category"],
             level=bp["level"],
-            thumbnail_url=pick_thumbnail_url(),
-            preview_video_url=pick_youtube_watch_url(),
+            thumbnail_url=get_course_thumbnail(curriculum),
+            preview_video_url=get_course_preview_url(curriculum),
             language=bp["language"],
             status=sample_weighted([("published", 0.8), ("draft", 0.15), ("archived", 0.05)]),
             owner_id=owner_id,
@@ -790,8 +931,8 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
             instructor_avatar=pick_avatar_url(),
             instructor_bio=fake.text(max_nb_chars=200),
             course_type="public",
-            learning_outcomes=[mk_course_outcome() for _ in range(random.randint(4, 7))],
-            prerequisites=[fake.sentence(nb_words=4) for _ in range(random.randint(0, 3))],
+            learning_outcomes=get_course_learning_outcomes(curriculum) or [mk_course_outcome()],
+            prerequisites=get_course_prerequisites(curriculum),
             modules=module_embeds,
             total_duration_minutes=total_duration,
             total_modules=len(module_embeds),
@@ -808,31 +949,36 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
     selected_students = random.sample(role_ids["student"], k=min(cfg.personal_courses, len(role_ids["student"])))
     for i, student_id in enumerate(selected_students):
         cid = gid()
-        bp = build_course_blueprint(i, "student")
+        bp = build_course_blueprint(i + 100, "student")
+        curriculum = bp.pop("_curriculum", {})
         module_embeds: List[EmbeddedModule] = []
         total_lessons = 0
         total_duration = 0
 
         for m in range(cfg.personal_modules_per_course):
             mid = gid()
+            mod_tpl = pick_module(m, curriculum)
             module_lessons_embed: List[EmbeddedLesson] = []
             module_duration = 0
             for l in range(cfg.personal_lessons_per_module):
                 lid = gid()
+                lesson_tpl = pick_lesson(mod_tpl, l)
                 mins = random.randint(15, 45)
-                ctype = random.choice(["text", "video", "mixed"])
+                ctype = lesson_tpl.get("content_type") or "text"
+                has_video = ctype in ["video", "mixed"] or bool(lesson_tpl.get("video_id"))
                 lesson = Lesson(
                     id=lid,
                     module_id=mid,
                     course_id=cid,
-                    title=f"Personal Lesson {m+1}.{l+1} - {fake.word()}",
-                    description=fake.sentence(nb_words=10),
+                    title=lesson_tpl["title"],
+                    description=lesson_tpl.get("description") or lesson_tpl["title"],
                     order=l + 1,
-                    content=f"<h3>{fake.word().title()}</h3><p>{fake.paragraph(nb_sentences=3)}</p>",
+                    content=lesson_tpl["content"],
                     content_type=ctype,
                     duration_minutes=mins,
-                    video_url=pick_youtube_watch_url() if ctype in ["video", "mixed"] else None,
-                    learning_objectives=[fake.sentence(nb_words=5) for _ in range(random.randint(1, 3))],
+                    video_url=get_lesson_video_url(curriculum, lesson_tpl, l) if has_video else None,
+                    learning_objectives=lesson_tpl.get("objectives")
+                    or [fake.sentence(nb_words=5) for _ in range(random.randint(1, 3))],
                     resources=[mk_resource("Personal notes", "pdf")],
                     quiz_id=None,
                     is_published=True,
@@ -865,12 +1011,12 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
             module = Module(
                 id=mid,
                 course_id=cid,
-                title=f"Personal Module {m+1}",
-                description=fake.sentence(nb_words=12),
+                title=mod_tpl.get("title") or f"Module {m+1}",
+                description=mod_tpl.get("description") or fake.sentence(nb_words=12),
                 order=m + 1,
                 difficulty=random.choice(["Basic", "Intermediate", "Advanced"]),
                 estimated_hours=round(module_duration / 60.0, 1),
-                learning_outcomes=[mk_module_outcome() for _ in range(3)],
+                learning_outcomes=module_outcomes_from_curriculum(mod_tpl),
                 resources=[mk_resource("Ref", "link")],
                 prerequisites=[module_embeds[m - 1].id] if m > 0 else [],
                 total_lessons=cfg.personal_lessons_per_module,
@@ -905,8 +1051,8 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
             category=bp["category"],
             level=bp["level"],
             language=bp["language"],
-            thumbnail_url=pick_thumbnail_url(),
-            preview_video_url=pick_youtube_watch_url(),
+            thumbnail_url=get_course_thumbnail(curriculum),
+            preview_video_url=get_course_preview_url(curriculum),
             status=sample_weighted([("published", 0.45), ("draft", 0.5), ("archived", 0.05)]),
             owner_id=student_id,
             owner_type="student",
@@ -914,8 +1060,8 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
             instructor_avatar=pick_avatar_url(),
             instructor_bio=fake.sentence(nb_words=14),
             course_type="personal",
-            learning_outcomes=[mk_course_outcome() for _ in range(3)],
-            prerequisites=[],
+            learning_outcomes=get_course_learning_outcomes(curriculum) or [mk_course_outcome()],
+            prerequisites=get_course_prerequisites(curriculum),
             modules=module_embeds,
             total_duration_minutes=total_duration,
             total_modules=len(module_embeds),
@@ -940,14 +1086,29 @@ async def seed_classes(cfg: SeedConfig, role_ids: Dict[str, List[str]], course_m
     profile_header("SEED CLASSES")
     classes: List[Class] = []
     public_courses = course_map["public"]
+    course_docs = {
+        c.id: c
+        for c in await Course.find({"_id": {"$in": public_courses}}).to_list()
+    }
+    course_counters: Dict[str, int] = {}
+
     for i in range(cfg.classes):
         start = past(0, 35)
         end = start + timedelta(days=random.randint(45, 120))
+        course_id = random.choice(public_courses)
+        course = course_docs.get(course_id)
+        course_title = course.title if course else "Khóa học"
+        course_counters[course_id] = course_counters.get(course_id, 0) + 1
+        n = course_counters[course_id]
+        prefix = CLASS_NAME_PREFIXES[i % len(CLASS_NAME_PREFIXES)]
+        short_title = course_title if len(course_title) <= 48 else f"{course_title[:45]}…"
+        name = f"{prefix} {short_title}" if n == 1 else f"{prefix} {short_title} #{n}"
+
         c = Class(
             id=gid(),
-            name=f"Class {i+1} - {fake.word().title()}",
-            description=fake.text(max_nb_chars=180),
-            course_id=random.choice(public_courses),
+            name=name,
+            description=mk_class_description(course_title),
+            course_id=course_id,
             instructor_id=random.choice(role_ids["instructor"]),
             max_students=random.randint(45, 120),
             start_date=start,
@@ -1103,7 +1264,7 @@ async def seed_quizzes_attempts(cfg: SeedConfig, role_ids: Dict[str, List[str]])
             course_id=ls.course_id,
             module_id=ls.module_id,
             title=f"Quiz - {ls.title}",
-            description=fake.sentence(nb_words=18),
+            description=mk_quiz_description(ls.title, ls.description or ""),
             quiz_type=random.choice(["review", "practice", "final_check"]),
             time_limit_minutes=random.choice([10, 15, 20, 25, None]),
             passing_score=random.choice([60.0, 70.0, 75.0]),
@@ -1213,6 +1374,7 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
     for sid in role_ids["student"]:
         for _ in range(random.randint(2, 4)):
             level = random.choice(["Beginner", "Intermediate", "Advanced"])
+            category = random.choice(categories)
             total_questions, time_limit = level_cfg[level]
             status = sample_weighted([("pending", 0.15), ("in_progress", 0.2), ("submitted", 0.15), ("evaluated", 0.5)])
             created = past(1, 100)
@@ -1225,7 +1387,7 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
                     diff = "medium"
                 else:
                     diff = "hard"
-                questions.append(mk_assessment_question(diff))
+                questions.append(mk_assessment_question(diff, category))
 
             answers = []
             overall = None
@@ -1254,25 +1416,21 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
                 correct_answers = sum(1 for _ in range(total_questions) if random.random() < 0.64)
                 overall = round((correct_answers / total_questions) * 100, 1)
                 proficiency = "Advanced" if overall >= 80 else ("Intermediate" if overall >= 60 else "Beginner")
-                skill_analysis = [
-                    {
-                        "skill_tag": f"skill_{i+1}",
-                        "questions_count": random.randint(3, 8),
-                        "correct_count": random.randint(1, 6),
-                        "proficiency_percentage": round(random.uniform(30, 95), 1),
-                        "strength_level": random.choice(["Strong", "Average", "Weak"]),
-                        "detailed_feedback": fake.sentence(nb_words=18),
-                    } for i in range(random.randint(3, 6))
-                ]
+                ai_feedback = (
+                    f"Bạn đạt {overall}% ở mức {proficiency}. "
+                    f"Hãy tập trung củng cố các kỹ năng còn yếu trong lĩnh vực {category}."
+                )
+                skill_analysis = mk_assessment_skill_analysis_payload(
+                    questions, correct_answers, ai_feedback
+                )
                 knowledge_gaps = [
                     {
-                        "gap_area": fake.word(),
-                        "description": fake.sentence(nb_words=16),
+                        "gap_area": pick_assessment_skill(category),
+                        "description": f"Cần ôn thêm kiến thức {category.lower()} ở mức {level}.",
                         "importance": random.choice(["High", "Medium", "Low"]),
-                        "suggested_action": fake.sentence(nb_words=14),
-                    } for _ in range(random.randint(1, 4))
+                        "suggested_action": "Xem lại bài học liên quan và làm bài luyện tập.",
+                    } for _ in range(random.randint(1, 3))
                 ]
-                ai_feedback = fake.paragraph(nb_sentences=3)
                 total_time_seconds = sum(a["time_taken_seconds"] for a in answers) if answers else random.randint(400, 1800)
                 time_analysis = {
                     "total_time_seconds": total_time_seconds,
@@ -1285,8 +1443,8 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
             session = AssessmentSession(
                 id=sid_session,
                 user_id=sid,
-                category=random.choice(categories),
-                subject=fake.word().title(),
+                category=category,
+                subject=random.choice(ASSESSMENT_SKILLS_BY_CATEGORY.get(category, ["Tổng quan"])),
                 level=level,
                 focus_areas=[fake.word() for _ in range(random.randint(1, 3))],
                 total_questions=total_questions,

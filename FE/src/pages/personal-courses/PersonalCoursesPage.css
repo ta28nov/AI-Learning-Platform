@@ -68,6 +68,14 @@
   color: var(--text-primary);
 }
 
+.personal-course-card__title--clickable {
+  cursor: pointer;
+}
+
+.personal-course-card__title--clickable:hover {
+  color: var(--color-primary, #6366f1);
+}
+
 .personal-course-card__desc {
   font-size: var(--font-size-sm);
   color: var(--text-secondary);

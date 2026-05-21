@@ -164,3 +164,12 @@
 .cld-module-list__title { font-weight: 600; color: var(--ink-900); }
 .cld-module-list__meta, .cld-quiz-list__score { font-family: var(--font-mono); color: var(--ink-400); font-size: 0.75rem; }
 .cld-quiz-list__score { color: var(--jade-500, #10b981); font-weight: 700; }
+
+.cld-curriculum { margin-top: var(--space-6); }
+.cld-curriculum__meta { font-size: 0.72rem; font-weight: 400; color: var(--ink-400); margin-left: var(--space-2); }
+.cld-curriculum__desc { margin-bottom: var(--space-3); }
+.cld-module-list__item--stack { flex-direction: column; align-items: stretch; }
+.cld-lesson-list {
+  list-style: none; margin: var(--space-2) 0 0; padding: 0 0 0 var(--space-3);
+  font-size: 0.75rem; color: var(--ink-500); line-height: 1.6;
+}

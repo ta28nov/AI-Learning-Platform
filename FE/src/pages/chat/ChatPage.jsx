@@ -288,9 +288,9 @@ const ChatPage = () => {
             />
           )}
 
-          {messages.map((msg) => (
+          {messages.map((msg, msgIndex) => (
             <motion.div
-              key={msg.message_id}
+              key={msg.message_id || `msg-${msgIndex}-${msg.timestamp || ''}`}
               className={`chat-msg ${msg.role === 'user' ? 'chat-msg--user' : 'chat-msg--ai'}`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}

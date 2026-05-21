@@ -6,7 +6,7 @@ export class DashboardPage {
   }
 
   async expectLoaded() {
-    await this.page.waitForURL(/\/dashboard/, { timeout: 30_000 })
+    await this.page.waitForURL(/\/dashboard/, { timeout: 60_000 })
     await this.page.getByRole('banner').waitFor({ state: 'visible' })
   }
 

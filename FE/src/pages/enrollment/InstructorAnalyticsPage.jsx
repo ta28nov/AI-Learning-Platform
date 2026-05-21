@@ -57,7 +57,7 @@ const InstructorAnalyticsPage = () => {
   if (error) {
     return (
       <div className="ia-page">
-        <PageHeader onBack={() => navigate('/dashboard/instructor')} />
+        <PageHeader onBack={() => navigate('/dashboard')} />
         <StateView type="error" title="Lỗi tải dữ liệu" message={error} action={{ label: 'Thử lại', onClick: load }} />
       </div>
     )
@@ -65,7 +65,7 @@ const InstructorAnalyticsPage = () => {
 
   return (
     <motion.div className="ia-page" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-      <PageHeader onBack={() => navigate('/dashboard/instructor')} />
+      <PageHeader onBack={() => navigate('/dashboard')} />
 
       <div className="ia-stats">
         <div className="ia-stat">
@@ -127,12 +127,17 @@ const InstructorAnalyticsPage = () => {
           <h2 className="ia-section">Theo lớp</h2>
           <div className="ia-class-list">
             {classStats.classes.map((c) => (
-              <div key={c.class_id} className="ia-class-row">
+              <button
+                key={c.class_id}
+                type="button"
+                className="ia-class-row ia-class-row--link"
+                onClick={() => navigate(`/dashboard/instructor/classes/${c.class_id}`)}
+              >
                 <span className="ia-class-row__name">{c.class_name}</span>
                 <span className="ia-class-row__meta">
                   {c.student_count} HV · {Math.round(c.avg_progress || 0)}% tiến độ
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         </section>
