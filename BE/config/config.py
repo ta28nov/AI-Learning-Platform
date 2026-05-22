@@ -1,9 +1,9 @@
 """Application configuration settings using Pydantic Settings."""
 
 from functools import lru_cache
-from typing import List, Optional
+from typing import List, Optional, Union
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -43,6 +43,26 @@ class Settings(BaseSettings):
         ],
         alias="ALLOWED_ORIGINS",
     )
+
+    @field_validator("allowed_origins", mode="before")
+    @classmethod
+    def parse_allowed_origins(cls, v):
+        """Parse ALLOWED_ORIGINS from comma-separated or JSON string."""
+        if isinstance(v, str):
+            v = v.strip()
+            # JSON array format: ["https://a.com","https://b.com"]
+            if v.startswith("["):
+                import json
+                try:
+                    parsed = json.loads(v)
+                    return [origin.rstrip("/") for origin in parsed]
+                except json.JSONDecodeError:
+                    pass
+            # Comma-separated format: https://a.com,https://b.com
+            return [origin.strip().rstrip("/") for origin in v.split(",") if origin.strip()]
+        if isinstance(v, list):
+            return [origin.rstrip("/") for origin in v]
+        return v
     
     # Email Service
     sendgrid_api_key: Optional[str] = Field(default=None, alias="SENDGRID_API_KEY")
