@@ -94,7 +94,7 @@ Yêu cầu format JSON chính xác (sắp xếp từ dễ đến khó):
         "question_text": "Câu hỏi rõ ràng, súc tích với ngữ cảnh thực tế...",
         "question_type": "multiple_choice",
         "options": ["Option A", "Option B", "Option C", "Option D"],
-        "correct_answer_hint": "Gợi ý ngắn về đáp án đúng (không nói trực tiếp)",
+        "correct_answer_hint": "đưa tôi gợi ý là kết quả ngắn gọn",
         "difficulty": "easy",
         "skill_tag": "python-syntax",
         "points": 1
@@ -104,7 +104,7 @@ Yêu cầu format JSON chính xác (sắp xếp từ dễ đến khó):
         "question_text": "Câu hỏi...",
         "question_type": "fill_in_blank",
         "options": null,
-        "correct_answer_hint": "Gợi ý ngắn...",
+        "correct_answer_hint": "Gợi ý: Điền vào chỗ trống với cú pháp đúng,chính xác",
         "difficulty": "medium",
         "skill_tag": "algorithm-basics",
         "points": 2
