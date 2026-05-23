@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { useAuthStore } from '@stores/authStore'
 import Button from '@components/ui/Button'
 import Input from '@components/ui/Input'
-import { toast } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { staggerEditorial, fadeUp, fadeDown } from '@/styles/motion'
 import { AuthInkPanel } from './LoginPage'
 import SocialAuthButtons from '@components/auth/SocialAuthButtons'
@@ -30,17 +30,13 @@ const RegisterPage = () => {
   const onSubmit = async (data) => {
     setLoading(true)
     try {
-      const result = await registerUser({
+      await registerUser({
         full_name: data.fullName,
         email: data.email,
         password: data.password,
       })
-      toast.success('Đăng ký thành công! Vui lòng xác minh email trước khi đăng nhập.')
-      const params = new URLSearchParams({ email: data.email })
-      if (result?.verification_token) {
-        params.set('token', result.verification_token)
-      }
-      navigate(`/auth/verify-email?${params.toString()}`)
+      toast.success('Đăng ký thành công! Vui lòng đăng nhập.')
+      navigate('/auth/login', { state: { email: data.email } })
     } catch (error) {
       toast.error(error.message || 'Đăng ký thất bại!')
     } finally {

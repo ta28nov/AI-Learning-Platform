@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { useAuthStore } from '@stores/authStore'
 import Button from '@components/ui/Button'
 import Input from '@components/ui/Input'
-import { toast } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { staggerEditorial, fadeUp, fadeDown } from '@/styles/motion'
 import SocialAuthButtons from '@components/auth/SocialAuthButtons'
 import './AuthPages.css'
@@ -25,7 +25,11 @@ const LoginPage = () => {
   // Redirect destination after login — preserved exactly
   const from = location.state?.from || '/dashboard'
 
-  const { register, handleSubmit, formState: { errors } } = useForm()
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    defaultValues: {
+      email: location.state?.email || ''
+    }
+  })
 
   // Submit logic — unchanged
   const onSubmit = async (data) => {
