@@ -414,6 +414,114 @@ ASSESSMENT_QUESTIONS_BY_DIFFICULTY: Dict[str, List[str]] = {
 
 CLASS_NAME_PREFIXES = ["Lớp", "Nhóm học", "Cohort", "Buổi"]
 
+# =============================================================================
+# VIETNAMESE REALISTIC DATA POOLS & GENERATORS
+# =============================================================================
+
+REAL_INSTRUCTOR_BIOS: List[str] = [
+    "Chuyên gia lập trình với hơn 10 năm kinh nghiệm phát triển phần mềm tại các tập đoàn công nghệ lớn. Đam mê giảng dạy và chia sẻ kiến thức thực tế.",
+    "Giảng viên Thạc sĩ Khoa học Máy tính, chuyên gia nghiên cứu về Trí tuệ nhân tạo (AI) và Xử lý ngôn ngữ tự nhiên (NLP).",
+    "Kiến trúc sư phần mềm, tác giả của nhiều thư viện mã nguồn mở phổ biến. Hơn 8 năm giảng dạy lập trình ứng dụng và hệ thống phân tán.",
+    "Chuyên gia tư vấn Quản trị Agile & Scrum cho các doanh nghiệp khởi nghiệp sáng tạo và tập đoàn đa quốc gia.",
+    "Tiến sĩ Toán tin với nhiều công trình công bố quốc tế, hơn 15 năm kinh nghiệm giảng dạy Toán cao cấp và Xác suất thống kê tại đại học lớn.",
+    "Giảng viên ngôn ngữ Anh, đạt chứng chỉ IELTS 8.5 và TESOL quốc tế, có 7 năm kinh nghiệm biên soạn tài liệu tiếng Anh học thuật.",
+    "Chuyên gia Phân tích dữ liệu (Data Analyst Lead) tại công ty viễn thông lớn. Kinh nghiệm dạy SQL, Python và PowerBI thực chiến."
+]
+
+REAL_STUDENT_BIOS: List[str] = [
+    "Sinh viên ngành Công nghệ thông tin muốn trau dồi thêm kỹ năng lập trình thực tế để chuẩn bị đi thực tập.",
+    "Lập trình viên muốn học thêm về Khoa học dữ liệu để chuyển hướng sự nghiệp.",
+    "Học viên tự do đam mê công nghệ, muốn tự xây dựng ứng dụng web và mobile.",
+    "Nhân viên văn phòng muốn học kỹ năng phân tích dữ liệu bằng SQL và Python để tối ưu hóa hiệu suất công việc.",
+    "Trưởng nhóm dự án muốn nâng cao tư duy quản trị Agile/Scrum và cải thiện kỹ năng giao tiếp tiếng Anh với đối tác.",
+    "Học viên chuẩn bị cho kỳ thi IELTS học thuật và cần cải thiện kỹ năng đọc tài liệu chuyên ngành.",
+    "Người mới bắt đầu tự học lập trình, mong muốn có lộ trình bài bản và nhận phản hồi chi tiết từ AI."
+]
+
+REAL_CUSTOM_GOALS: Dict[str, List[str]] = {
+    "Programming": [
+        "Tôi muốn thành thạo Python để viết kịch bản tự động hóa và phát triển API web.",
+        "Mục tiêu của tôi là vượt qua vòng phỏng vấn kỹ thuật về cấu trúc dữ liệu và thuật toán.",
+        "Tôi cần làm chủ quy trình debug, quản lý mã nguồn bằng Git để làm việc nhóm hiệu quả hơn.",
+        "Tôi muốn xây dựng ứng dụng web đầu tay sử dụng FastAPI và cơ sở dữ liệu MongoDB."
+    ],
+    "Data Science": [
+        "Tôi muốn chuyển đổi nghề nghiệp từ kế toán sang làm chuyên viên phân tích dữ liệu (Data Analyst).",
+        "Mục tiêu của tôi là thành thạo các câu lệnh truy vấn SQL phức tạp và kỹ thuật chuẩn bị dữ liệu.",
+        "Tôi cần học cách triển khai các mô hình Machine Learning cơ bản bằng Scikit-Learn.",
+        "Tôi muốn làm chủ thư viện Pandas để xử lý tập dữ liệu lớn và thiết kế dashboard trực quan."
+    ],
+    "Business": [
+        "Tôi muốn áp dụng thành công phương pháp OKR và chỉ số KPI cho doanh nghiệp của mình.",
+        "Mục tiêu là lấy được chứng chỉ quản trị dự án Agile/Scrum chuyên nghiệp.",
+        "Tôi cần nâng cao kỹ năng đàm phán, thuyết trình trước ban giám đốc và đối tác.",
+        "Tôi muốn xây dựng quy trình làm việc hiệu quả cho đội ngũ phát triển sản phẩm."
+    ],
+    "Languages": [
+        "Mục tiêu của tôi là đạt tối thiểu 6.5 IELTS cho kỹ năng Viết và Đọc tài liệu.",
+        "Tôi cần giao tiếp tiếng Anh tự tin với các kỹ sư nước ngoài trong các cuộc họp dự án.",
+        "Tôi muốn dịch chuẩn xác các tài liệu kỹ thuật chuyên ngành công nghệ thông tin.",
+        "Tôi muốn học từ vựng và mẫu câu phục vụ cho việc viết báo cáo và gửi email công việc."
+    ],
+    "Math": [
+        "Tôi cần ôn lại Đại số tuyến tính và ma trận để phục vụ cho nghiên cứu Deep Learning.",
+        "Mục tiêu là hiểu rõ phân phối xác suất và kiểm định giả thuyết để áp dụng vào phân tích dữ liệu.",
+        "Tôi muốn nâng cao tư duy logic và kỹ năng giải quyết bài toán tối ưu hóa trong lập trình.",
+        "Tôi cần củng cố kiến thức Giải tích để hiểu bản chất của thuật toán lan truyền ngược (backpropagation)."
+    ]
+}
+
+VIETNAMESE_CHAT_TEMPLATES: Dict[str, List[List[Dict[str, str]]]] = {
+    "Programming": [
+        [
+            {"role": "user", "content": "Làm thế nào để phân biệt list và tuple trong Python?"},
+            {"role": "assistant", "content": "Chào bạn! Điểm khác biệt lớn nhất giữa list và tuple là:\n1. **Khả năng thay đổi (Mutability)**: List có thể thay đổi (mutable) sau khi tạo, trong khi Tuple thì bất biến (immutable).\n2. **Cú pháp**: List dùng ngoặc vuông `[1, 2]`, Tuple dùng ngoặc đơn `(1, 2)`.\n3. **Hiệu năng**: Tuple nhanh hơn list một chút và tốn ít bộ nhớ hơn.\nBạn nên dùng Tuple khi muốn bảo vệ dữ liệu không bị thay đổi ngẫu nhiên nhé!"},
+            {"role": "user", "content": "Vậy khi nào mình nên dùng Tuple làm key cho Dictionary?"},
+            {"role": "assistant", "content": "Câu hỏi rất hay! Vì Tuple là bất biến (immutable), nó có thể băm (hashable) và dùng làm key cho Dictionary được. List thì không làm được việc này vì nó mutable. Ví dụ, bạn có thể dùng một Tuple tọa độ `(x, y)` làm key để lưu thông tin bản đồ."}
+        ],
+        [
+            {"role": "user", "content": "Tại sao tôi chạy code Python lại bị lỗi IndentationError?"},
+            {"role": "assistant", "content": "Lỗi `IndentationError` xảy ra khi thụt đầu dòng (indentation) không đồng nhất. Trong Python, thụt đầu dòng dùng để xác định các khối lệnh (như trong hàm, vòng lặp, câu lệnh `if`).\nCách khắc phục:\n1. Hãy đảm bảo bạn dùng nhất quán tab hoặc dấu cách (khuyến nghị dùng 4 dấu cách).\n2. Không trộn lẫn tab và dấu cách trong cùng một file.\nBạn có thể gửi đoạn code bị lỗi lên đây để mình chỉ rõ vị trí giúp nhé!"},
+            {"role": "user", "content": "À mình hiểu rồi, do mình dùng cả Tab lẫn Space. Cảm ơn bạn!"},
+            {"role": "assistant", "content": "Không có gì bạn nhé! Nhiều trình soạn thảo như VS Code có tính năng tự động chuyển đổi Tab sang Space rất tiện lợi, bạn nên bật nó lên để tránh lỗi này trong tương lai."}
+        ]
+    ],
+    "Data Science": [
+        [
+            {"role": "user", "content": "Làm sao để xử lý giá trị khuyết (missing values) bằng thư viện Pandas?"},
+            {"role": "assistant", "content": "Chào bạn! Trong Pandas, bạn có một số cách phổ biến để xử lý giá trị khuyết (NaN):\n1. **Loại bỏ**: Dùng `df.dropna()` để xóa dòng hoặc cột chứa NaN.\n2. **Điền giá trị thay thế**: Dùng `df.fillna(value)` để thay thế NaN bằng giá trị trung bình (mean), trung vị (median) hoặc mode.\n3. **Nội suy**: Dùng `df.interpolate()` để ước lượng giá trị dựa trên các điểm lân cận.\nLựa chọn phụ thuộc vào tỷ lệ dữ liệu khuyết và bài toán cụ thể bạn đang giải quyết."},
+            {"role": "user", "content": "Nếu cột dữ liệu dạng danh mục (categorical) thì nên điền thế nào?"},
+            {"role": "assistant", "content": "Với dữ liệu categorical, phương pháp phổ biến nhất là điền bằng giá trị xuất hiện nhiều nhất (mode) bằng lệnh `df['col'].fillna(df['col'].mode()[0])`, hoặc điền bằng một nhãn mới như `'Unknown'` để giữ nguyên thông tin về việc dữ liệu bị thiếu."}
+        ],
+        [
+            {"role": "user", "content": "Giải thích giúp mình ý nghĩa của chỉ số F1-Score trong Machine Learning."},
+            {"role": "assistant", "content": "F1-Score là trung bình điều hòa (harmonic mean) giữa Precision (độ chính xác) và Recall (độ phủ). Nó được dùng để đánh giá mô hình phân loại (classification).\nCông thức: `F1 = 2 * (Precision * Recall) / (Precision + Recall)`.\nF1-Score đặc biệt hữu ích khi tập dữ liệu bị mất cân bằng lớp (imbalanced dataset), vì nó cân bằng cả Precision và Recall thay vì chỉ nhìn vào Accuracy."},
+            {"role": "user", "content": "Khi nào thì F1-Score quan trọng hơn Accuracy?"},
+            {"role": "assistant", "content": "Ví dụ trong bài toán phát hiện bệnh hiếm gặp. Nếu tỷ lệ người bệnh chỉ là 1%, một mô hình đoán bừa 'không bệnh' vẫn đạt Accuracy 99%. Tuy nhiên, Recall và F1-Score của nó sẽ cực kỳ thấp (gần bằng 0). Khi đó F1-Score là chỉ số bắt buộc phải dùng để đánh giá chính xác chất lượng mô hình."}
+        ]
+    ],
+    "Business": [
+        [
+            {"role": "user", "content": "Làm thế nào để viết Key Results (KR) trong OKR hiệu quả?"},
+            {"role": "assistant", "content": "Chào bạn! Một KR tốt cần tuân thủ quy tắc SMART, đặc biệt là phải **đo lường được**.\nCông thức chuẩn: *Tăng/Giảm/Đạt được [Chỉ số] từ [Giá trị X] đến [Giá trị Y]*.\nVí dụ tệ: 'Cải thiện tốc độ tải trang web'.\nVí dụ tốt: 'Giảm thời gian tải trang trung bình từ 3 giây xuống dưới 1.5 giây trước quý 3'.\nBạn có muốn thử viết một KR cho dự án của mình không? Mình có thể góp ý giúp!"},
+            {"role": "user", "content": "Mình muốn viết KR cho việc chăm sóc khách hàng."},
+            {"role": "assistant", "content": "Tuyệt vời! Bạn có thể tham khảo KR này: 'Đạt điểm số hài lòng của khách hàng (CSAT) trung bình tối thiểu là 4.5/5.0 và giảm thời gian phản hồi trung bình xuống dưới 15 phút'."}
+        ]
+    ],
+    "Languages": [
+        [
+            {"role": "user", "content": "Có cấu trúc viết mở bài IELTS Writing Task 2 nào dễ áp dụng không?"},
+            {"role": "assistant", "content": "Chào bạn! Mở bài IELTS Writing Task 2 luôn gồm 2 câu cơ bản:\n1. **Sentence 1: Paraphrase the prompt** (Viết lại đề bài bằng từ đồng nghĩa và cấu trúc khác).\n2. **Sentence 2: Thesis statement** (Nêu rõ quan điểm của bạn và trả lời trực tiếp câu hỏi của đề).\nVí dụ đề bài bàn về làm việc tại nhà, bạn có thể viết mở bài theo cấu trúc: *'While some people argue that... (Paraphrase), I personally believe that... (Thesis statement)'*."}
+        ]
+    ],
+    "Math": [
+        [
+            {"role": "user", "content": "Tại sao định thức (determinant) của ma trận lại quan trọng trong Đại số tuyến tính?"},
+            {"role": "assistant", "content": "Chào bạn! Định thức (thường ký hiệu là `det(A)` hoặc `|A|`) là một số vô hướng chứa nhiều thông tin cốt lõi:\n1. **Khả nghịch**: Ma trận khả nghịch (có ma trận nghịch đảo) khi và chỉ khi `det(A) != 0`.\n2. **Ý nghĩa hình học**: Định thức biểu thị hệ số thay đổi diện tích (trong 2D) hoặc thể tích (trong 3D) khi thực hiện phép biến đổi tuyến tính.\n3. **Hệ phương trình**: Nếu định thức khác 0, hệ phương trình tuyến tính `Ax = b` luôn có nghiệm duy nhất."}
+        ]
+    ]
+}
+
 
 def pick_assessment_skill(category: str) -> str:
     pool = ASSESSMENT_SKILLS_BY_CATEGORY.get(category) or ASSESSMENT_SKILLS_BY_CATEGORY["Programming"]
@@ -450,6 +558,239 @@ def youtube_watch_from_id(video_id: str) -> str:
 
 def pick_youtube_watch_url() -> str:
     return youtube_watch_from_id(random.choice(REAL_YOUTUBE_VIDEO_IDS))
+
+
+def generate_chat_messages(category: str, start_time: datetime) -> List[dict]:
+    templates = VIETNAMESE_CHAT_TEMPLATES.get(category) or VIETNAMESE_CHAT_TEMPLATES["Programming"]
+    script = random.choice(templates)
+    
+    messages = []
+    current_time = start_time
+    for i, turn in enumerate(script):
+        current_time += timedelta(minutes=random.randint(1, 5))
+        m_id = gid()
+        messages.append({
+            "id": m_id,
+            "message_id": m_id,
+            "role": turn["role"],
+            "content": turn["content"],
+            "timestamp": current_time,
+            "created_at": current_time,
+        })
+    return messages
+
+
+def get_assessment_evaluation_vietnamese(category: str, level: str, score: float, proficiency: str) -> str:
+    if proficiency == "Advanced":
+        return (
+            f"Chúc mừng bạn! Kết quả kiểm tra đạt {score}% thể hiện bạn đã nắm bắt rất tốt kiến thức {category} ở mức độ {level}. "
+            "Bạn có tư duy nhạy bén và khả năng áp dụng lý thuyết vào thực hành một cách nhuần nhuyễn. "
+            "Lộ trình tiếp theo khuyến nghị bạn tham gia các khóa học chuyên sâu hoặc thực hành các dự án thực tế."
+        )
+    elif proficiency == "Intermediate":
+        return (
+            f"Kết quả {score}% cho thấy bạn có nền tảng vững vàng về {category} ở trình độ {level}. "
+            "Tuy nhiên, vẫn còn một vài khái niệm nâng cao hoặc trường hợp đặc biệt bạn cần lưu ý kỹ hơn. "
+            "Hãy hoàn thành các bài tập thực hành được gợi ý để củng cố kỹ năng và tự tin nâng cao trình độ."
+        )
+    else:
+        return (
+            f"Bạn đạt {score}% ở mức độ {level} lĩnh vực {category}. Đây là kết quả bước đầu giúp nhận diện những phần kiến thức cần tập trung. "
+            "Đừng lo lắng, hãy bắt đầu ôn tập từ các bài học cơ bản, tập trung làm các bài quiz nhỏ để nắm chắc lý thuyết trước khi chuyển sang phần nâng cao hơn."
+        )
+
+
+def get_knowledge_gaps_vietnamese(category: str, level: str) -> List[dict]:
+    gaps_pool = {
+        "Programming": [
+            {
+                "gap_area": "Quản lý bộ nhớ và tối ưu hóa code",
+                "description": "Chưa tối ưu hóa việc sử dụng các vòng lặp và câu lệnh điều kiện trong Python.",
+                "importance": "Medium",
+                "suggested_action": "Học về generator, list comprehension và cách đo lường thời gian thực thi."
+            },
+            {
+                "gap_area": "Xử lý lỗi và ngoại lệ (Exception Handling)",
+                "description": "Còn thiếu sót trong việc bắt và xử lý các lỗi runtime một cách an toàn.",
+                "importance": "High",
+                "suggested_action": "Xem lại cú pháp try-except-finally và cách định nghĩa custom exception."
+            },
+            {
+                "gap_area": "Lập trình hướng đối tượng (OOP)",
+                "description": "Hiểu chưa sâu về tính kế thừa, đóng gói và đa hình trong thiết kế class.",
+                "importance": "High",
+                "suggested_action": "Thực hành thiết kế các class kế thừa nhau và áp dụng nguyên lý SOLID."
+            }
+        ],
+        "Data Science": [
+            {
+                "gap_area": "Truy vấn dữ liệu nâng cao",
+                "description": "Khó khăn khi thực hiện các truy vấn JOIN nhiều bảng và tính toán phân tích (Window Functions).",
+                "importance": "High",
+                "suggested_action": "Thực hành viết các câu lệnh SELECT có chứa PARTITION BY, RANK và các phép JOIN phức tạp."
+            },
+            {
+                "gap_area": "Tiền xử lý dữ liệu (Data Cleaning)",
+                "description": "Chưa xử lý triệt để các dữ liệu bị khuyết hoặc dữ liệu ngoại lai (outliers).",
+                "importance": "High",
+                "suggested_action": "Tìm hiểu kỹ thuật điền khuyết bằng median/mode và phát hiện outliers bằng Z-score/IQR."
+            },
+            {
+                "gap_area": "Đánh giá mô hình (Model Evaluation)",
+                "description": "Chưa phân biệt rõ ràng khi nào nên ưu tiên F1-score thay vì Accuracy.",
+                "importance": "Medium",
+                "suggested_action": "Nghiên cứu lại Ma trận nhầm lẫn (Confusion Matrix) và đường cong ROC-AUC."
+            }
+        ],
+        "Business": [
+            {
+                "gap_area": "Quản trị dự án theo Agile",
+                "description": "Chưa hiểu rõ vai trò của Scrum Master và cách vận hành các buổi họp Sprint.",
+                "importance": "Medium",
+                "suggested_action": "Đọc tài liệu Scrum Guide và thực hành lập kế hoạch Sprint trong công cụ quản lý."
+            },
+            {
+                "gap_area": "Xây dựng chỉ số đo lường (KPIs/OKRs)",
+                "description": "Các kết quả then chốt (Key Results) viết chưa đo lường được định lượng.",
+                "importance": "High",
+                "suggested_action": "Áp dụng quy tắc SMART để viết lại các KR tập trung vào chỉ số kết quả."
+            }
+        ],
+        "Languages": [
+            {
+                "gap_area": "Từ vựng chuyên ngành công nghệ",
+                "description": "Vốn từ vựng kỹ thuật còn hạn chế, ảnh hưởng đến tốc độ đọc hiểu đặc tả dự án.",
+                "importance": "Medium",
+                "suggested_action": "Học từ vựng qua các tài liệu chuẩn hóa hoặc bài viết trên MDN/W3Schools."
+            },
+            {
+                "gap_area": "Viết báo cáo kỹ thuật",
+                "description": "Cách diễn đạt câu từ trong email và tài liệu chưa thực sự chuyên nghiệp và ngắn gọn.",
+                "importance": "High",
+                "suggested_action": "Tham khảo các mẫu viết email thương mại và cấu trúc viết báo cáo học thuật."
+            }
+        ],
+        "Math": [
+            {
+                "gap_area": "Đại số tuyến tính nâng cao",
+                "description": "Gặp khó khăn với các khái niệm trị riêng (eigenvalue) và vectơ riêng (eigenvector).",
+                "importance": "High",
+                "suggested_action": "Học lại các phép biến đổi ma trận và ý nghĩa hình học của chúng."
+            },
+            {
+                "gap_area": "Kiểm định giả thuyết thống kê",
+                "description": "Chưa hiểu bản chất của chỉ số p-value trong kiểm định A/B testing.",
+                "importance": "High",
+                "suggested_action": "Thực hành giải các bài toán kiểm định t-test, chi-square và phân tích kết quả."
+            }
+        ]
+    }
+    pool = gaps_pool.get(category) or gaps_pool["Programming"]
+    return random.sample(pool, k=random.randint(1, min(2, len(pool))))
+
+
+def get_recommendation_reason_vietnamese(course_title: str, category: str, rank: int) -> str:
+    reasons = [
+        f"Dựa trên kết quả đánh giá năng lực của bạn trong phần {category}. Khóa học '{course_title}' này sẽ giúp bạn lấp đầy các lỗ hổng kiến thức cốt lõi.",
+        f"Khóa học '{course_title}' rất phù hợp để nâng cấp kỹ năng {category} của bạn lên trình độ tiếp theo.",
+        f"Khóa học '{course_title}' được đánh giá cao bởi cộng đồng học viên và có nội dung trực quan, sinh động.",
+        f"Lộ trình học tập cá nhân hóa đề xuất khóa '{course_title}' làm bước đi thứ {rank} để tối ưu hóa thời gian tiếp thu của bạn."
+    ]
+    return random.choice(reasons)
+
+
+def get_why_this_order_vietnamese(course_title: str, rank: int) -> str:
+    why_orders = [
+        f"Khóa học này cung cấp nền tảng cần thiết trước khi bạn bước sang học các chủ đề nâng cao hơn.",
+        f"Hoàn thành khóa học ở vị trí thứ {rank} giúp bạn liên kết lý thuyết cơ bản với thực hành thực tế một cách liền mạch.",
+        f"Kiến thức từ khóa này là tiền đề trực tiếp để học tốt các khóa tiếp theo trong lộ trình học tập của bạn."
+    ]
+    return random.choice(why_orders)
+
+
+def get_practice_exercises_vietnamese(category: str) -> List[dict]:
+    exercises_pool = {
+        "Programming": [
+            {
+                "skill_tag": "python_syntax_and_loops",
+                "exercise_type": "coding",
+                "description": "Viết chương trình tìm tất cả các số nguyên tố trong khoảng từ 1 đến N bằng thuật toán Sieve.",
+                "difficulty": "medium",
+                "estimated_time_hours": 1.5
+            },
+            {
+                "skill_tag": "git_version_control",
+                "exercise_type": "project",
+                "description": "Tạo một repository trên GitHub, thực hiện tạo nhánh mới, giải quyết xung đột (conflict) khi merge nhánh.",
+                "difficulty": "easy",
+                "estimated_time_hours": 2.0
+            },
+            {
+                "skill_tag": "oop_design_patterns",
+                "exercise_type": "coding",
+                "description": "Thiết kế hệ thống quản lý thư viện sử dụng lập trình hướng đối tượng với các tính năng mượn/trả sách.",
+                "difficulty": "hard",
+                "estimated_time_hours": 4.5
+            }
+        ],
+        "Data Science": [
+            {
+                "skill_tag": "sql_query_join",
+                "exercise_type": "coding",
+                "description": "Viết câu truy vấn SQL tìm top 5 khách hàng có tổng giá trị đơn hàng lớn nhất trong năm qua bằng cách JOIN 3 bảng.",
+                "difficulty": "medium",
+                "estimated_time_hours": 1.0
+            },
+            {
+                "skill_tag": "pandas_data_wrangling",
+                "exercise_type": "project",
+                "description": "Tải một tập dữ liệu nhà đất, xử lý các giá trị NaN và vẽ biểu đồ phân phối giá nhà bằng Seaborn.",
+                "difficulty": "medium",
+                "estimated_time_hours": 3.0
+            }
+        ],
+        "Business": [
+            {
+                "skill_tag": "agile_sprint_planning",
+                "exercise_type": "reading",
+                "description": "Đọc chương 3 tài liệu Scrum Guide và viết bản tóm tắt vai trò của Product Owner trong việc quản lý Backlog.",
+                "difficulty": "easy",
+                "estimated_time_hours": 1.0
+            }
+        ],
+        "Languages": [
+            {
+                "skill_tag": "english_writing_task2",
+                "exercise_type": "quiz",
+                "description": "Viết một bài luận ngắn 250 từ thảo luận về ưu và nhược điểm của xu hướng làm việc từ xa (telecommuting).",
+                "difficulty": "hard",
+                "estimated_time_hours": 2.5
+            }
+        ],
+        "Math": [
+            {
+                "skill_tag": "linear_algebra_eigenvalues",
+                "exercise_type": "coding",
+                "description": "Viết script Python sử dụng thư viện NumPy để tính toán trị riêng và vectơ riêng của một ma trận vuông cấp 3.",
+                "difficulty": "medium",
+                "estimated_time_hours": 1.2
+            }
+        ]
+    }
+    pool = exercises_pool.get(category) or exercises_pool["Programming"]
+    return random.sample(pool, k=min(len(pool), random.randint(2, 3)))
+
+
+def get_personalized_advice_vietnamese(category: str, level: str) -> str:
+    advices = {
+        "Programming": f"Hãy duy trì thói quen viết code hàng ngày, dù chỉ là bài tập nhỏ. Đối với trình độ {level}, việc đọc code của người khác và tham khảo thư viện chuẩn sẽ giúp bạn tiến bộ vượt bậc.",
+        "Data Science": f"Với định hướng {category}, dữ liệu thực tế luôn phức tạp và lộn xộn. Hãy tập trung luyện tập kỹ năng đặt câu hỏi từ dữ liệu và làm chủ SQL - công cụ quan trọng nhất của mọi Data Analyst.",
+        "Business": f"Quản lý hiệu quả luôn đi kèm với sự linh hoạt. Bạn nên áp dụng thử các mô hình Agile vào chính công việc cá nhân của mình để trải nghiệm và tối ưu hóa quy trình làm việc.",
+        "Languages": f"Đừng học từ vựng riêng lẻ. Hãy ghi nhớ cả cụm từ (collocations) và áp dụng chúng trực tiếp vào các bài viết hoặc hội thoại hàng ngày để tăng phản xạ tự nhiên.",
+        "Math": f"Mọi công thức toán học đều có ý nghĩa hình học đằng sau nó. Khi học đại số hay giải tích, hãy cố gắng trực quan hóa các phép biến đổi để hiểu sâu bản chất thay vì chỉ học vẹt công thức."
+    }
+    return advices.get(category) or advices["Programming"]
+
 
 
 @dataclass
@@ -710,9 +1051,17 @@ async def drop_all_collections():
     print("Reset done.")
 
 
-async def seed_users(cfg: SeedConfig) -> Dict[str, List[str]]:
+REAL_ADMIN_BIOS: List[str] = [
+    "Quản trị viên hệ thống LMS. Chịu trách nhiệm quản lý kỹ thuật, cấu hình hệ thống và hỗ trợ người dùng.",
+    "Trưởng ban kiểm duyệt nội dung học liệu và quản lý chất lượng đào tạo trên hệ thống.",
+    "Quản trị viên học vụ, điều phối các lớp học trực tuyến và kết nối giảng viên - học viên."
+]
+
+
+async def seed_users(cfg: SeedConfig) -> Tuple[Dict[str, List[str]], Dict[str, User]]:
     profile_header("SEED USERS")
     users: List[User] = []
+    users_dict: Dict[str, User] = {}
     role_ids = {"admin": [], "instructor": [], "student": []}
 
     for i in range(cfg.admins):
@@ -725,7 +1074,7 @@ async def seed_users(cfg: SeedConfig) -> Dict[str, List[str]]:
             role="admin",
             status=sample_weighted([("active", 0.9), ("inactive", 0.06), ("banned", 0.02), ("suspended", 0.02)]),
             avatar_url=pick_avatar_url(),
-            bio=fake.text(max_nb_chars=180),
+            bio=random.choice(REAL_ADMIN_BIOS),
             contact_info=fake.phone_number(),
             learning_preferences=random.sample(["Programming", "Data Science", "Business", "Languages", "Math"], k=2),
             email_verified=random.random() < 0.94,
@@ -735,6 +1084,7 @@ async def seed_users(cfg: SeedConfig) -> Dict[str, List[str]]:
             last_login_at=past(0, 5),
         )
         users.append(user)
+        users_dict[uid] = user
         role_ids["admin"].append(uid)
 
     for i in range(cfg.instructors):
@@ -747,7 +1097,7 @@ async def seed_users(cfg: SeedConfig) -> Dict[str, List[str]]:
             role="instructor",
             status=sample_weighted([("active", 0.8), ("inactive", 0.15), ("banned", 0.03), ("suspended", 0.02)]),
             avatar_url=pick_avatar_url(),
-            bio=fake.text(max_nb_chars=260),
+            bio=random.choice(REAL_INSTRUCTOR_BIOS),
             contact_info=fake.phone_number(),
             learning_preferences=random.sample(["Programming", "Data Science", "Business", "Languages", "Math"], k=3),
             email_verified=random.random() < 0.86,
@@ -758,6 +1108,7 @@ async def seed_users(cfg: SeedConfig) -> Dict[str, List[str]]:
             last_login_at=past(0, 15),
         )
         users.append(user)
+        users_dict[uid] = user
         role_ids["instructor"].append(uid)
 
     for i in range(cfg.students):
@@ -770,7 +1121,7 @@ async def seed_users(cfg: SeedConfig) -> Dict[str, List[str]]:
             role="student",
             status=sample_weighted([("active", 0.82), ("inactive", 0.11), ("banned", 0.04), ("suspended", 0.03)]),
             avatar_url=pick_avatar_url(),
-            bio=fake.text(max_nb_chars=220),
+            bio=random.choice(REAL_STUDENT_BIOS),
             contact_info=fake.phone_number(),
             learning_preferences=random.sample(["Programming", "Data Science", "Business", "Languages", "Math"], k=random.randint(1, 3)),
             email_verified=random.random() < 0.82,
@@ -781,11 +1132,12 @@ async def seed_users(cfg: SeedConfig) -> Dict[str, List[str]]:
             last_login_at=past(0, 30),
         )
         users.append(user)
+        users_dict[uid] = user
         role_ids["student"].append(uid)
 
     await insert_many_batched(User, users, BATCH_USERS)
     print(f"Users seeded: {len(users)}")
-    return role_ids
+    return role_ids, users_dict
 
 
 def build_course_blueprint(idx: int, owner_type: str) -> Dict[str, str]:
@@ -801,7 +1153,7 @@ def build_course_blueprint(idx: int, owner_type: str) -> Dict[str, str]:
     }
 
 
-async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List[str]]) -> Dict[str, Any]:
+async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List[str]], users_dict: Dict[str, User]) -> Dict[str, Any]:
     profile_header("SEED COURSES/MODULES/LESSONS")
     courses: List[Course] = []
     modules: List[Module] = []
@@ -819,12 +1171,22 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
         total_lessons = 0
         total_duration = 0
 
-        for m in range(cfg.public_modules_per_course):
+        # Fetch actual instructor info
+        instructor = users_dict.get(instructor_id)
+        instructor_name = instructor.full_name if instructor else f"Instructor {instructor_id[:6]}"
+        instructor_avatar = instructor.avatar_url if instructor else pick_avatar_url()
+        instructor_bio = instructor.bio if instructor else fake.text(max_nb_chars=200)
+
+        curriculum_modules = curriculum.get("modules") or []
+        num_modules = len(curriculum_modules) if curriculum_modules else cfg.public_modules_per_course
+        for m in range(num_modules):
             mid = gid()
             mod_tpl = pick_module(m, curriculum)
             module_lessons_embed: List[EmbeddedLesson] = []
             module_duration = 0
-            for l in range(cfg.public_lessons_per_module):
+            curriculum_lessons = mod_tpl.get("lessons") or []
+            num_lessons = len(curriculum_lessons) if curriculum_lessons else cfg.public_lessons_per_module
+            for l in range(num_lessons):
                 lid = gid()
                 lesson_tpl = pick_lesson(mod_tpl, l)
                 mins = random.randint(18, 65)
@@ -889,7 +1251,7 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
                 learning_outcomes=module_outcomes_from_curriculum(mod_tpl),
                 resources=[mk_resource("Module Notes", "pdf"), mk_resource("Links", "link")],
                 prerequisites=[module_embeds[m - 1].id] if m > 0 else [],
-                total_lessons=cfg.public_lessons_per_module,
+                total_lessons=num_lessons,
                 total_duration_minutes=module_duration,
                 created_at=past(20, 120),
                 updated_at=past(1, 10),
@@ -927,9 +1289,9 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
             owner_id=owner_id,
             owner_type=bp["owner_type"],
             instructor_id=instructor_id,
-            instructor_name=f"Instructor {instructor_id[:6]}",
-            instructor_avatar=pick_avatar_url(),
-            instructor_bio=fake.text(max_nb_chars=200),
+            instructor_name=instructor_name,
+            instructor_avatar=instructor_avatar,
+            instructor_bio=instructor_bio,
             course_type="public",
             learning_outcomes=get_course_learning_outcomes(curriculum) or [mk_course_outcome()],
             prerequisites=get_course_prerequisites(curriculum),
@@ -955,12 +1317,16 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
         total_lessons = 0
         total_duration = 0
 
-        for m in range(cfg.personal_modules_per_course):
+        curriculum_modules = curriculum.get("modules") or []
+        num_modules = len(curriculum_modules) if curriculum_modules else cfg.personal_modules_per_course
+        for m in range(num_modules):
             mid = gid()
             mod_tpl = pick_module(m, curriculum)
             module_lessons_embed: List[EmbeddedLesson] = []
             module_duration = 0
-            for l in range(cfg.personal_lessons_per_module):
+            curriculum_lessons = mod_tpl.get("lessons") or []
+            num_lessons = len(curriculum_lessons) if curriculum_lessons else cfg.personal_lessons_per_module
+            for l in range(num_lessons):
                 lid = gid()
                 lesson_tpl = pick_lesson(mod_tpl, l)
                 mins = random.randint(15, 45)
@@ -977,6 +1343,7 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
                     content_type=ctype,
                     duration_minutes=mins,
                     video_url=get_lesson_video_url(curriculum, lesson_tpl, l) if has_video else None,
+                    audio_url=None,
                     learning_objectives=lesson_tpl.get("objectives")
                     or [fake.sentence(nb_words=5) for _ in range(random.randint(1, 3))],
                     resources=[mk_resource("Personal notes", "pdf")],
@@ -999,6 +1366,7 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
                         content_type=lesson.content_type,
                         duration_minutes=lesson.duration_minutes,
                         video_url=lesson.video_url,
+                        audio_url=lesson.audio_url,
                         resources=lesson.resources,
                         learning_objectives=lesson.learning_objectives,
                         quiz_id=None,
@@ -1019,7 +1387,7 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
                 learning_outcomes=module_outcomes_from_curriculum(mod_tpl),
                 resources=[mk_resource("Ref", "link")],
                 prerequisites=[module_embeds[m - 1].id] if m > 0 else [],
-                total_lessons=cfg.personal_lessons_per_module,
+                total_lessons=num_lessons,
                 total_duration_minutes=module_duration,
                 created_at=past(10, 70),
                 updated_at=past(1, 7),
@@ -1056,9 +1424,10 @@ async def seed_courses_modules_lessons(cfg: SeedConfig, role_ids: Dict[str, List
             status=sample_weighted([("published", 0.45), ("draft", 0.5), ("archived", 0.05)]),
             owner_id=student_id,
             owner_type="student",
-            instructor_name=f"Student Owner {student_id[:6]}",
-            instructor_avatar=pick_avatar_url(),
-            instructor_bio=fake.sentence(nb_words=14),
+            instructor_id=None,
+            instructor_name=None,
+            instructor_avatar=None,
+            instructor_bio=None,
             course_type="personal",
             learning_outcomes=get_course_learning_outcomes(curriculum) or [mk_course_outcome()],
             prerequisites=get_course_prerequisites(curriculum),
@@ -1244,7 +1613,6 @@ async def seed_quizzes_attempts(cfg: SeedConfig, role_ids: Dict[str, List[str]])
     profile_header("SEED QUIZZES/ATTEMPTS")
     lessons = await Lesson.find().to_list()
     enrollments = await Enrollment.find().to_list()
-    enroll_by_user_course = {(e.user_id, e.course_id): e for e in enrollments}
     quizzes: List[Quiz] = []
     attempts: List[QuizAttempt] = []
     quiz_ids: List[str] = []
@@ -1292,6 +1660,20 @@ async def seed_quizzes_attempts(cfg: SeedConfig, role_ids: Dict[str, List[str]])
             ls.quiz_id = quiz_by_lesson[ls.id].id
             ls.updated_at = now()
             await ls.save()
+
+    # Sync quiz_id to EmbeddedLessons inside Courses
+    courses = await Course.find().to_list()
+    for c in courses:
+        updated = False
+        for mod in c.modules:
+            for el in mod.lessons:
+                if el.id in quiz_by_lesson:
+                    el.quiz_id = quiz_by_lesson[el.id].id
+                    el.updated_at = now()
+                    updated = True
+        if updated:
+            c.updated_at = now()
+            await c.save()
 
     # Attempts
     for q in quizzes:
@@ -1362,8 +1744,8 @@ async def seed_quizzes_attempts(cfg: SeedConfig, role_ids: Dict[str, List[str]])
 async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], course_map: Dict[str, List[str]]) -> Dict[str, str]:
     profile_header("SEED ASSESSMENTS/RECOMMENDATIONS")
     sessions: List[AssessmentSession] = []
-    # user -> (session_id, created_at, proficiency_level) — phiên evaluated mới nhất theo created_at
-    user_latest_evaluated: Dict[str, Tuple[str, datetime, str]] = {}
+    # user -> latest evaluated assessment details
+    student_assessments: Dict[str, Dict[str, Any]] = {}
     categories = ["Programming", "Data Science", "Business", "Languages", "Math"]
     level_cfg = {
         "Beginner": (15, 15),
@@ -1390,6 +1772,7 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
                 questions.append(mk_assessment_question(diff, category))
 
             answers = []
+            per_question_results = []
             overall = None
             proficiency = None
             correct_answers = None
@@ -1399,44 +1782,43 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
             time_analysis = None
             submitted_at = None
             evaluated_at = None
+            total_elapsed_seconds = None
+            custom_goals = random.choice(REAL_CUSTOM_GOALS.get(category, ["Nâng cao năng lực"]))
 
             if status in ["submitted", "evaluated"]:
                 submitted_at = created + timedelta(minutes=random.randint(8, time_limit))
+                correct_answers = 0
                 for q in questions:
                     is_correct = random.random() < 0.62
+                    if is_correct:
+                        correct_answers += 1
                     answers.append({
                         "question_id": q["question_id"],
                         "answer_content": q["correct_answer_hint"] if is_correct else fake.word(),
                         "selected_option": random.randint(0, 3) if q["question_type"] == "multiple_choice" else None,
                         "time_taken_seconds": random.randint(20, 95),
                     })
+                    per_question_results.append({
+                        "question_id": q["question_id"],
+                        "is_correct": is_correct,
+                        "explanation": f"Gợi ý đáp án đúng: {q['correct_answer_hint']}"
+                    })
+                total_elapsed_seconds = sum(a["time_taken_seconds"] for a in answers)
 
             if status == "evaluated":
                 evaluated_at = submitted_at + timedelta(seconds=random.randint(8, 180))
-                correct_answers = sum(1 for _ in range(total_questions) if random.random() < 0.64)
                 overall = round((correct_answers / total_questions) * 100, 1)
                 proficiency = "Advanced" if overall >= 80 else ("Intermediate" if overall >= 60 else "Beginner")
-                ai_feedback = (
-                    f"Bạn đạt {overall}% ở mức {proficiency}. "
-                    f"Hãy tập trung củng cố các kỹ năng còn yếu trong lĩnh vực {category}."
-                )
+                ai_feedback = get_assessment_evaluation_vietnamese(category, level, overall, proficiency)
                 skill_analysis = mk_assessment_skill_analysis_payload(
                     questions, correct_answers, ai_feedback
                 )
-                knowledge_gaps = [
-                    {
-                        "gap_area": pick_assessment_skill(category),
-                        "description": f"Cần ôn thêm kiến thức {category.lower()} ở mức {level}.",
-                        "importance": random.choice(["High", "Medium", "Low"]),
-                        "suggested_action": "Xem lại bài học liên quan và làm bài luyện tập.",
-                    } for _ in range(random.randint(1, 3))
-                ]
-                total_time_seconds = sum(a["time_taken_seconds"] for a in answers) if answers else random.randint(400, 1800)
+                knowledge_gaps = get_knowledge_gaps_vietnamese(category, level)
                 time_analysis = {
-                    "total_time_seconds": total_time_seconds,
-                    "average_time_per_question": round(total_time_seconds / total_questions, 2),
-                    "fastest_question_time": random.randint(8, 25),
-                    "slowest_question_time": random.randint(80, 150),
+                    "total_time_seconds": total_elapsed_seconds,
+                    "average_time_per_question": round(total_elapsed_seconds / total_questions, 2),
+                    "fastest_question_time": min([a["time_taken_seconds"] for a in answers]) if answers else random.randint(8, 25),
+                    "slowest_question_time": max([a["time_taken_seconds"] for a in answers]) if answers else random.randint(80, 150),
                 }
 
             sid_session = gid()
@@ -1459,6 +1841,9 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
                 knowledge_gaps=knowledge_gaps,
                 ai_feedback=ai_feedback,
                 time_analysis=time_analysis,
+                total_elapsed_seconds=total_elapsed_seconds,
+                per_question_results=per_question_results,
+                custom_goals=custom_goals,
                 created_at=created,
                 expires_at=expires,
                 submitted_at=submitted_at,
@@ -1466,9 +1851,15 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
             )
             sessions.append(session)
             if status == "evaluated" and proficiency:
-                prev = user_latest_evaluated.get(sid)
-                if prev is None or created >= prev[1]:
-                    user_latest_evaluated[sid] = (sid_session, created, proficiency)
+                prev = student_assessments.get(sid)
+                if prev is None or created >= prev["created_at"]:
+                    student_assessments[sid] = {
+                        "session_id": sid_session,
+                        "created_at": created,
+                        "proficiency": proficiency,
+                        "category": category,
+                        "gaps": [g["gap_area"] for g in knowledge_gaps]
+                    }
 
     if sessions:
         await insert_many_batched(AssessmentSession, sessions, BATCH_ASSESSMENTS)
@@ -1477,9 +1868,12 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
     recommendations: List[Recommendation] = []
     all_courses = await Course.find({"status": {"$in": ["published", "draft"]}}).to_list()
     for sid in role_ids["student"]:
-        eval_info = user_latest_evaluated.get(sid)
-        session_id = eval_info[0] if eval_info else None
-        prof_from_assessment = eval_info[2] if eval_info else None
+        eval_info = student_assessments.get(sid)
+        session_id = eval_info["session_id"] if eval_info else None
+        prof_from_assessment = eval_info["proficiency"] if eval_info else None
+        category = eval_info["category"] if eval_info else random.choice(categories)
+        gaps = eval_info["gaps"] if eval_info else [pick_assessment_skill(category)]
+
         picked = random.sample(all_courses, k=min(len(all_courses), random.randint(4, 7)))
         recs = []
         order = []
@@ -1496,15 +1890,15 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
                 "thumbnail_url": c.thumbnail_url,
                 "priority_rank": rank,
                 "relevance_score": round(random.uniform(60, 98), 1),
-                "reason": fake.sentence(nb_words=16),
-                "addresses_gaps": [fake.word() for _ in range(random.randint(1, 3))],
+                "reason": get_recommendation_reason_vietnamese(c.title, c.category, rank),
+                "addresses_gaps": random.sample(gaps, k=min(len(gaps), random.randint(1, 2))) if gaps else [pick_assessment_skill(c.category)],
                 "estimated_completion_days": est_days,
             })
             order.append({
                 "step": rank,
                 "course_id": c.id,
-                "focus_modules": [f"Module {i}" for i in range(1, random.randint(2, 4))],
-                "why_this_order": fake.sentence(nb_words=14),
+                "focus_modules": [m.title for m in c.modules[:random.randint(1, 2)]] if c.modules else [f"Module {i}" for i in range(1, random.randint(2, 4))],
+                "why_this_order": get_why_this_order_vietnamese(c.title, rank),
             })
 
         if session_id and prof_from_assessment:
@@ -1526,16 +1920,8 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
             user_proficiency_level=user_prof_level,
             recommended_courses=recs,
             suggested_learning_order=order,
-            practice_exercises=[
-                {
-                    "skill_tag": fake.slug().replace("-", "_"),
-                    "exercise_type": random.choice(["coding", "quiz", "project", "reading"]),
-                    "description": fake.sentence(nb_words=12),
-                    "difficulty": random.choice(["easy", "medium", "hard"]),
-                    "estimated_time_hours": round(random.uniform(0.5, 6.0), 1),
-                } for _ in range(random.randint(3, 6))
-            ],
-            ai_personalized_advice=fake.paragraph(nb_sentences=3),
+            practice_exercises=get_practice_exercises_vietnamese(category),
+            ai_personalized_advice=get_personalized_advice_vietnamese(category, user_prof_level),
             total_estimated_hours=round(total_est_h, 1),
             created_at=past(0, 35),
             expires_at=future(15, 120),
@@ -1545,7 +1931,7 @@ async def seed_assessments_recommendations(role_ids: Dict[str, List[str]], cours
     if recommendations:
         await insert_many_batched(Recommendation, recommendations, BATCH_RECOMMENDATIONS)
     print(f"Recommendations seeded: {len(recommendations)}")
-    return {u: info[0] for u, info in user_latest_evaluated.items()}
+    return {u: info["session_id"] for u, info in student_assessments.items()}
 
 
 async def seed_conversations_tokens(role_ids: Dict[str, List[str]], course_map: Dict[str, List[str]]):
@@ -1556,31 +1942,96 @@ async def seed_conversations_tokens(role_ids: Dict[str, List[str]], course_map: 
     active_users = await User.find({"status": "active"}).to_list()
     public_courses = course_map["public"]
 
+    # Pre-fetch public courses
+    courses_list = await Course.find({"_id": {"$in": public_courses}}).to_list()
+    course_by_id = {c.id: c for c in courses_list}
+
+    CONV_TITLES: Dict[str, List[str]] = {
+        "Programming": [
+            "Hỏi đáp về cú pháp Python",
+            "Thắc mắc về list và tuple",
+            "Lỗi thụt đầu dòng IndentationError",
+            "Cách dùng class và OOP"
+        ],
+        "Data Science": [
+            "Xử lý missing value Pandas",
+            "Giải thích F1-Score",
+            "Truy vấn SQL nâng cao",
+            "Đánh giá mô hình Machine Learning"
+        ],
+        "Business": [
+            "Viết Key Results trong OKR",
+            "Hỏi về Sprint Planning",
+            "Quy trình quản lý dự án Agile",
+            "Xây dựng chỉ số KPI"
+        ],
+        "Languages": [
+            "Mở bài IELTS Writing Task 2",
+            "Từ vựng chuyên ngành IT",
+            "Mẫu câu giao tiếp tiếng Anh công sở",
+            "Luyện nói Part 1 IELTS"
+        ],
+        "Math": [
+            "Ý nghĩa của định thức ma trận",
+            "Giải phương trình bậc hai",
+            "Ứng dụng đạo hàm tìm cực trị",
+            "Phân phối xác suất trong thống kê"
+        ]
+    }
+
+    CONV_SUMMARIES: Dict[str, List[str]] = {
+        "Programming": [
+            "Học viên hỏi về cách phân biệt List và Tuple trong Python và cách sử dụng chúng hiệu quả.",
+            "Học viên gặp lỗi IndentationError do trộn lẫn Tab và Space và được hướng dẫn cách khắc phục.",
+            "Hội thoại trao đổi về cách định nghĩa class, phương thức và ứng dụng lập trình hướng đối tượng."
+        ],
+        "Data Science": [
+            "Thảo luận về các chiến lược xử lý dữ liệu khuyết thiếu (NaN) trong Pandas DataFrame.",
+            "Giải thích chi tiết về F1-score và các trường hợp nên ưu tiên F1-score so với Accuracy.",
+            "Hướng dẫn cách viết câu lệnh SQL JOIN phức tạp và tối ưu hóa hiệu năng truy vấn."
+        ],
+        "Business": [
+            "Hướng dẫn học viên cách thiết lập các Key Results đo lường được theo mô hình OKR.",
+            "Trao đổi về vai trò của Product Owner và cách tổ chức các buổi Sprint Planning hiệu quả."
+        ],
+        "Languages": [
+            "Chia sẻ cấu trúc viết mở bài Task 2 trong kỳ thi IELTS Writing chuẩn và dễ áp dụng.",
+            "Cung cấp các từ vựng tiếng Anh chuyên ngành công nghệ thông tin thông dụng."
+        ],
+        "Math": [
+            "Giải thích ý nghĩa hình học của định thức ma trận và tính khả nghịch trong đại số tuyến tính.",
+            "Hội thoại ôn tập cách tính đạo hàm và ứng dụng để tìm điểm cực trị của hàm số."
+        ]
+    }
+
     for sid in role_ids["student"]:
         for _ in range(random.randint(1, 4)):
             cid = random.choice(public_courses)
-            msg_count = random.randint(4, 16)
-            messages = []
-            for i in range(msg_count):
-                role = "user" if i % 2 == 0 else "assistant"
-                messages.append({
-                    "id": gid(),
-                    "role": role,
-                    "content": fake.sentence(nb_words=18) if role == "user" else fake.paragraph(nb_sentences=2),
-                    "created_at": past(0, 40),
-                })
+            course = course_by_id.get(cid)
+            if not course:
+                continue
+
+            category = course.category
+            start_time = past(1, 40)
+            messages = generate_chat_messages(category, start_time)
+            
+            titles = CONV_TITLES.get(category, CONV_TITLES["Programming"])
+            summaries = CONV_SUMMARIES.get(category, CONV_SUMMARIES["Programming"])
+            title = random.choice(titles)
+            summary = random.choice(summaries)
+
             conv = Conversation(
                 id=gid(),
                 user_id=sid,
                 course_id=cid,
-                title=f"Discussion {fake.word().title()}",
-                summary=fake.sentence(nb_words=18),
-                course_title=f"Course {cid[:8]}",
+                title=title,
+                summary=summary,
+                course_title=course.title,
                 messages=messages,
                 total_messages=len(messages),
-                last_message_at=messages[-1]["created_at"],
-                created_at=past(1, 60),
-                updated_at=past(0, 15),
+                last_message_at=messages[-1]["timestamp"] if messages else now(),
+                created_at=start_time,
+                updated_at=now(),
             )
             conversations.append(conv)
 
@@ -1760,6 +2211,11 @@ async def seed_report_accounts():
 
 async def main():
     cfg = SeedConfig()
+    from scripts.curriculum_content import custom_imported_courses
+    if custom_imported_courses:
+        cfg.public_courses = len(custom_imported_courses)
+        print(f"[CONFIG] Đã điều chỉnh public_courses = {cfg.public_courses} theo số lượng khóa học tùy chỉnh từ JSON.")
+        
     random.seed(cfg.seed)
     fake.seed_instance(cfg.seed)
 
@@ -1773,8 +2229,8 @@ async def main():
     print(f"MongoDB: {settings.mongodb_database}")
 
     await drop_all_collections()
-    role_ids = await seed_users(cfg)
-    domain = await seed_courses_modules_lessons(cfg, role_ids)
+    role_ids, users_dict = await seed_users(cfg)
+    domain = await seed_courses_modules_lessons(cfg, role_ids, users_dict)
     class_ids = await seed_classes(cfg, role_ids, domain["course_map"])
     await seed_enrollments_progress(cfg, role_ids, domain["course_map"])
     await sync_classes_with_enrollments(class_ids)

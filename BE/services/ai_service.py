@@ -869,7 +869,7 @@ Trả về JSON với cấu trúc (CHỈ JSON THUẦN TÚY, KHÔNG CÓ TEXT KHÁ
                 {{
                     "title": "Tên bài",
                     "description": "Mô tả ngắn",
-                    "content": "Nội dung ngắn gọn",
+                    "content": "Bài giảng học thuật chi tiết bằng Tiếng Việt (HTML format có các thẻ h2, h3, p, pre, code). Viết tối thiểu 3-5 đoạn văn chi tiết giải thích sâu sắc về lý thuyết, kèm theo các ví dụ thực tế và các khối code mẫu được định dạng đẹp mắt. Tuyệt đối không dùng văn bản giả lập, tóm tắt hoặc ghi chú placeholder.",
                     "duration_minutes": 15,
                     "order": 1
                 }}
@@ -880,7 +880,7 @@ Trả về JSON với cấu trúc (CHỈ JSON THUẦN TÚY, KHÔNG CÓ TEXT KHÁ
 
 LƯU Ý:
 - CHỈ trả về JSON, KHÔNG có markdown hay text thừa
-- Mô tả ngắn gọn, tránh quá dài
+- Mô tả khóa học ngắn gọn, nhưng nội dung bài giảng (content) của các bài học PHẢI cực kỳ chi tiết, nhiều đoạn văn dài, đầy đủ kiến thức chuyên môn sâu và code mẫu trực quan để người học có thể tự học trọn vẹn qua bài viết đó.
 - Mỗi module 2-3 learning outcomes
 - Mỗi module 2-3 lessons
 - Max 3-4 modules
